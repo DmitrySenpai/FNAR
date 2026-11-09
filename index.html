@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#060809">
+  <title>Kokhinhin Office Night Shift — Rebuild v0.3.6</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app"><main id="stage" aria-label="Комната охраны Kokhinhin Office Night Shift">
+  <canvas id="scene" aria-label="Осмотр комнаты. Наведите мышь в сторону или проведите пальцем"></canvas>
+  <div id="grain" aria-hidden="true"></div>
+  <div id="vignette" aria-hidden="true"></div>
+  <section id="hud" class="hidden" aria-label="Игровой интерфейс">
+    <div class="topbar">
+      <div class="utilities"><button type="button" id="muteBtn" class="icon-button" title="Выключить звук (M)" aria-label="Выключить звук">🔊</button><button type="button" id="settingsBtn" class="icon-button" title="Настройки (H)">⚙</button><button type="button" id="fullscreenBtn" class="icon-button" title="Полный экран (F)">⛶</button></div>
+    </div>
+    <div class="bottom">
+      <div class="status-zone"><div class="time" id="hudClock">12 AM</div><div class="office-energy" aria-label="Энергия офиса"><div><span data-i18n="power">Энергия:</span> <strong id="officePowerValue">100%</strong></div><div class="usage-meter office-usage"><span data-i18n="usage">Расход:</span><span id="officeUsageBars"><span class="bar on"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span></span></div></div></div>
+      <div class="turn-info"><span id="directionLabel">ВЗГЛЯД ПО ЦЕНТРУ</span><div class="turn-track"><span id="turnPin"></span></div><span id="hoverAction">Наведите взгляд на кнопки у дверей</span></div>
+      <div class="test-zone"><div class="indicators"><span id="statusLeft">ЛЕВО: ДВЕРЬ ОТКР. / СВЕТ ВЫКЛ.</span><span id="statusRight">ПРАВО: ДВЕРЬ ОТКР. / СВЕТ ВЫКЛ.</span></div></div>
+    </div>
+    <div id="toast" class="toast" aria-live="polite" role="status"></div>
+  </section>
+
+  <!-- CCTV monitor: camera pictures can be replaced later with assets/cameras/camXX.webp -->
+  <section id="cameraScreen" class="camera-screen" aria-label="Планшет камер наблюдения" aria-hidden="true">
+    <div id="cameraFeed" class="camera-feed" data-camera="01" style="--feed-accent:45,59,65">
+      <img id="cameraPicture" class="camera-picture hidden" alt="" draggable="false" />
+      <div id="feedEmpty" class="feed-empty">
+        <div class="feed-perspective" aria-hidden="true"><div class="feed-back-wall"></div><div class="feed-ground"></div><div class="feed-lamp"></div></div>
+        <div class="no-feed"><span class="no-feed-symbol">▣</span><strong data-i18n="cameraEmpty">ИЗОБРАЖЕНИЕ НЕ ПОДКЛЮЧЕНО</strong><small data-i18n="cameraDev">ГРАФИКА ПОМЕЩЕНИЯ В РАЗРАБОТКЕ</small></div>
+      </div>
+      <div class="cctv-darkening" aria-hidden="true"></div>
+    </div>
+    <div class="cctv-noise" aria-hidden="true"></div>
+    <div class="cctv-interlace" aria-hidden="true"></div>
+    <div class="camera-border" aria-hidden="true"></div>
+    <div class="camera-top-left"><span class="rec-led"></span> REC <span class="signal-txt">● SIGNAL</span></div>
+    <div class="camera-time"><strong id="camClock">12 AM</strong><span id="cameraNightLabel">Ночь 1</span></div>
+    <div class="camera-location"><strong id="cameraName">Reception</strong><div><span id="cameraCode">CAM 01</span><span class="camera-live" data-i18n="camLive">● LIVE</span></div></div>
+    <div class="cctv-energy"><div><span data-i18n="power">Энергия:</span> <strong id="cameraPowerValue">100%</strong></div><div class="usage-meter"><span data-i18n="usage">Расход:</span> <span id="cameraUsageBars"><span class="bar on"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span></span></div></div>
+    <div class="camera-map" aria-label="Схема объекта">
+      <div class="camera-map-heading" data-i18n="mapTitle">ОБЪЕКТ / КАМЕРЫ</div>
+      <div class="camera-map-diagram">
+        <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" class="map-branches"><path d="M49 12 V28 V52 M49 52 H20 V69 V88 M49 52 H76 V69 V88 M76 52 V31 H89 M49 88 V95"/></svg>
+        <button class="cam-node" style="--mx:49%;--my:11%" data-camera="1" type="button" aria-label="CAM 01 Северная"><span>CAM</span>01</button>
+        <button class="cam-node" style="--mx:49%;--my:29%" data-camera="2" type="button" aria-label="CAM 02 Коридор"><span>CAM</span>02</button>
+        <button class="cam-node" style="--mx:49%;--my:52%" data-camera="5" type="button" aria-label="CAM 05 Опен-спейс"><span>CAM</span>05</button>
+        <button class="cam-node" style="--mx:23%;--my:52%" data-camera="4" type="button" aria-label="CAM 04 Ресепшен"><span>CAM</span>04</button>
+        <button class="cam-node" style="--mx:22%;--my:71%" data-camera="6" type="button" aria-label="CAM 06 Левый коридор"><span>CAM</span>06</button>
+        <button class="cam-node" style="--mx:22%;--my:88%" data-camera="7" type="button" aria-label="CAM 07 Левый выход"><span>CAM</span>07</button>
+        <button class="cam-node" style="--mx:89%;--my:31%" data-camera="8" type="button" aria-label="CAM 08 Кабинет директора"><span>CAM</span>08</button>
+        <button class="cam-node" style="--mx:76%;--my:71%" data-camera="3" type="button" aria-label="CAM 03 Правый коридор"><span>CAM</span>03</button>
+        <button class="cam-node" style="--mx:76%;--my:88%" data-camera="9" type="button" aria-label="CAM 09 Правый выход"><span>CAM</span>09</button>
+        <div class="office-node" style="--mx:49%;--my:94%">YOU</div>
+      </div>
+    </div>
+    <div id="cameraSwitchFlash" class="camera-switch-flash" aria-hidden="true"></div>
+  </section>
+  <button id="cameraToggle" class="camera-toggle hidden" type="button" aria-label="Открыть камеры наблюдения" aria-expanded="false" title="Камеры — C">
+    <span class="toggle-chevrons" aria-hidden="true"><i></i><i></i><i></i></span><span class="toggle-caption" data-i18n="cameras">КАМЕРЫ</span>
+  </button>
+  <section id="languageScreen" class="initial-screen" role="dialog" aria-modal="true" aria-label="Выберите язык">
+    <div class="initial-card"><p class="eyebrow">KOKHINHIN OFFICE</p>
+      <h2 data-i18n="chooseLanguage">ВЫБЕРИТЕ ЯЗЫК</h2>
+      <div class="language-buttons"><button type="button" id="languageRu" class="primary">Русский</button><button type="button" id="languageJa" class="primary">日本語</button></div>
+    </div>
+  </section>
+  <section id="warningScreen" class="initial-screen hidden" role="dialog" aria-modal="true" aria-label="Предупреждение">
+    <div class="initial-card warning-card"><p class="eyebrow">KOKHINHIN OFFICE · NOTICE</p>
+      <h2 data-i18n="warningHeading">ПРЕДУПРЕЖДЕНИЕ</h2>
+      <p data-i18n="warningBody">В игре присутствуют внезапные громкие звуки, скримеры и мигающие изображения.</p>
+      <button type="button" id="warningAccept" class="primary" data-i18n="warningAccept">ПОНИМАЮ · ПРОДОЛЖИТЬ</button>
+    </div>
+  </section>
+  <section id="welcome" class="hidden" aria-label="Главное меню">
+    <div class="welcome-backdrop"></div>
+    <div class="welcome-card">
+      <p class="eyebrow">KOKHINHIN / ENGINE REBUILD</p>
+      <h1>OFFICE<br><strong>NIGHT SHIFT</strong></h1>
+      <p data-i18n="menuDesc">Переживите ночь до 6:00. Следите за четырьмя петухами по девяти камерам, проверяйте светом обе двери и экономьте электричество.</p>
+      <label for="officeInput" data-i18n="officeLabel">НАЗВАНИЕ ОФИСА</label>
+      <input id="officeInput" maxlength="44" placeholder="Мой офис" autocomplete="off" spellcheck="false">
+      <button id="startBtn" class="primary" type="button" disabled>ЗАГРУЗКА…</button>
+      <button id="continueBtn" class="secondary-action" type="button" disabled>ПРОДОЛЖИТЬ</button>
+      <p id="loadingStatus" class="loading">Загрузка 0 / 11</p>
+    </div>
+  </section>
+  <button type="button" id="pauseBtn" class="pause-floating hidden" aria-label="Пауза" title="Пауза (Esc / P)">Ⅱ</button>
+  <section id="pauseScreen" class="pause-screen hidden" role="dialog" aria-modal="true" aria-label="Пауза">
+    <div class="pause-card"><p class="eyebrow">KOKHINHIN OFFICE</p>
+      <h2 data-i18n="pauseTitle">ПАУЗА</h2>
+      <button type="button" id="pauseResume" class="primary" data-i18n="pauseResume">ВЕРНУТЬСЯ В ИГРУ</button>
+      <button type="button" id="pauseRestart" class="secondary-action" data-i18n="pauseRestart">ПЕРЕЗАПУСТИТЬ НОЧЬ</button>
+      <button type="button" id="pauseMenu" class="secondary-action" data-i18n="pauseMenu">В ГЛАВНОЕ МЕНЮ</button>
+      <small data-i18n="pauseHint">Esc или P — продолжить</small>
+    </div>
+  </section>
+  <section id="phoneDialog" class="phone-dialog hidden" role="dialog" aria-label="Телефонный разговор">
+    <div class="phone-dialog-heading" data-i18n="ringing">☎ ВХОДЯЩИЙ ЗВОНОК / ЛИНИЯ ОТКРЫТА</div>
+    <div class="phone-dialog-text">...</div>
+    <button type="button" id="phoneHangup" data-i18n="hangup">ПОЛОЖИТЬ ТРУБКУ</button>
+  </section>
+  <section id="blackout" class="blackout hidden" aria-label="Электричество отключено" aria-hidden="true"></section>
+  <section id="deathStatic" class="death-static hidden" aria-hidden="true">
+    <video id="staticVideo" preload="auto" playsinline muted loop disablepictureinpicture></video>
+    <div class="death-static-fallback"></div>
+  </section>
+  <section id="jumpscare" class="jumpscare hidden" aria-label="Скример" aria-hidden="true">
+    <video id="jumpscareVideo" preload="metadata" playsinline muted disablepictureinpicture></video>
+  </section>
+  <section id="ending" class="hidden" role="dialog" aria-modal="true" aria-labelledby="endingTitle">
+    <div class="ending-card"><p id="endingNightLabel" class="eyebrow">KOKHINHIN / Ночь 1</p><h2 id="endingTitle">НОЧЬ ОКОНЧЕНА</h2><p id="endingText"></p><button id="restartBtn" type="button" class="primary">ПОВТОРИТЬ НОЧЬ</button><button id="endingMenuBtn" type="button" class="secondary-action" data-i18n="backMenu">ГЛАВНОЕ МЕНЮ</button></div>
+  </section>
+  <section id="settings" class="hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="settings-card"><div class="settings-heading"><h2 id="settingsTitle" data-i18n="settingsTitle">Настройки обзора</h2><button id="closeSettings" class="icon-button" type="button" aria-label="Закрыть">×</button></div>
+      <label><i data-i18n="settingsAngle">Амплитуда поворота</i> <span id="turnAmountText">100%</span><input id="turnAmount" type="range" min="65" max="120" step="5" value="100"></label>
+      <label><i data-i18n="settingsFish">«Рыбий глаз»</i> <span id="fishAmountText">60%</span><input id="fishAmount" type="range" min="0" max="100" step="5" value="60"></label>
+      <label><i data-i18n="settingsSmooth">Плавность</i> <span id="smoothAmountText">70%</span><input id="smoothAmount" type="range" min="10" max="100" step="5" value="70"></label>
+      <p data-i18n="settingsInstructions">Поворот: мышь, стрелки ← → или A / D. Двери: 1 / 2. Свет: Q / E. Камеры: C. Пауза: Esc / P.</p>
+      <button type="button" class="primary" id="closeSettingsPrimary" data-i18n="settingsResume">ПРОДОЛЖИТЬ</button>
+    </div>
+  </section>
+</main></div>
+<script src="app.js"></script>
+</body></html>
