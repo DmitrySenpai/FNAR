@@ -474,6 +474,11 @@ function resetEnemies(){
   ENEMIES.forEach(e=>{
     e.step=0;e.phase='dormant';e.nextMove=e.initial*(1-(currentNight-1)*.075)+randomBetween(0,9);
     e.attack=0;e.blocked=0;e.knocks=0;e.cycles=0;e.retreatTo=0;
+    // From night 2, C3 becomes agitated if CAM 08 is ignored.
+    if(e.id===3){
+      e.anger=0;e.watchTime=0;e.angerThreshold=Math.max(24,38-(currentNight-2)*2.7);
+      if(currentNight>=2)e.nextMove=30+randomBetween(0,8);
+    }
   });
 }
 function cameraImageURL(file){return window.KONS_EMBEDDED_CAMERAS?.[file] || getCachedAssetURL('assets/cameras/'+file);}
@@ -746,12 +751,13 @@ function showVictorySequence(){
   victoryButtonTimer=setTimeout(()=>{
     victoryButtonTimer=null;
     if(!screen.classList.contains('hidden'))button.classList.remove('hidden');
-  },6000); // Four seconds of number movement, then two seconds of silence.
+  },7200); // 1.2s dissolve + 4s number roll + 2s pause.
 }
 function finishNight(success,message,attackerId=0){
   if(!state.active)return;
   clearVictorySequence();
-  if(cameraOpen)setCameraOpen(false);
+  // Hold the current camera frame during the dissolve to 6 AM.
+  if(cameraOpen&&!success)setCameraOpen(false);
   state.active=false;state.gameOver=true;
   stopPowerFailureAudio();powerFailure.active=false;
   if(success)blackout.classList.add('hidden');
@@ -766,7 +772,9 @@ function finishNight(success,message,attackerId=0){
   }
   $('ending').dataset.success=String(success);
   $('endingTitle').textContent=success?(currentNight===7?t('allNightsTitle'):t('winTitle')):t('loseTitle');
-  $('endingText').textContent=success?(currentNight===7?t('allNightsText'):t('winText',{night:currentNight})):message;
+  // No cause-of-death text is shown on the defeat screen.
+  $('endingText').textContent=success?(currentNight===7?t('allNightsText'):t('winText',{night:currentNight})):'';
+  $('endingText').classList.toggle('hidden',!success);
   $('endingNightLabel').textContent=t('titleNight',{night:currentNight});
   $('restartBtn').textContent=success?(currentNight===7?t('backMenu'):t('nextNight',{night:currentNight+1})):t('retryNight',{night:currentNight});
   $('endingMenuBtn').classList.toggle('hidden',success&&currentNight===7);
@@ -788,6 +796,7 @@ function footstep(e,fast=false){
 }
 function retreatEnemy(e,fromDoor=true){
   e.phase='retreat';e.attack=0;e.blocked=0;e.knocks=0;
+  if(e.id===3&&currentNight>=2){e.anger=0;e.watchTime=0;}
   if(fromDoor)e.cycles++;
   // Two camera positions from the door; another bird can now take a turn.
   e.retreatTo=Math.max(0,e.route.length-3);
@@ -800,6 +809,39 @@ function moveEnemies(dt){
   let changed=false;
   for(const e of ENEMIES){
     if(!state.active||powerFailure.active)return;
+    // After waking up C3 waits in the director's office. Keeping CAM 08 on
+    // him for at least 1.4s calms him; quickly switching does not help.
+    if(e.id===3&&currentNight>=2){
+      if(e.phase==='dormant'){
+        e.nextMove-=dt;
+        if(e.nextMove<=0){e.phase='watch';e.step=0;e.anger=0;e.watchTime=0;changed=true;}
+        continue;
+      }
+      if(e.phase==='watch'){
+        const watching=cameraOpen&&currentCamera===8;
+        e.watchTime=watching?Math.min(4,e.watchTime+dt):0;
+        e.anger=clamp(e.anger+(e.watchTime>=1.4?-3.5:1)*dt,0,e.angerThreshold);
+        if(e.anger>=e.angerThreshold){
+          e.phase='rush';e.nextMove=.45;e.watchTime=0;changed=true;
+        }
+        continue;
+      }
+      if(e.phase==='rush'){
+        e.nextMove-=dt;
+        if(e.nextMove>0)continue;
+        // Rush respects the existing one-rooster-near-guard rule.
+        if(e.step+1>=e.route.length-2 && ENEMIES.some(other=>other!==e&&isThreatening(other))){
+          e.nextMove=randomBetween(1,2.3);continue;
+        }
+        if(e.step>=e.route.length-1){
+          e.step=e.route.length;e.phase='door';e.attack=0;e.blocked=0;e.knocks=0;
+          footstep(e,true);
+        }else{
+          e.step++;footstep(e,true);e.nextMove=randomBetween(.8,1.5);
+        }
+        changed=true;continue;
+      }
+    }
     if(e.phase==='door'){
       const closed=state[e.side+'DoorPos']>.88;
       if(closed){
@@ -826,7 +868,8 @@ function moveEnemies(dt){
       const previous=e.step;e.step=Math.max(e.retreatTo,e.step-1);
       if(e.step!==previous){changed=true;footstep(e,true);}
       if(e.step<=e.retreatTo){
-        e.phase='rest';e.nextMove=(randomBetween(24,39)+e.id*3.5)*(1-(currentNight-1)*.075);
+        if(e.id===3&&currentNight>=2){e.phase='watch';e.anger=0;e.watchTime=0;e.nextMove=0;}
+        else {e.phase='rest';e.nextMove=(randomBetween(24,39)+e.id*3.5)*(1-(currentNight-1)*.075);}
       }else e.nextMove=randomBetween(2.8,5.8);
       continue;
     }

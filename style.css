@@ -225,3 +225,19 @@ html, body, #app, #stage, #stage *, button, input {
 @keyframes victory-hour-roll{0%,8%{transform:translateY(0)}100%{transform:translateY(calc(-1 * var(--hour-height)))}}
 .victory-next{position:absolute;top:72%;left:50%;transform:translateX(-50%);min-width:36%;max-width:90%;padding:1.2cqw 2.2cqw;font-size:clamp(13px,1.6cqw,26px);letter-spacing:.07em;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.victory-screen.is-playing .victory-reel{animation:victory-hour-roll 4s linear both}}
+
+/* v0.4.1: dissolve the frozen view into a black victory card. */
+.victory-screen{background:transparent!important;isolation:isolate}
+.victory-screen::before{content:'';position:absolute;inset:0;z-index:0;background:#000;opacity:1;pointer-events:none}
+.victory-screen.is-playing::before{animation:victory-dissolve-black 1.2s ease-in-out both}
+@keyframes victory-dissolve-black{from{opacity:0}to{opacity:1}}
+.victory-clock{z-index:1;opacity:1}
+.victory-screen.is-playing .victory-clock{animation:victory-clock-fade .85s .48s both}
+@keyframes victory-clock-fade{from{opacity:0}to{opacity:1}}
+.victory-screen.is-playing .victory-reel{animation:victory-hour-roll 4s 1.2s cubic-bezier(.64,.05,.28,.99) both}
+.victory-next{z-index:1}
+@media (prefers-reduced-motion:reduce){
+ .victory-screen.is-playing::before{animation:victory-dissolve-black 1.2s linear both}
+ .victory-screen.is-playing .victory-clock{animation:victory-clock-fade .85s .48s both}
+ .victory-screen.is-playing .victory-reel{animation:victory-hour-roll 4s 1.2s linear both}
+}
