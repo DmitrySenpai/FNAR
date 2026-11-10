@@ -106,12 +106,15 @@ $('warningAccept').addEventListener('click',()=>{$('warningScreen').classList.ad
 
 // Audio: original supplied MP3 effects, all optional if browser audio is blocked.
 const SOUND_PATH='assets/sound/';
-const soundURL=name=>window.KONS_EMBEDDED_SOUNDS?.[name]||SOUND_PATH+name+'.mp3';
+const soundURL=name=>window.KONS_EMBEDDED_SOUNDS?.[name] ||
+  ((window.KONS_STANDALONE || location.protocol==='file:') && /^phone_\d\d$/.test(name)
+    ? 'https://dmitrysenpai.github.io/FNAR/assets/sound/'+name+'.mp3'
+    : SOUND_PATH+name+'.mp3');
 const screamerURL=id=>window.KONS_EMBEDDED_SCREAMERS?.[id]||'assets/screamers/rooster_'+id+'_scream.webm';
 const staticVideoURL=()=>window.KONS_EMBEDDED_STATIC_VIDEO||'assets/sound/static-bm.webm';
 const audioLoops=new Map();
 let soundMuted=safeRead('kons-muted')==='1';
-let phoneRingAudio=null,deathStaticAudio=null;
+let phoneRingAudio=null,phoneVoiceAudio=null,deathStaticAudio=null;
 const activeOneShots=new Set();
 function updateMuteUI(){
   const b=$('muteBtn');b.textContent=soundMuted?'🔇':'🔊';
@@ -119,6 +122,7 @@ function updateMuteUI(){
   b.setAttribute('aria-label',b.title);
   for(const a of audioLoops.values())a.muted=soundMuted;
   if(phoneRingAudio)phoneRingAudio.muted=soundMuted;
+  if(phoneVoiceAudio)phoneVoiceAudio.muted=soundMuted;
   if(deathStaticAudio)deathStaticAudio.muted=soundMuted;
   for(const a of activeOneShots)a.muted=soundMuted;
 }
@@ -338,7 +342,7 @@ function updateOfficePower(){
 }
 function showToast(message){ return; }
 function setLight(side,on){
-  if(on && (!state.active||state.power<=0||powerFailure.active))return;
+  if(on && (!state.active||state.paused||phoneState.status==='talking'||state.power<=0||powerFailure.active))return;
   const prop=side+'Light';
   if(state[prop]===on)return;
   state[prop]=on;
@@ -347,7 +351,7 @@ function setLight(side,on){
   needsComposing=true;updateStatus();
 }
 function toggleDoor(side){
-  if(!state.active || state.power<=0 || powerFailure.active)return;
+  if(!state.active || state.paused || phoneState.status==='talking' || state.power<=0 || powerFailure.active)return;
   const prop=side+'Door';state[prop]=!state[prop];playSfx('door',.52);needsComposing=true;updateStatus();showToast(`${side==='left'?'Левая':'Правая'} дверь: ${state[prop]?'закрывается':'открывается'}`);
 }
 function viewFromMouse(e){
@@ -447,10 +451,10 @@ function chooseCamera(id){
  if(cameraOpen && changed){showCameraFlash();playSfx('blip',.26);}
 }
 function setCameraOpen(open){
- if(!state.active || powerFailure.active || !$('settings').classList.contains('hidden'))return;
+ if(!state.active || state.paused || phoneState.status==='talking' || powerFailure.active || !$('settings').classList.contains('hidden'))return;
  if(cameraOpen===open)return;
  cameraOpen=open;
- if(open){clearHeldActions();state.leftKey=false;state.rightKey=false;state.dragging=false;canvas.style.cursor='none';}
+ if(open){clearHeldActions();state.leftKey=false;state.rightKey=false;state.dragging=false;canvas.style.cursor='url("arrow.cur") 0 0, auto';}
  cameraScreen.classList.toggle('is-open',open);
  cameraScreen.setAttribute('aria-hidden',String(!open));
  cameraToggle.setAttribute('aria-expanded',String(open));
@@ -478,11 +482,14 @@ function updateClock(){
   $('hudClock').textContent=display;
   $('cameraNightLabel').textContent=t('titleNight',{night:currentNight});
 }
-// Ring only once; the physical telephone on the desk is the sole answer target.
+// During a call the game world is frozen, but voice/subtitle playback continues.
+// Nights 1–5 use user-provided phone_01…phone_05.mp3 and bilingual transcripts.
+// On nights 6–7 the phone never rings.
 const PHONE_RING_SECONDS=13.35;
-const phoneState={status:'idle',nextRingAt:7,ringEndsAt:0,dialogEndsAt:0};
-const phoneDialog=$('phoneDialog');
+const phoneState={status:'idle',nextRingAt:7,ringEndsAt:0,dialogEndsAt:0,subtitleIndex:-1};
+const phoneDialog=$('phoneDialog'),phoneSubtitle=$('phoneSubtitle');
 let phoneEpoch=0;
+let phoneParagraphs=[];
 function updatePhoneUI(){
   phoneDialog.classList.toggle('hidden',phoneState.status!=='talking');
   needsComposing=true;
@@ -491,9 +498,18 @@ function stopRingtone(){
   if(phoneRingAudio){phoneRingAudio.pause();phoneRingAudio.currentTime=0;
     phoneRingAudio.onended=null;phoneRingAudio.onerror=null;phoneRingAudio=null;}
 }
+function stopPhoneVoice(){
+  if(!phoneVoiceAudio)return;
+  phoneVoiceAudio.onended=null;phoneVoiceAudio.onerror=null;
+  phoneVoiceAudio.pause();try{phoneVoiceAudio.currentTime=0;}catch(_){ }
+  pausedAudio.delete(phoneVoiceAudio);
+  phoneVoiceAudio=null;
+}
 function resetPhone(){
-  ++phoneEpoch;stopRingtone();stopAudioLoop('phone-line');
-  phoneState.status='idle';phoneState.nextRingAt=7;phoneState.ringEndsAt=0;phoneState.dialogEndsAt=0;
+  ++phoneEpoch;stopRingtone();stopPhoneVoice();stopAudioLoop('phone-line');
+  phoneState.status=currentNight>=6?'disabled':'idle';phoneState.nextRingAt=7;
+  phoneState.ringEndsAt=0;phoneState.dialogEndsAt=0;phoneState.subtitleIndex=-1;
+  phoneParagraphs=[];phoneSubtitle.textContent='';
   updatePhoneUI();
 }
 function missPhone(){
@@ -501,7 +517,7 @@ function missPhone(){
   stopRingtone();phoneState.status='missed';updatePhoneUI();
 }
 function startRinging(){
-  if(!state.active||powerFailure.active||phoneState.status!=='idle')return;
+  if(!state.active||state.paused||currentNight>=6||powerFailure.active||phoneState.status!=='idle')return;
   const epoch=phoneEpoch;
   phoneState.status='ringing';phoneState.ringEndsAt=state.nightElapsed+PHONE_RING_SECONDS;
   updatePhoneUI();
@@ -510,27 +526,62 @@ function startRinging(){
   audio.onended=()=>{if(epoch===phoneEpoch)missPhone();};
   audio.play().catch(()=>{});
 }
+function currentPhoneParagraphs(){
+  const all=window.KOKHINHIN_PHONE_TEXTS || {};
+  const locale=all[gameLanguage] || all.ru || {};
+  const paragraphs=locale[String(currentNight)] || ['...'];
+  const office=readSave('kokhinhin_office') || $('officeInput').value.trim() || t('officePlaceholder');
+  return paragraphs.map(line=>line.replace(/\[НАЗВАНИЕ ОФИСА\]/g,office));
+}
+function updatePhoneCaption(){
+  if(phoneState.status!=='talking'||!phoneVoiceAudio)return;
+  const duration=Number.isFinite(phoneVoiceAudio.duration)&&phoneVoiceAudio.duration>0?phoneVoiceAudio.duration:0;
+  if(!duration)return;
+  // Match complete transcript to the audio duration without inventing speech timestamps.
+  const weights=phoneParagraphs.map(txt=>Math.max(4,Array.from(txt).length));
+  const total=weights.reduce((a,b)=>a+b,0);
+  const elapsed=Math.max(0,Math.min(duration-.001,phoneVoiceAudio.currentTime));
+  const point=total*elapsed/duration;
+  let count=0,i=0;
+  for(;i<weights.length-1;i++){count+=weights[i];if(point<count)break;}
+  if(i!==phoneState.subtitleIndex){phoneState.subtitleIndex=i;phoneSubtitle.textContent=phoneParagraphs[i] || '...';}
+}
 function answerPhone(){
-  if(!state.active||powerFailure.active||phoneState.status!=='ringing')return;
+  if(!state.active||state.paused||powerFailure.active||phoneState.status!=='ringing')return;
   if(state.nightElapsed>=phoneState.ringEndsAt){missPhone();return;}
   stopRingtone();
-  phoneState.status='talking';phoneState.dialogEndsAt=state.nightElapsed+16;
+  phoneState.status='talking';phoneState.subtitleIndex=-1;
+  phoneParagraphs=currentPhoneParagraphs();
+  phoneSubtitle.textContent=phoneParagraphs[0] || '...';
+  phoneState.subtitleIndex=0;
+  // Remove held inputs immediately: talking pauses power, AI and time.
+  clearHeldActions();
+  if(cameraOpen){
+    cameraOpen=false;cameraScreen.classList.remove('is-open');
+    cameraScreen.setAttribute('aria-hidden','true');cameraToggle.setAttribute('aria-expanded','false');
+  }
+  const epoch=phoneEpoch;
+  const voice=new Audio(soundURL('phone_'+String(currentNight).padStart(2,'0')));
+  phoneVoiceAudio=voice;voice.preload='auto';voice.loop=false;voice.volume=.88;voice.muted=soundMuted;
+  voice.onended=()=>{if(phoneEpoch===epoch && phoneVoiceAudio===voice)hangUpPhone();};
+  voice.onerror=()=>{if(phoneEpoch===epoch && phoneVoiceAudio===voice){
+    console.warn('Phone audio unavailable:',voice.src);hangUpPhone();
+  }};
+  voice.play().catch(err=>{if(phoneEpoch===epoch && phoneVoiceAudio===voice){
+    console.warn('Unable to play phone dialogue:',err);hangUpPhone();
+  }});
   updatePhoneUI();
-  playSfx('os_info',.25);
-  startAudioLoop('phone-line',.08);
 }
 function hangUpPhone(){
   if(phoneState.status!=='talking')return;
-  stopAudioLoop('phone-line');playSfx('hang-up',.24);
+  stopPhoneVoice();stopAudioLoop('phone-line');playSfx('hang-up',.24);
   phoneState.status='completed';updatePhoneUI();
 }
 function updatePhone(){
-  if(!state.active||powerFailure.active)return;
+  if(!state.active||powerFailure.active||currentNight>=6)return;
   if(phoneState.status==='idle'&&state.nightElapsed>=phoneState.nextRingAt)startRinging();
   if(phoneState.status==='ringing'&&state.nightElapsed>=phoneState.ringEndsAt)missPhone();
-  if(phoneState.status==='talking'&&state.nightElapsed>=phoneState.dialogEndsAt)hangUpPhone();
 }
-$('phoneHangup').addEventListener('click',hangUpPhone);
 updatePhoneUI();
 
 // The electrical failure is NOT instant defeat: the clock keeps running.
@@ -712,12 +763,12 @@ $('restartBtn').addEventListener('click',()=>{
 $('endingMenuBtn').addEventListener('click',goMenu);
 const pausedAudio=new Set();
 function pauseGameAudio(){
-  for(const a of [...audioLoops.values(),...activeOneShots,phoneRingAudio,powerFailure.audio].filter(Boolean)){
+  for(const a of [...audioLoops.values(),...activeOneShots,phoneRingAudio,phoneVoiceAudio,powerFailure.audio].filter(Boolean)){
     if(!a.paused){pausedAudio.add(a);a.pause();}
   }
 }
 function resumeGameAudio(){
-  for(const a of pausedAudio){if(a)a.play().catch(()=>{});}
+  for(const a of pausedAudio){if(a && state.active)a.play().catch(()=>{});}
   pausedAudio.clear();
 }
 function updatePauseButton(){
@@ -729,6 +780,7 @@ function togglePause(force){
   if(state.paused===next)return;
   state.paused=next;clearHeldActions();state.dragging=false;state.leftKey=false;state.rightKey=false;
   $('pauseScreen').classList.toggle('hidden',!next);
+  if(!next)$('settings').classList.add('hidden');
   if(next)pauseGameAudio();else resumeGameAudio();
 }
 $('pauseBtn').addEventListener('click',()=>togglePause());
@@ -738,7 +790,7 @@ $('pauseMenu').addEventListener('click',goMenu);
 resetEnemies();chooseCamera(1);preloadFutureCameras();
 
 canvas.addEventListener('pointerdown',e=>{
-  if(!state.active||state.paused||powerFailure.active||cameraOpen||!$('settings').classList.contains('hidden'))return;
+  if(!state.active||state.paused||phoneState.status==='talking'||powerFailure.active||cameraOpen||!$('settings').classList.contains('hidden'))return;
   const hit=findHit(e.clientX,e.clientY);
   if(hit){
     state.pressAction=hit;state.pressPointerId=e.pointerId;state.dragging=false;state.dragMoved=false;
@@ -751,7 +803,7 @@ canvas.addEventListener('pointerdown',e=>{
   if(e.pointerType==='touch'||e.pointerType==='pen'){try{canvas.setPointerCapture(e.pointerId)}catch(_){}}
 });
 canvas.addEventListener('pointermove',e=>{
-  if(!state.active||state.paused||powerFailure.active||cameraOpen||!$('settings').classList.contains('hidden'))return;
+  if(!state.active||state.paused||phoneState.status==='talking'||powerFailure.active||cameraOpen||!$('settings').classList.contains('hidden'))return;
   if(state.pressPointerId===e.pointerId&&state.pressAction&&state.pressAction.startsWith('light-')){
     const hit=findHit(e.clientX,e.clientY);
     if(state.pressAction==='light-left')setLight('left',hit==='light-left');
@@ -762,11 +814,11 @@ canvas.addEventListener('pointermove',e=>{
     if(state.dragMoved){const w=canvas.getBoundingClientRect().width;state.target=clamp(state.dragYaw-dx/Math.max(1,w*.45),-1,1);e.preventDefault();}
   } else if(e.pointerType==='mouse')viewFromMouse(e);
   const target=findHit(e.clientX,e.clientY);
-  canvas.style.cursor=target?'pointer':'none';
+  canvas.style.cursor='url("arrow.cur") 0 0, auto';
   $('hoverAction').textContent=target?(target.startsWith('light-')?`УДЕРЖИВАТЬ: ${labels[target]}`:`НАЖАТЬ: ${labels[target]}`):'Наведите взгляд на кнопки у дверей';
 });
 canvas.addEventListener('pointerup',e=>{
-  if(!state.active||state.paused||powerFailure.active)return;
+  if(!state.active||state.paused||phoneState.status==='talking'||powerFailure.active)return;
   if(state.pressPointerId===e.pointerId&&state.pressAction){
     const action=state.pressAction;
     if(action==='light-left')setLight('left',false);
@@ -780,19 +832,22 @@ canvas.addEventListener('pointerup',e=>{
   state.dragging=false;
 });
 canvas.addEventListener('pointercancel',()=>{clearHeldActions();state.dragging=false;});
-canvas.addEventListener('pointerleave',()=>{canvas.style.cursor='none';if(!state.dragging&&state.pressAction?.startsWith('light-'))clearHeldActions();});
+canvas.addEventListener('pointerleave',()=>{canvas.style.cursor='url("arrow.cur") 0 0, auto';if(!state.dragging&&state.pressAction?.startsWith('light-'))clearHeldActions();});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
   if(e.target instanceof HTMLInputElement)return;
+  if(state.paused && !$('settings').classList.contains('hidden') && e.key==='Escape'){
+    $('settings').classList.add('hidden');e.preventDefault();return;
+  }
   if(state.paused && (e.key==='Escape'||e.key.toLowerCase()==='p')){togglePause(false);e.preventDefault();return;}
-  if(e.key==='Escape' && phoneState.status==='talking'){hangUpPhone();e.preventDefault();return;}
   if(e.key==='Escape'){
     if(cameraOpen){setCameraOpen(false);e.preventDefault();return;}
     if(!$('settings').classList.contains('hidden')){$('settings').classList.add('hidden');return;}
     if(state.active){togglePause(true);e.preventDefault();return;}
   }
   if(e.key.toLowerCase()==='p'&&state.active&&!e.repeat){togglePause(true);e.preventDefault();return;}
-  if(!state.active||state.paused||powerFailure.active||!$('settings').classList.contains('hidden'))return;
+  if(e.key.toLowerCase()==='m'&&!e.repeat){toggleMute();e.preventDefault();return;}
+  if(!state.active||state.paused||phoneState.status==='talking'||powerFailure.active||!$('settings').classList.contains('hidden'))return;
   const key=e.key.toLowerCase();
   if((key==='c'||key===' ')&&!e.repeat){toggleCamera();e.preventDefault();return;}
   if(cameraOpen){
@@ -821,6 +876,9 @@ window.addEventListener('blur',()=>{state.leftKey=state.rightKey=state.dragging=
 function loop(timestamp){
   const dt=Math.min(.06,Math.max(0,(timestamp-state.last)/1000));state.last=timestamp;
   if(state.paused){draw();requestAnimationFrame(loop);return;}
+  if(state.active && phoneState.status==='talking'){
+    updatePhoneCaption();draw();requestAnimationFrame(loop);return;
+  }
   if(state.active&&!cameraOpen&&$('settings').classList.contains('hidden')){
     if(state.leftKey||state.rightKey){state.target=clamp(state.target+((state.rightKey?1:0)-(state.leftKey?1:0))*dt*1.22,-1,1);}
     const k=3.6+state.smooth*10;state.yaw+=(state.target-state.yaw)*(1-Math.exp(-k*dt));
@@ -881,7 +939,7 @@ function setSliders(){
     const slider=$(key);state[property]=Number(slider.value)/scale;$(key+'Text').textContent=slider.value+'%';
   }
 }
-function toggleSettings(){if(!state.active||state.paused)return;if(cameraOpen)setCameraOpen(false);clearHeldActions();$('settings').classList.toggle('hidden');}
+function toggleSettings(){if(!state.active)return;if(cameraOpen)setCameraOpen(false);clearHeldActions();$('settings').classList.toggle('hidden');}
 async function toggleFullscreen(){try{if(!document.fullscreenElement){await stage.requestFullscreen();try{await screen.orientation?.lock?.('landscape')}catch(_) {}}else await document.exitFullscreen();}catch(e){showToast('Полный экран недоступен');}}
 $('startBtn').addEventListener('click',()=>start(1));$('continueBtn').addEventListener('click',()=>start(unlockedNight));$('officeInput').addEventListener('keydown',e=>{if(e.key==='Enter')start(1);});
 $('settingsBtn').addEventListener('click',toggleSettings);
@@ -898,7 +956,8 @@ window.KokhinhinDebug={state,toggleDoor,setLight,findHit,imagePos,setView(v){sta
   setPower(value){state.power=clamp(value,0,100);updateOfficePower();},
   startPowerFailure, powerFailure, setNightElapsed(value){state.nightElapsed=clamp(value,0,NIGHT_LENGTH);updateClock();},
   finishNight:finishNight,triggerScreamer(id){if(state.active)finishNight(false,'Тестовый скример петуха C'+id+'.',Number(id));},
-  phoneState,forcePhoneRing(){if(state.active){resetPhone();startRinging();}},answerPhone,hangUpPhone,
+  phoneState,forcePhoneRing(){if(state.active && currentNight<=5){resetPhone();startRinging();}},answerPhone,hangUpPhone,
+  get phoneVoice(){return phoneVoiceAudio;}, get phoneSubtitle(){return phoneSubtitle.textContent;},
   toggleMute,togglePause,get currentNight(){return currentNight;},get unlockedNight(){return unlockedNight;},
   setLanguage:chooseLanguage,goMenu,updateSaveProgress};
 initCanvas();setSliders();updateStatus();loadImages();resize();requestAnimationFrame(loop);

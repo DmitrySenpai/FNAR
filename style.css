@@ -150,3 +150,32 @@ button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opac
 .ending-card .secondary-action{width:100%;margin-top:.75cqw}
 .settings-card label i{font-style:normal}
 @media (pointer:coarse){.pause-floating{width:5cqw;height:5cqw;font-size:2.5cqw}}
+
+/* v0.3.7: pixel-accurate user-supplied pointer for the entire game and its UI. */
+html, body, #app, #stage, #stage *, button, input {
+  cursor: url("arrow.cur") 0 0, auto !important;
+}
+/* Two centered language buttons on pure black, with Japanese kept on one line. */
+.initial-screen{background:#000!important;box-shadow:none!important}
+#languageScreen .language-buttons{display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:2cqw;margin:0;max-width:94%;width:52%;}
+#languageScreen .language-buttons .primary{flex:1 1 0;min-width:0;width:50%;font-size:2cqw;padding:1.3cqw 1.5cqw;white-space:nowrap;word-break:keep-all;line-height:1.2;}
+/* No border, vignette card, eyebrow or office artwork on the warning screen. */
+#warningScreen .initial-card{width:min(76%,700px);max-width:90%;padding:2cqw;background:transparent!important;border:0!important;box-shadow:none!important}
+#warningScreen .warning-card .primary{width:auto;min-width:46%;max-width:100%;white-space:nowrap}
+/* Pause is right-aligned; audio, fullscreen and view settings live INSIDE the pause menu. */
+.pause-floating{top:2%;right:2.4%;left:auto;transform:none;}
+.pause-utilities{display:flex;gap:1.2cqw;justify-content:center;align-items:center;margin:1.2cqw 0 .5cqw}
+.pause-utilities .icon-button{width:4cqw;height:4cqw;font-size:2cqw}
+/* The phone transcript overlays the lower center of the picture without a box. */
+.phone-dialog{z-index:19;position:absolute;top:auto;bottom:7.2%;left:50%;right:auto;transform:translateX(-50%);
+  width:min(84%,960px);min-height:0;padding:.7cqw 1.1cqw;background:transparent!important;
+  border:none!important;box-shadow:none!important;pointer-events:none;text-align:center}
+.phone-dialog-text{margin:0;color:#fff!important;font-size:clamp(13px,1.75cqw,30px);font-family:'Segoe UI',Arial,sans-serif;
+  font-weight:700;line-height:1.5;max-height:22cqw;overflow:hidden;overflow-wrap:anywhere;
+  text-shadow:2px 2px 3px #000,-2px -2px 3px #000,0 0 12px #000,0 0 22px #000;}
+@media (max-width:660px){#languageScreen .language-buttons{width:75%;gap:3cqw}.pause-utilities .icon-button{width:6cqw;height:6cqw;font-size:3cqw}.phone-dialog-text{font-size:2.35cqw}}
+/* Settings must be layered above the pause menu so its controls remain clickable. */
+#settings{z-index:28}
+/* Black canvas even outside the 16:9 stage on the two opening screens. */
+#app:has(#languageScreen:not(.hidden)), #app:has(#warningScreen:not(.hidden)){background:#000}
+#stage:has(#languageScreen:not(.hidden)), #stage:has(#warningScreen:not(.hidden)){box-shadow:none;background:#000}

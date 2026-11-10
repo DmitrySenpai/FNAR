@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#060809">
-  <title>Kokhinhin Office Night Shift — Rebuild v0.3.6</title>
+  <title>Kokhinhin Office Night Shift — Rebuild v0.3.7</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,9 +13,6 @@
   <div id="grain" aria-hidden="true"></div>
   <div id="vignette" aria-hidden="true"></div>
   <section id="hud" class="hidden" aria-label="Игровой интерфейс">
-    <div class="topbar">
-      <div class="utilities"><button type="button" id="muteBtn" class="icon-button" title="Выключить звук (M)" aria-label="Выключить звук">🔊</button><button type="button" id="settingsBtn" class="icon-button" title="Настройки (H)">⚙</button><button type="button" id="fullscreenBtn" class="icon-button" title="Полный экран (F)">⛶</button></div>
-    </div>
     <div class="bottom">
       <div class="status-zone"><div class="time" id="hudClock">12 AM</div><div class="office-energy" aria-label="Энергия офиса"><div><span data-i18n="power">Энергия:</span> <strong id="officePowerValue">100%</strong></div><div class="usage-meter office-usage"><span data-i18n="usage">Расход:</span><span id="officeUsageBars"><span class="bar on"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span></span></div></div></div>
       <div class="turn-info"><span id="directionLabel">ВЗГЛЯД ПО ЦЕНТРУ</span><div class="turn-track"><span id="turnPin"></span></div><span id="hoverAction">Наведите взгляд на кнопки у дверей</span></div>
@@ -63,13 +60,10 @@
     <span class="toggle-chevrons" aria-hidden="true"><i></i><i></i><i></i></span><span class="toggle-caption" data-i18n="cameras">КАМЕРЫ</span>
   </button>
   <section id="languageScreen" class="initial-screen" role="dialog" aria-modal="true" aria-label="Выберите язык">
-    <div class="initial-card"><p class="eyebrow">KOKHINHIN OFFICE</p>
-      <h2 data-i18n="chooseLanguage">ВЫБЕРИТЕ ЯЗЫК</h2>
-      <div class="language-buttons"><button type="button" id="languageRu" class="primary">Русский</button><button type="button" id="languageJa" class="primary">日本語</button></div>
-    </div>
+    <div class="language-buttons"><button type="button" id="languageRu" class="primary">Русский</button><button type="button" id="languageJa" class="primary">日本語</button></div>
   </section>
   <section id="warningScreen" class="initial-screen hidden" role="dialog" aria-modal="true" aria-label="Предупреждение">
-    <div class="initial-card warning-card"><p class="eyebrow">KOKHINHIN OFFICE · NOTICE</p>
+    <div class="initial-card warning-card">
       <h2 data-i18n="warningHeading">ПРЕДУПРЕЖДЕНИЕ</h2>
       <p data-i18n="warningBody">В игре присутствуют внезапные громкие звуки, скримеры и мигающие изображения.</p>
       <button type="button" id="warningAccept" class="primary" data-i18n="warningAccept">ПОНИМАЮ · ПРОДОЛЖИТЬ</button>
@@ -95,13 +89,16 @@
       <button type="button" id="pauseResume" class="primary" data-i18n="pauseResume">ВЕРНУТЬСЯ В ИГРУ</button>
       <button type="button" id="pauseRestart" class="secondary-action" data-i18n="pauseRestart">ПЕРЕЗАПУСТИТЬ НОЧЬ</button>
       <button type="button" id="pauseMenu" class="secondary-action" data-i18n="pauseMenu">В ГЛАВНОЕ МЕНЮ</button>
+      <div class="pause-utilities" role="group" aria-label="Дополнительные настройки">
+        <button type="button" id="muteBtn" class="icon-button" title="Звук (M)" aria-label="Звук">🔊</button>
+        <button type="button" id="settingsBtn" class="icon-button" title="Настройки (H)" aria-label="Настройки">⚙</button>
+        <button type="button" id="fullscreenBtn" class="icon-button" title="Полный экран (F)" aria-label="Полный экран">⛶</button>
+      </div>
       <small data-i18n="pauseHint">Esc или P — продолжить</small>
     </div>
   </section>
-  <section id="phoneDialog" class="phone-dialog hidden" role="dialog" aria-label="Телефонный разговор">
-    <div class="phone-dialog-heading" data-i18n="ringing">☎ ВХОДЯЩИЙ ЗВОНОК / ЛИНИЯ ОТКРЫТА</div>
-    <div class="phone-dialog-text">...</div>
-    <button type="button" id="phoneHangup" data-i18n="hangup">ПОЛОЖИТЬ ТРУБКУ</button>
+  <section id="phoneDialog" class="phone-dialog hidden" role="status" aria-live="off" aria-label="Текст телефонного разговора">
+    <div id="phoneSubtitle" class="phone-dialog-text">...</div>
   </section>
   <section id="blackout" class="blackout hidden" aria-label="Электричество отключено" aria-hidden="true"></section>
   <section id="deathStatic" class="death-static hidden" aria-hidden="true">
@@ -124,5 +121,6 @@
     </div>
   </section>
 </main></div>
+<script src="phone-dialogues.js"></script>
 <script src="app.js"></script>
 </body></html>
