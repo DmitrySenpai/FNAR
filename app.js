@@ -124,7 +124,7 @@ const L10N={
   camNames:['Северная','Коридор','Правый коридор','Ресепшен','Опен-спейс','Левый коридор','Левый выход','Кабинет директора','Правый выход'],
   leftLight:'Свет слева',rightLight:'Свет справа',leftDoorLabel:'Дверь слева',rightDoorLabel:'Дверь справа',phoneLabel:'Телефон на столе',
   openCamera:'Открыть камеры наблюдения',closeCamera:'Закрыть камеры наблюдения',
-  mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО'},
+  mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.'},
  ja:{chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langJa:'日本語',
   warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',skipConversation:'通話をスキップ',
   officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
@@ -141,7 +141,7 @@ const L10N={
   camNames:['北エリア','廊下','右の廊下','受付','オープンスペース','左の廊下','左の出口','社長室','右の出口'],
   leftLight:'左のライト',rightLight:'右のライト',leftDoorLabel:'左のドア',rightDoorLabel:'右のドア',phoneLabel:'机の電話',
   openCamera:'監視カメラを開く',closeCamera:'監視カメラを閉じる',
-  mute:'消音',unmute:'音声をオン',viewCenter:'正面',viewLeft:'左を見る',viewRight:'右を見る'}
+  mute:'消音',unmute:'音声をオン',viewCenter:'正面',viewLeft:'左を見る',viewRight:'右を見る',newspaperHeadline:'{office} が夜勤警備員を緊急募集',newspaperShift:'勤務時間: 00:00 から 06:00。',newspaperDuty:'業務内容: 夜間のオフィス監視。',newspaperPay:'給与: 週 250 ドル。'}
 };
 let gameLanguage='ru',currentNight=1,unlockedNight=Math.max(1,Math.min(7,Number(readSave('kokhinhin_unlocked'))||1));
 let sevenNightsComplete=readSave('kokhinhin_complete')==='1';
@@ -153,6 +153,46 @@ function updateSaveProgress(){writeSave('kokhinhin_unlocked',unlockedNight);writ
 function updateContinueButton(){
   const b=$('continueBtn');b.disabled=state.loaded!==names.length||unlockedNight<=1;
   b.textContent=t('continue',{night:unlockedNight});
+}
+const NEWSPAPER_SHOW_MS=5000,NEWSPAPER_FADE_MS=900;
+let newspaperStartTimer=null,newspaperHideTimer=null;
+function officeNameValue(){
+  return $('officeInput').value.trim().slice(0,44)||(gameLanguage==='ja'?'私のオフィス':'Мой офис');
+}
+function persistOfficeName(){
+  const office=officeNameValue();
+  $('officeInput').value=office;
+  writeSave('kokhinhin_office',office);safeStore('kons-new-office',office);
+  return office;
+}
+function clearNewspaperIntro(){
+  if(newspaperStartTimer!==null){clearTimeout(newspaperStartTimer);newspaperStartTimer=null;}
+  if(newspaperHideTimer!==null){clearTimeout(newspaperHideTimer);newspaperHideTimer=null;}
+  const scr=$('newspaperIntro');
+  scr.classList.add('hidden');
+  scr.classList.remove('is-visible','is-leaving');
+}
+function fillNewspaperIntro(){
+  const office=persistOfficeName();
+  $('newspaperHeadline').textContent=t('newspaperHeadline',{office});
+  $('newspaperShift').textContent=t('newspaperShift');
+  $('newspaperDuty').textContent=t('newspaperDuty');
+  $('newspaperPay').textContent=t('newspaperPay');
+}
+function showNewspaperIntro(night){
+  clearNewspaperIntro();
+  fillNewspaperIntro();
+  const scr=$('newspaperIntro');
+  $('welcome').classList.add('hidden');
+  syncMenuStatic();
+  scr.classList.remove('hidden');
+  requestAnimationFrame(()=>scr.classList.add('is-visible'));
+  newspaperStartTimer=setTimeout(()=>{
+    newspaperStartTimer=null;
+    start(night,{suppressIntro:true});
+    requestAnimationFrame(()=>scr.classList.add('is-leaving'));
+    newspaperHideTimer=setTimeout(()=>{clearNewspaperIntro();},NEWSPAPER_FADE_MS);
+  },NEWSPAPER_SHOW_MS);
 }
 function applyTranslations(){
   document.documentElement.lang=gameLanguage;
@@ -763,6 +803,7 @@ function finishNight(success,message,attackerId=0){
   if(success)blackout.classList.add('hidden');
   resetPhone();
   state.leftLight=false;state.rightLight=false;needsComposing=true;
+  $('pauseBtn').classList.add('hidden');
   cameraToggle.classList.add('hidden');
   stopAudioLoops();
   if(success){
@@ -898,6 +939,7 @@ cameraToggle.addEventListener('click',toggleCamera);
 cameraNodes.forEach(b=>b.addEventListener('click',()=>chooseCamera(Number(b.dataset.camera))));
 function goMenu(){
   clearVictorySequence();
+  clearNewspaperIntro();
   if(state.active){state.active=false;clearHeldActions();stopAudioLoops();stopRingtone();stopPowerFailureAudio();}
   for(const a of activeOneShots){a.pause();try{a.currentTime=0;}catch(_){}}activeOneShots.clear();
   state.paused=false;pausedAudio.clear();resetJumpscare();resetPowerFailure();resetPhone();
@@ -1067,12 +1109,12 @@ function loop(timestamp){
   $('directionLabel').textContent=t(state.yaw<-.23?'viewLeft':state.yaw>.23?'viewRight':'viewCenter');
   draw();requestAnimationFrame(loop);
 }
-function start(night=1){
+function start(night=1,options={}){
   if(state.loaded!==names.length)return;
+  if(options && options.intro){showNewspaperIntro(night);return;}
   clearVictorySequence();
   currentNight=clamp(Number(night)||1,1,7);state.night=currentNight;
-  const office=$('officeInput').value.trim().slice(0,44)||(gameLanguage==='ja'?'私のオフィス':'Мой офис');
-  writeSave('kokhinhin_office',office);safeStore('kons-new-office',office);
+  persistOfficeName();
   $('officeInput').blur();
   state.paused=false;resumeGameAudio();$('pauseScreen').classList.add('hidden');$('pauseBtn').classList.remove('hidden');
   $('settings').classList.add('hidden');$('cameraNightLabel').textContent=t('titleNight',{night:currentNight});
@@ -1094,7 +1136,7 @@ function setSliders(){
 }
 function toggleSettings(){if(!state.active)return;if(cameraOpen)setCameraOpen(false);clearHeldActions();$('settings').classList.toggle('hidden');}
 async function toggleFullscreen(){try{if(!document.fullscreenElement){await stage.requestFullscreen();try{await screen.orientation?.lock?.('landscape')}catch(_) {}}else await document.exitFullscreen();}catch(e){showToast('Полный экран недоступен');}}
-$('startBtn').addEventListener('click',()=>start(1));$('continueBtn').addEventListener('click',()=>start(unlockedNight));$('officeInput').addEventListener('keydown',e=>{if(e.key==='Enter')start(1);});
+$('startBtn').addEventListener('click',()=>start(1,{intro:true}));$('continueBtn').addEventListener('click',()=>start(unlockedNight));$('officeInput').addEventListener('keydown',e=>{if(e.key==='Enter')start(1,{intro:true});});
 $('settingsBtn').addEventListener('click',toggleSettings);
 $('closeSettings').addEventListener('click',toggleSettings);$('closeSettingsPrimary').addEventListener('click',toggleSettings);
 $('fullscreenBtn').addEventListener('click',toggleFullscreen);

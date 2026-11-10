@@ -241,3 +241,26 @@ html, body, #app, #stage, #stage *, button, input {
  .victory-screen.is-playing .victory-clock{animation:victory-clock-fade .85s .48s both}
  .victory-screen.is-playing .victory-reel{animation:victory-hour-roll 4s 1.2s linear both}
 }
+
+/* v0.4.2 — refined end screen layout and newspaper intro sequence. */
+#ending{place-items:center}
+.ending-card{width:min(74%,840px);max-width:92%;padding:clamp(20px,2.8cqw,52px) clamp(18px,3.6cqw,56px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,1cqw,18px);text-align:center}
+.ending-card .eyebrow{width:100%;text-align:center;margin:0 auto;font-size:clamp(12px,1.05cqw,18px)}
+.ending-card h2{width:100%;margin:0 auto;font-size:clamp(38px,6.2cqw,96px);line-height:.95;letter-spacing:.05em;text-align:center;text-wrap:balance;overflow-wrap:anywhere}
+.ending-card p:not(.eyebrow){font-size:clamp(14px,1.35cqw,24px);max-width:92%;margin:0 auto 1.2cqw;line-height:1.5;text-align:center}
+.ending-card .primary,.ending-card .secondary-action{max-width:min(100%,520px)}
+
+.newspaper-screen{position:absolute;inset:0;z-index:27;display:grid;place-items:center;background:#000;opacity:0;pointer-events:none;transition:opacity .9s ease;isolation:isolate}
+.newspaper-screen.is-visible{opacity:1;pointer-events:auto}
+.newspaper-screen.is-leaving{opacity:0}
+.newspaper-paper{width:min(82%,960px);max-width:92%;padding:clamp(22px,3.1cqw,60px);background:#e8dcc2;color:#111;box-shadow:0 0 0 1px rgba(0,0,0,.55),0 1.2cqw 4cqw rgba(0,0,0,.45);text-align:center;font-family:Georgia,'Times New Roman',serif}
+.newspaper-kicker{margin:0 0 .9em;font-size:clamp(12px,1cqw,18px);letter-spacing:.35em;font-weight:700;color:#5d513e}
+.newspaper-paper h2{margin:0 auto .6em;max-width:90%;font-size:clamp(28px,3.8cqw,58px);line-height:1.08;letter-spacing:.01em;color:#111;text-wrap:balance}
+.newspaper-rule{height:1px;background:#41382c;opacity:.55;margin:0 auto 1.2em;width:92%}
+.newspaper-paper p{margin:.52em auto;max-width:86%;font-size:clamp(16px,1.6cqw,28px);line-height:1.45;color:#1a1713}
+@media (max-width:660px){
+  .ending-card h2{font-size:clamp(30px,8.3cqw,64px)}
+  .newspaper-paper{width:92%;padding:24px 18px}
+  .newspaper-paper h2{font-size:clamp(24px,6.2cqw,38px)}
+  .newspaper-paper p{max-width:94%;font-size:clamp(15px,3.1cqw,22px)}
+}
