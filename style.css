@@ -196,3 +196,17 @@ html, body, #app, #stage, #stage *, button, input {
 .phone-skip{position:absolute;z-index:25;right:2.4%;top:8%;max-width:28%;padding:.65cqw 1.05cqw;border:1px solid #cba679;background:#111111ed;color:#f5dfbf;letter-spacing:.05em;font-size:clamp(11px,1.15cqw,19px);font-weight:750;pointer-events:auto}
 .phone-skip:hover,.phone-skip:focus-visible{background:#3b3024;border-color:#f7d0a0}
 @media(max-width:660px){#warningScreen .warning-card p{width:94%;font-size:clamp(13px,2.7cqw,20px)!important}.preload-center{width:86%}.phone-skip{top:10%;max-width:44%;font-size:clamp(10px,2cqw,14px)}}
+
+/* v0.3.9 — supplied rooster art in the main menu with gentle analogue CCTV static. */
+#welcome .welcome-backdrop{
+ background-image:linear-gradient(90deg,rgba(0,0,0,.74) 0%,rgba(0,0,0,.50) 30%,rgba(0,0,0,.07) 56%,rgba(0,0,0,0) 100%),url('assets/menu/rooster_menu.webp');
+ background-position:center center;background-size:cover;background-repeat:no-repeat;
+}
+#welcome .welcome-static{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;opacity:.14;mix-blend-mode:screen;filter:grayscale(1) contrast(1.25);pointer-events:none}
+#welcome .welcome-interference{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.22;
+ background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(1,1,1,.65) 3px 4px),
+ repeating-linear-gradient(90deg,transparent 0 5px,rgba(255,255,255,.035) 6px 7px);
+ animation:menu-signal-flicker 4.3s steps(3,end) infinite}
+#welcome .welcome-card{z-index:3;text-shadow:0 2px 9px rgba(0,0,0,.9)}
+@keyframes menu-signal-flicker{0%,93%,100%{opacity:.20}94%{opacity:.32}96%{opacity:.16}97%{opacity:.28}}
+@media(prefers-reduced-motion:reduce){#welcome .welcome-interference{animation:none}}

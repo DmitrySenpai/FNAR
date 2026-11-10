@@ -31,11 +31,11 @@ async function preloadAllGameAssets(){
     ...PRELOAD_CAMERA_NAMES.map(n=>'assets/cameras/'+n),
     ...PRELOAD_SOUND_NAMES.map(n=>'assets/sound/'+n+'.mp3'),
     ...[1,2,3,4].map(n=>'assets/screamers/rooster_'+n+'_scream.webm'),
-    'assets/sound/static-bm.webm'];
+    'assets/sound/static-bm.webm', 'assets/menu/rooster_menu.webp'];
   let done=0;preloadProgress(done,paths.length);
   // file:// cannot use CacheStorage/fetch; standalone files embed their game art and audio.
   if(location.protocol==='file:'){
-    staticVideo.src=staticVideoURL();loadImages();preloadBusy=false;return;
+    staticVideo.src=staticVideoURL();setMenuBackdrop();loadImages();preloadBusy=false;return;
   }
   let cache=null;
   try{if('caches' in window)cache=await caches.open(PRELOAD_CACHE_NAME);}catch(e){console.warn('Persistent cache unavailable',e);}
@@ -65,9 +65,20 @@ async function preloadAllGameAssets(){
     $('preloadRetry').classList.remove('hidden');return;
   }
   staticVideo.src=staticVideoURL();
+  setMenuBackdrop();
   loadImages();
 }
 $('preloadRetry').addEventListener('click',preloadAllGameAssets);
+function setMenuBackdrop(){
+  const url=getCachedAssetURL('assets/menu/rooster_menu.webp');
+  $('menuBackdrop').style.backgroundImage='linear-gradient(90deg,rgba(0,0,0,.74) 0%,rgba(0,0,0,.50) 30%,rgba(0,0,0,.07) 56%,rgba(0,0,0,0) 100%),url("'+url+'")';
+}
+function syncMenuStatic(){
+  const el=$('menuStaticVideo');
+  if($('welcome').classList.contains('hidden')){el.pause();return;}
+  el.muted=true;el.loop=true;
+  el.play().catch(()=>{}); // muted autoplay may still be limited by browser settings
+}
 
 const rects = {
   'light-left':  [48,361,145,468], 'door-left':  [48,448,145,552],
@@ -98,7 +109,7 @@ function writeSave(key,value){
 }
 const L10N={
  ru:{chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langJa:'日本語',
-  warningHeading:'ПРЕДУПРЕЖДЕНИЕ',warningBody:'В игре присутствуют внезапные громкие звуки, скримеры, мигающие изображения и напряжённые сцены. Рекомендуется умеренная громкость.',warningAccept:'ПОНИМАЮ · ПРОДОЛЖИТЬ',preloadTitle:'ПОДГОТОВКА ИГРЫ',preloadStatus:'Загрузка ресурсов: {n} / {total} ({percent}%)',preloadRetry:'ПОВТОРИТЬ ЗАГРУЗКУ',preloadError:'Не удалось загрузить ресурсы. Проверьте интернет и повторите попытку.',skipPhone:'ПРОПУСТИТЬ ЗВОНОК',
+  warningHeading:'ПРЕДУПРЕЖДЕНИЕ',warningBody:'В игре присутствуют внезапные громкие звуки, скримеры, мигающие изображения и напряжённые сцены. Рекомендуется умеренная громкость.',warningAccept:'ПОНИМАЮ · ПРОДОЛЖИТЬ',preloadTitle:'ПОДГОТОВКА ИГРЫ',preloadStatus:'Загрузка ресурсов: {n} / {total} ({percent}%)',preloadRetry:'ПОВТОРИТЬ ЗАГРУЗКУ',preloadError:'Не удалось загрузить ресурсы. Проверьте интернет и повторите попытку.',skipPhone:'ПРОПУСТИТЬ ЗВОНОК',skipConversation:'ПРОПУСТИТЬ РАЗГОВОР',
   menuDesc:'Выживите до 6:00. Четыре петуха патрулируют девять камер. Следите за дверями, светом и расходом электричества.',officeLabel:'НАЗВАНИЕ ОФИСА',officePlaceholder:'Мой офис',start:'НОВАЯ ИГРА · НОЧЬ 1',continue:'ПРОДОЛЖИТЬ · НОЧЬ {night}',loading:'Загрузка {n} / {total}',
   titleNight:'Ночь {night}',pause:'ПАУЗА',pauseTitle:'ПАУЗА',pauseResume:'ВЕРНУТЬСЯ В ИГРУ',pauseRestart:'ПЕРЕЗАПУСТИТЬ НОЧЬ',pauseMenu:'В ГЛАВНОЕ МЕНЮ',pauseHint:'Esc или P — продолжить',
   winTitle:'6:00 AM',winText:'Вы пережили ночь {night}! До рассвета петухи не смогли попасть в комнату охраны.',
@@ -115,7 +126,7 @@ const L10N={
   openCamera:'Открыть камеры наблюдения',closeCamera:'Закрыть камеры наблюдения',
   mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО'},
  ja:{chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langJa:'日本語',
-  warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',
+  warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',skipConversation:'通話をスキップ',
   menuDesc:'午前6時まで生き残ろう。4羽のニワトリが9台のカメラの間を巡回します。ドアとライト、残り電力に注意してください。',officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
   titleNight:'第{night}夜',pause:'一時停止',pauseTitle:'一時停止',pauseResume:'ゲームを再開',pauseRestart:'この夜をやり直す',pauseMenu:'メインメニューへ',pauseHint:'Esc または P で再開',
   winTitle:'午前6:00',winText:'第{night}夜を生き延びました！ 夜明けまでニワトリの侵入を阻止しました。',
@@ -155,6 +166,7 @@ function applyTranslations(){
   if(typeof updateStatus==='function')updateStatus();
   if(typeof chooseCamera==='function')chooseCamera(currentCamera);
   if(typeof updatePauseButton==='function')updatePauseButton();
+  if(typeof updatePhoneUI==='function')updatePhoneUI();
 }
 function chooseLanguage(lang){
   gameLanguage=lang==='ja'?'ja':'ru';writeSave('kokhinhin_lang',gameLanguage);
@@ -269,7 +281,7 @@ function loadImages(){
         composite();$('startBtn').disabled=false;$('startBtn').textContent=t('start');
         $('loadingStatus').textContent='';updateContinueButton();
         window.__KONS_VIEW_READY=true;
-        $('preloadScreen').classList.add('hidden');$('welcome').classList.remove('hidden');
+        $('preloadScreen').classList.add('hidden');$('welcome').classList.remove('hidden');syncMenuStatic();
       }
     };
     img.onerror=()=>{$('loadingStatus').textContent=`Ошибка загрузки ${name}. Проверьте папку assets/room.`;console.error('Image load failed',src(name));};
@@ -553,7 +565,11 @@ let phoneEpoch=0;
 let phoneParagraphs=[];
 function updatePhoneUI(){
   phoneDialog.classList.toggle('hidden',phoneState.status!=='talking');
-  const skip=$('skipPhoneBtn');skip.classList.toggle('hidden',phoneState.status!=='ringing');skip.disabled=phoneState.status!=='ringing';
+  const skip=$('skipPhoneBtn');
+  const canSkip=phoneState.status==='ringing'||phoneState.status==='talking';
+  skip.classList.toggle('hidden',!canSkip);skip.disabled=!canSkip;
+  skip.textContent=t(phoneState.status==='talking'?'skipConversation':'skipPhone');
+  skip.setAttribute('aria-label',skip.textContent);
   needsComposing=true;
 }
 function stopRingtone(){
@@ -574,7 +590,7 @@ function resetPhone(){
   phoneParagraphs=[];phoneSubtitle.textContent='';
   updatePhoneUI();
 }
-$('skipPhoneBtn').addEventListener('click',()=>{if(phoneState.status==='ringing')missPhone();});
+$('skipPhoneBtn').addEventListener('click',()=>{if(phoneState.status==='ringing')missPhone();else if(phoneState.status==='talking')hangUpPhone();});
 function missPhone(){
   if(phoneState.status!=='ringing')return;
   stopRingtone();phoneState.status='missed';updatePhoneUI();
@@ -816,7 +832,7 @@ function goMenu(){
   $('pauseScreen').classList.add('hidden');$('ending').classList.add('hidden');
   if(cameraOpen){cameraOpen=false;cameraScreen.classList.remove('is-open');cameraScreen.setAttribute('aria-hidden','true');cameraToggle.setAttribute('aria-expanded','false');}
   cameraToggle.classList.add('hidden');$('hud').classList.add('hidden');
-  $('welcome').classList.remove('hidden');updateContinueButton();
+  $('welcome').classList.remove('hidden');updateContinueButton();syncMenuStatic();
   $('pauseBtn').classList.add('hidden');
 }
 $('restartBtn').addEventListener('click',()=>{
@@ -989,7 +1005,7 @@ function start(night=1){
   resetJumpscare();resetPowerFailure();resetPhone();stopAudioLoops();
   state.started=state.active=true;state.gameOver=false;
   startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);
-  $('welcome').classList.add('hidden');$('hud').classList.remove('hidden');$('ending').classList.add('hidden');cameraToggle.classList.remove('hidden');
+  $('welcome').classList.add('hidden');syncMenuStatic();$('hud').classList.remove('hidden');$('ending').classList.add('hidden');cameraToggle.classList.remove('hidden');
   state.target=state.yaw=0;state.power=100;state.nightElapsed=0;
   state.leftDoor=state.rightDoor=state.leftLight=state.rightLight=false;
   state.leftDoorPos=state.rightDoorPos=0;
@@ -1011,6 +1027,30 @@ $('fullscreenBtn').addEventListener('click',toggleFullscreen);
 for(const s of ['turnAmount','fishAmount','smoothAmount'])$(s).addEventListener('input',setSliders);
 window.addEventListener('resize',resize);document.addEventListener('fullscreenchange',resize);
 if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);
+// In-browser testing helpers: 12 AM..6 AM, without advancing the real wall clock.
+function debugFinishDay(){
+  if(!state.active){console.warn('Start a night before using finishDay()');return false;}
+  state.paused=false;$('pauseScreen').classList.add('hidden');$('settings').classList.add('hidden');
+  pausedAudio.clear();state.nightElapsed=NIGHT_LENGTH;
+  updateClock();finishNight(true,t('winText',{night:currentNight}));
+  return true;
+}
+function debugSetTime(hourOrText,minutes=0){
+  if(!state.active){console.warn('Start a night before using setTime()');return false;}
+  let hour=hourOrText;
+  if(typeof hourOrText==='string'){
+    const m=hourOrText.trim().match(/^(12|[0-6])(?::([0-5]\d))?(?:\s*AM)?$/i);
+    if(!m)throw new RangeError('Use setTime(5,30) or setTime("5:30 AM") between 12 AM and 6 AM');
+    hour=Number(m[1]);minutes=m[2]===undefined?0:Number(m[2]);
+  }
+  if(!Number.isInteger(hour)||!Number.isInteger(minutes)||hour<0||hour>12||minutes<0||minutes>59 || (hour>6&&hour!==12) || (hour===6&&minutes!==0))
+    throw new RangeError('Valid game time is 12:00 AM or 1:00 AM through 6:00 AM');
+  const elapsed=(hour===12?0:hour)*60+minutes;
+  if(elapsed===NIGHT_LENGTH)return debugFinishDay();
+  state.nightElapsed=elapsed;updateClock();updateOfficePower();
+  console.info('Game time set to',hour===0||hour===12?'12:'+String(minutes).padStart(2,'0')+' AM':String(hour)+':'+String(minutes).padStart(2,'0')+' AM');
+  return state.nightElapsed;
+}
 window.KokhinhinDebug={state,toggleDoor,setLight,findHit,imagePos,setView(v){state.target=state.yaw=clamp(v,-1,1);},get frames(){return state.frames;},get assets(){return state.loaded;},toggleCamera,setCameraOpen,chooseCamera,get currentCamera(){return currentCamera;},get cameraOpen(){return cameraOpen;},
   enemies:ENEMIES,resetEnemies,
   setEnemyStep(id,step){const e=ENEMIES.find(e=>e.id===id);if(!e)return;
@@ -1018,7 +1058,7 @@ window.KokhinhinDebug={state,toggleDoor,setLight,findHit,imagePos,setView(v){sta
     e.attack=0;e.blocked=0;e.knocks=0;e.nextMove=5;needsComposing=true;updateCameraScene();},
   setPower(value){state.power=clamp(value,0,100);updateOfficePower();},
   startPowerFailure, powerFailure, setNightElapsed(value){state.nightElapsed=clamp(value,0,NIGHT_LENGTH);updateClock();},
-  finishNight:finishNight,triggerScreamer(id){if(state.active)finishNight(false,'Тестовый скример петуха C'+id+'.',Number(id));},
+  finishNight:finishNight,setTime:debugSetTime,finishDay:debugFinishDay,winNight:debugFinishDay,triggerScreamer(id){if(state.active)finishNight(false,'Тестовый скример петуха C'+id+'.',Number(id));},
   phoneState,forcePhoneRing(){if(state.active && currentNight<=5){resetPhone();startRinging();}},answerPhone,hangUpPhone,
   get phoneVoice(){return phoneVoiceAudio;}, get phoneSubtitle(){return phoneSubtitle.textContent;},
   toggleMute,togglePause,get currentNight(){return currentNight;},get unlockedNight(){return unlockedNight;},
