@@ -8,7 +8,67 @@ const names = [
   'door_left.png','door_right.png','bt_door_left.png','bt_door_right.png','bt_light_left.png','bt_light_right.png',
   'left_c1.png','left_c4.png','right_c2.png','right_c3.png'
 ];
-const src = f => window.KONS_EMBEDDED_ASSETS?.[f] || 'assets/room/'+f;
+const src = f => window.KONS_EMBEDDED_ASSETS?.[f] || getCachedAssetURL('assets/room/'+f);
+// Preload before the first night so all effects and camera frames are local when played.
+const PRELOAD_CACHE_NAME='fnar-game-assets-v038';
+const cachedAssetURLs=new Map();
+function getCachedAssetURL(path){return cachedAssetURLs.get(path)||path;}
+const PRELOAD_SOUND_NAMES=["ambience","ambient_room","beep","blip","chimes","door","hang-up","knock-2","knock-3","knock","light","open-camera","os_balloon","os_info","os_shutdown","os_startup","os_usb_connect","os_usb_remove","phone-line","phone","phone_01","phone_02","phone_03","phone_04","phone_05","power-outage","running-fast","running","scream","static-bm"];
+const PRELOAD_CAMERA_NAMES=["cam01.webp","cam01_c2.webp","cam02.webp","cam02_c4.webp","cam03.webp","cam03_c2.webp","cam03_c2_c3.webp","cam03_c3.webp","cam04.webp","cam04_c1.webp","cam04_c1_c4.webp","cam04_c4.webp","cam05.webp","cam05_c1.webp","cam05_c4.webp","cam05_c4_c1.webp","cam06.webp","cam06_c1.webp","cam06_c1_c4.webp","cam06_c4.webp","cam07.webp","cam07_c1.webp","cam07_c1_c4.webp","cam07_c4.webp","cam08.webp","cam08_c2.webp","cam08_c2_c3.webp","cam08_c3.webp","cam09.webp","cam09_c2.webp","cam09_c2_c3.webp","cam09_c3.webp"];
+let preloadBusy=false;
+function preloadProgress(completed,total){
+  const percentage=total?Math.floor(completed*100/total):100;
+  $('preloadProgressFill').style.width=percentage+'%';
+  $('preloadProgress').setAttribute('aria-valuenow',String(percentage));
+  $('preloadStatus').textContent=t('preloadStatus',{n:completed,total,percent:percentage});
+}
+async function preloadAllGameAssets(){
+  if(preloadBusy || window.__KONS_VIEW_READY)return;
+  preloadBusy=true;
+  $('preloadRetry').classList.add('hidden');
+  $('preloadScreen').classList.remove('hidden');
+  const paths=[...names.map(n=>'assets/room/'+n),
+    ...PRELOAD_CAMERA_NAMES.map(n=>'assets/cameras/'+n),
+    ...PRELOAD_SOUND_NAMES.map(n=>'assets/sound/'+n+'.mp3'),
+    ...[1,2,3,4].map(n=>'assets/screamers/rooster_'+n+'_scream.webm'),
+    'assets/sound/static-bm.webm'];
+  let done=0;preloadProgress(done,paths.length);
+  // file:// cannot use CacheStorage/fetch; standalone files embed their game art and audio.
+  if(location.protocol==='file:'){
+    staticVideo.src=staticVideoURL();loadImages();preloadBusy=false;return;
+  }
+  let cache=null;
+  try{if('caches' in window)cache=await caches.open(PRELOAD_CACHE_NAME);}catch(e){console.warn('Persistent cache unavailable',e);}
+  let next=0;const failed=[];
+  async function worker(){
+    while(next<paths.length){
+      const path=paths[next++];
+      try{
+        if(!cachedAssetURLs.has(path)){
+          let response=cache?await cache.match(path):null;
+          if(!response){
+            response=await fetch(path,{cache:'no-cache'});
+            if(!response.ok)throw Error('HTTP '+response.status+' '+path);
+            if(cache)try{await cache.put(path,response.clone());}catch(e){console.warn('Unable to persist cache entry',path,e);}
+          }
+          const blob=await response.blob();
+          cachedAssetURLs.set(path,URL.createObjectURL(blob));
+        }
+      }catch(e){failed.push(path);console.warn('Asset preload failed',path,e);}
+      done++;preloadProgress(done,paths.length);
+    }
+  }
+  await Promise.all(Array.from({length:5},worker));
+  preloadBusy=false;
+  if(failed.length){
+    $('preloadStatus').textContent=t('preloadError')+' ('+failed.length+')';
+    $('preloadRetry').classList.remove('hidden');return;
+  }
+  staticVideo.src=staticVideoURL();
+  loadImages();
+}
+$('preloadRetry').addEventListener('click',preloadAllGameAssets);
+
 const rects = {
   'light-left':  [48,361,145,468], 'door-left':  [48,448,145,552],
   'light-right': [1550,360,1647,466], 'door-right': [1550,444,1647,551],
@@ -38,7 +98,7 @@ function writeSave(key,value){
 }
 const L10N={
  ru:{chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langJa:'日本語',
-  warningHeading:'ПРЕДУПРЕЖДЕНИЕ',warningBody:'В игре присутствуют внезапные громкие звуки, скримеры, мигающие изображения и напряжённые сцены. Рекомендуется умеренная громкость.',warningAccept:'ПОНИМАЮ · ПРОДОЛЖИТЬ',
+  warningHeading:'ПРЕДУПРЕЖДЕНИЕ',warningBody:'В игре присутствуют внезапные громкие звуки, скримеры, мигающие изображения и напряжённые сцены. Рекомендуется умеренная громкость.',warningAccept:'ПОНИМАЮ · ПРОДОЛЖИТЬ',preloadTitle:'ПОДГОТОВКА ИГРЫ',preloadStatus:'Загрузка ресурсов: {n} / {total} ({percent}%)',preloadRetry:'ПОВТОРИТЬ ЗАГРУЗКУ',preloadError:'Не удалось загрузить ресурсы. Проверьте интернет и повторите попытку.',skipPhone:'ПРОПУСТИТЬ ЗВОНОК',
   menuDesc:'Выживите до 6:00. Четыре петуха патрулируют девять камер. Следите за дверями, светом и расходом электричества.',officeLabel:'НАЗВАНИЕ ОФИСА',officePlaceholder:'Мой офис',start:'НОВАЯ ИГРА · НОЧЬ 1',continue:'ПРОДОЛЖИТЬ · НОЧЬ {night}',loading:'Загрузка {n} / {total}',
   titleNight:'Ночь {night}',pause:'ПАУЗА',pauseTitle:'ПАУЗА',pauseResume:'ВЕРНУТЬСЯ В ИГРУ',pauseRestart:'ПЕРЕЗАПУСТИТЬ НОЧЬ',pauseMenu:'В ГЛАВНОЕ МЕНЮ',pauseHint:'Esc или P — продолжить',
   winTitle:'6:00 AM',winText:'Вы пережили ночь {night}! До рассвета петухи не смогли попасть в комнату охраны.',
@@ -55,7 +115,7 @@ const L10N={
   openCamera:'Открыть камеры наблюдения',closeCamera:'Закрыть камеры наблюдения',
   mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО'},
  ja:{chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langJa:'日本語',
-  warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',
+  warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',
   menuDesc:'午前6時まで生き残ろう。4羽のニワトリが9台のカメラの間を巡回します。ドアとライト、残り電力に注意してください。',officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
   titleNight:'第{night}夜',pause:'一時停止',pauseTitle:'一時停止',pauseResume:'ゲームを再開',pauseRestart:'この夜をやり直す',pauseMenu:'メインメニューへ',pauseHint:'Esc または P で再開',
   winTitle:'午前6:00',winText:'第{night}夜を生き延びました！ 夜明けまでニワトリの侵入を阻止しました。',
@@ -102,16 +162,16 @@ function chooseLanguage(lang){
 }
 $('languageRu').addEventListener('click',()=>chooseLanguage('ru'));
 $('languageJa').addEventListener('click',()=>chooseLanguage('ja'));
-$('warningAccept').addEventListener('click',()=>{$('warningScreen').classList.add('hidden');$('welcome').classList.remove('hidden');updateContinueButton();});
+$('warningAccept').addEventListener('click',()=>{$('warningScreen').classList.add('hidden');$('preloadScreen').classList.remove('hidden');preloadAllGameAssets();});
 
 // Audio: original supplied MP3 effects, all optional if browser audio is blocked.
 const SOUND_PATH='assets/sound/';
 const soundURL=name=>window.KONS_EMBEDDED_SOUNDS?.[name] ||
   ((window.KONS_STANDALONE || location.protocol==='file:') && /^phone_\d\d$/.test(name)
     ? 'https://dmitrysenpai.github.io/FNAR/assets/sound/'+name+'.mp3'
-    : SOUND_PATH+name+'.mp3');
-const screamerURL=id=>window.KONS_EMBEDDED_SCREAMERS?.[id]||'assets/screamers/rooster_'+id+'_scream.webm';
-const staticVideoURL=()=>window.KONS_EMBEDDED_STATIC_VIDEO||'assets/sound/static-bm.webm';
+    : getCachedAssetURL(SOUND_PATH+name+'.mp3'));
+const screamerURL=id=>window.KONS_EMBEDDED_SCREAMERS?.[id]||getCachedAssetURL('assets/screamers/rooster_'+id+'_scream.webm');
+const staticVideoURL=()=>window.KONS_EMBEDDED_STATIC_VIDEO||getCachedAssetURL('assets/sound/static-bm.webm');
 const audioLoops=new Map();
 let soundMuted=safeRead('kons-muted')==='1';
 let phoneRingAudio=null,phoneVoiceAudio=null,deathStaticAudio=null;
@@ -147,7 +207,7 @@ $('muteBtn').addEventListener('click',toggleMute);updateMuteUI();
 const jumpOverlay=$('jumpscare'),jumpVideo=$('jumpscareVideo');
 let jumpTimer=0,jumpEpoch=0;
 const deathStatic=$('deathStatic'),staticVideo=$('staticVideo');
-staticVideo.src=staticVideoURL();staticVideo.muted=true;staticVideo.loop=true;
+staticVideo.muted=true;staticVideo.loop=true;
 function clearDeathStaticAudio(){
   if(deathStaticAudio){deathStaticAudio.pause();deathStaticAudio.currentTime=0;deathStaticAudio=null;}
 }
@@ -209,6 +269,7 @@ function loadImages(){
         composite();$('startBtn').disabled=false;$('startBtn').textContent=t('start');
         $('loadingStatus').textContent='';updateContinueButton();
         window.__KONS_VIEW_READY=true;
+        $('preloadScreen').classList.add('hidden');$('welcome').classList.remove('hidden');
       }
     };
     img.onerror=()=>{$('loadingStatus').textContent=`Ошибка загрузки ${name}. Проверьте папку assets/room.`;console.error('Image load failed',src(name));};
@@ -403,7 +464,7 @@ function resetEnemies(){
     e.attack=0;e.blocked=0;e.knocks=0;e.cycles=0;e.retreatTo=0;
   });
 }
-function cameraImageURL(file){return window.KONS_EMBEDDED_CAMERAS?.[file] || 'assets/cameras/'+file;}
+function cameraImageURL(file){return window.KONS_EMBEDDED_CAMERAS?.[file] || getCachedAssetURL('assets/cameras/'+file);}
 function cameraFile(){
   const code='cam'+String(currentCamera).padStart(2,'0');
   const current=ENEMIES.filter(e=>e.phase!=='dormant' && e.step<e.route.length && e.route[e.step]===currentCamera)
@@ -492,6 +553,7 @@ let phoneEpoch=0;
 let phoneParagraphs=[];
 function updatePhoneUI(){
   phoneDialog.classList.toggle('hidden',phoneState.status!=='talking');
+  const skip=$('skipPhoneBtn');skip.classList.toggle('hidden',phoneState.status!=='ringing');skip.disabled=phoneState.status!=='ringing';
   needsComposing=true;
 }
 function stopRingtone(){
@@ -512,6 +574,7 @@ function resetPhone(){
   phoneParagraphs=[];phoneSubtitle.textContent='';
   updatePhoneUI();
 }
+$('skipPhoneBtn').addEventListener('click',()=>{if(phoneState.status==='ringing')missPhone();});
 function missPhone(){
   if(phoneState.status!=='ringing')return;
   stopRingtone();phoneState.status='missed';updatePhoneUI();
@@ -960,5 +1023,5 @@ window.KokhinhinDebug={state,toggleDoor,setLight,findHit,imagePos,setView(v){sta
   get phoneVoice(){return phoneVoiceAudio;}, get phoneSubtitle(){return phoneSubtitle.textContent;},
   toggleMute,togglePause,get currentNight(){return currentNight;},get unlockedNight(){return unlockedNight;},
   setLanguage:chooseLanguage,goMenu,updateSaveProgress};
-initCanvas();setSliders();updateStatus();loadImages();resize();requestAnimationFrame(loop);
+initCanvas();setSliders();updateStatus();resize();requestAnimationFrame(loop);
 })();

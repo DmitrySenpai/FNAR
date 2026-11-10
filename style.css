@@ -179,3 +179,20 @@ html, body, #app, #stage, #stage *, button, input {
 /* Black canvas even outside the 16:9 stage on the two opening screens. */
 #app:has(#languageScreen:not(.hidden)), #app:has(#warningScreen:not(.hidden)){background:#000}
 #stage:has(#languageScreen:not(.hidden)), #stage:has(#warningScreen:not(.hidden)){box-shadow:none;background:#000}
+
+/* v0.3.8: centered disclaimer, clickable skip call, and asset preloading screen. */
+#warningScreen{display:grid;place-items:center;background:#000!important}
+#warningScreen .warning-card{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:none;box-sizing:border-box;padding:2.5cqw 4cqw;text-align:center}
+#warningScreen .warning-card h2{display:block;width:100%;margin:0 auto 3cqw;text-align:center!important;letter-spacing:.035em;line-height:1.15;font-size:clamp(22px,4.5cqw,74px)}
+#warningScreen .warning-card p{width:min(76%,650px);max-width:100%;margin:0 auto!important;text-align:center!important;font-size:clamp(14px,2.1cqw,36px)!important;line-height:1.55!important}
+#warningScreen .warning-card .primary{margin:3.2cqw auto 0!important;width:auto;min-width:0;max-width:95%;padding:1.1cqw 2.1cqw;font-size:clamp(12px,1.7cqw,28px)}
+#preloadScreen{z-index:31;background:#000!important}
+.preload-center{width:min(64%,630px);display:flex;flex-direction:column;align-items:center;gap:2.2cqw;text-align:center}
+.preload-center h2{font-size:clamp(20px,3cqw,44px);letter-spacing:.06em;margin:0;color:var(--ivory)}
+.preload-progress{height:1.1cqw;min-height:7px;width:100%;border:1px solid #bc9a69;background:#1a1a1a;overflow:hidden}
+#preloadProgressFill{height:100%;width:0%;background:#dbb277;transition:width .14s linear}
+#preloadStatus{font:600 clamp(12px,1.3cqw,18px) Consolas,monospace;color:#d6c7b3;line-height:1.5;min-height:2em;margin:0}
+#preloadRetry{width:auto;padding:.8cqw 1.8cqw}
+.phone-skip{position:absolute;z-index:25;right:2.4%;top:8%;max-width:28%;padding:.65cqw 1.05cqw;border:1px solid #cba679;background:#111111ed;color:#f5dfbf;letter-spacing:.05em;font-size:clamp(11px,1.15cqw,19px);font-weight:750;pointer-events:auto}
+.phone-skip:hover,.phone-skip:focus-visible{background:#3b3024;border-color:#f7d0a0}
+@media(max-width:660px){#warningScreen .warning-card p{width:94%;font-size:clamp(13px,2.7cqw,20px)!important}.preload-center{width:86%}.phone-skip{top:10%;max-width:44%;font-size:clamp(10px,2cqw,14px)}}

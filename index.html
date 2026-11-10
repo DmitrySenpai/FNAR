@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#060809">
-  <title>Kokhinhin Office Night Shift — Rebuild v0.3.7</title>
+  <title>Kokhinhin Office Night Shift — Rebuild v0.3.8</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -69,6 +69,14 @@
       <button type="button" id="warningAccept" class="primary" data-i18n="warningAccept">ПОНИМАЮ · ПРОДОЛЖИТЬ</button>
     </div>
   </section>
+  <section id="preloadScreen" class="initial-screen hidden" role="status" aria-live="polite" aria-label="Загрузка ресурсов">
+    <div class="preload-center">
+      <h2 data-i18n="preloadTitle">ПОДГОТОВКА ИГРЫ</h2>
+      <div class="preload-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="preloadProgress"><div id="preloadProgressFill"></div></div>
+      <p id="preloadStatus">0%</p>
+      <button type="button" id="preloadRetry" class="secondary-action hidden" data-i18n="preloadRetry">ПОВТОРИТЬ ЗАГРУЗКУ</button>
+    </div>
+  </section>
   <section id="welcome" class="hidden" aria-label="Главное меню">
     <div class="welcome-backdrop"></div>
     <div class="welcome-card">
@@ -83,6 +91,7 @@
     </div>
   </section>
   <button type="button" id="pauseBtn" class="pause-floating hidden" aria-label="Пауза" title="Пауза (Esc / P)">Ⅱ</button>
+  <button type="button" id="skipPhoneBtn" class="phone-skip hidden" data-i18n="skipPhone" aria-label="Пропустить звонок">ПРОПУСТИТЬ ЗВОНОК</button>
   <section id="pauseScreen" class="pause-screen hidden" role="dialog" aria-modal="true" aria-label="Пауза">
     <div class="pause-card"><p class="eyebrow">KOKHINHIN OFFICE</p>
       <h2 data-i18n="pauseTitle">ПАУЗА</h2>
