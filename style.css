@@ -210,3 +210,18 @@ html, body, #app, #stage, #stage *, button, input {
 #welcome .welcome-card{z-index:3;text-shadow:0 2px 9px rgba(0,0,0,.9)}
 @keyframes menu-signal-flicker{0%,93%,100%{opacity:.20}94%{opacity:.32}96%{opacity:.16}97%{opacity:.28}}
 @media(prefers-reduced-motion:reduce){#welcome .welcome-interference{animation:none}}
+
+/* v0.4.0 — Five Nights at Rooster's, animated 5 AM → 6 AM victory (4s roll, 2s hold). */
+#welcome .welcome-card{gap:1.15cqw}
+#welcome .welcome-card h1{font-size:clamp(28px,5.4cqw,92px);line-height:1.03;letter-spacing:.012em;margin:0 0 2.1cqw;white-space:nowrap}
+#welcome .welcome-card h1 strong{display:inline-block;font-size:.67em;white-space:nowrap;letter-spacing:.012em}
+.victory-screen{position:absolute;inset:0;z-index:29;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#000!important;overflow:hidden;pointer-events:auto}
+.victory-clock{--hour-height:13cqw;position:relative;height:var(--hour-height);width:100%;display:flex;justify-content:center;align-items:center;gap:2.0cqw;text-align:center;user-select:none}
+.victory-digit-window{height:var(--hour-height);overflow:hidden;min-width:10cqw}
+.victory-suffix{height:var(--hour-height);display:flex;align-items:center;font-family:Consolas,'Courier New',monospace;font-size:clamp(54px,10.2cqw,160px);font-weight:900;letter-spacing:.03em;color:#f5f1e7;text-shadow:0 0 1.1cqw #d5d0c530}
+.victory-reel{display:flex;flex-direction:column;align-items:center;transform:translateY(0);will-change:transform}
+.victory-hour{height:var(--hour-height);flex:0 0 var(--hour-height);display:flex;align-items:center;justify-content:center;line-height:1;font-family:Consolas,'Courier New',monospace;font-size:clamp(54px,10.2cqw,160px);font-weight:900;letter-spacing:.03em;color:#f5f1e7;text-shadow:0 0 1.1cqw #d5d0c530}
+.victory-screen.is-playing .victory-reel{animation:victory-hour-roll 4s cubic-bezier(.64,.05,.28,.99) both}
+@keyframes victory-hour-roll{0%,8%{transform:translateY(0)}100%{transform:translateY(calc(-1 * var(--hour-height)))}}
+.victory-next{position:absolute;top:72%;left:50%;transform:translateX(-50%);min-width:36%;max-width:90%;padding:1.2cqw 2.2cqw;font-size:clamp(13px,1.6cqw,26px);letter-spacing:.07em;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.victory-screen.is-playing .victory-reel{animation:victory-hour-roll 4s linear both}}

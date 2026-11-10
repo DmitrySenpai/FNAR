@@ -110,11 +110,11 @@ function writeSave(key,value){
 const L10N={
  ru:{chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langJa:'日本語',
   warningHeading:'ПРЕДУПРЕЖДЕНИЕ',warningBody:'В игре присутствуют внезапные громкие звуки, скримеры, мигающие изображения и напряжённые сцены. Рекомендуется умеренная громкость.',warningAccept:'ПОНИМАЮ · ПРОДОЛЖИТЬ',preloadTitle:'ПОДГОТОВКА ИГРЫ',preloadStatus:'Загрузка ресурсов: {n} / {total} ({percent}%)',preloadRetry:'ПОВТОРИТЬ ЗАГРУЗКУ',preloadError:'Не удалось загрузить ресурсы. Проверьте интернет и повторите попытку.',skipPhone:'ПРОПУСТИТЬ ЗВОНОК',skipConversation:'ПРОПУСТИТЬ РАЗГОВОР',
-  menuDesc:'Выживите до 6:00. Четыре петуха патрулируют девять камер. Следите за дверями, светом и расходом электричества.',officeLabel:'НАЗВАНИЕ ОФИСА',officePlaceholder:'Мой офис',start:'НОВАЯ ИГРА · НОЧЬ 1',continue:'ПРОДОЛЖИТЬ · НОЧЬ {night}',loading:'Загрузка {n} / {total}',
+  officeLabel:'НАЗВАНИЕ ОФИСА',officePlaceholder:'Мой офис',start:'НОВАЯ ИГРА · НОЧЬ 1',continue:'ПРОДОЛЖИТЬ · НОЧЬ {night}',loading:'Загрузка {n} / {total}',
   titleNight:'Ночь {night}',pause:'ПАУЗА',pauseTitle:'ПАУЗА',pauseResume:'ВЕРНУТЬСЯ В ИГРУ',pauseRestart:'ПЕРЕЗАПУСТИТЬ НОЧЬ',pauseMenu:'В ГЛАВНОЕ МЕНЮ',pauseHint:'Esc или P — продолжить',
   winTitle:'6:00 AM',winText:'Вы пережили ночь {night}! До рассвета петухи не смогли попасть в комнату охраны.',
   allNightsTitle:'ВСЕ 7 НОЧЕЙ ПРОЙДЕНЫ',allNightsText:'Все семь ночных смен пройдены. Офис выжил!',
-  loseTitle:'НОЧЬ ОКОНЧЕНА',nextNight:'СЛЕДУЮЩАЯ НОЧЬ · {night}',retryNight:'ПОВТОРИТЬ НОЧЬ {night}',backMenu:'ГЛАВНОЕ МЕНЮ',
+  loseTitle:'НОЧЬ ОКОНЧЕНА',startNextDay:'НАЧАТЬ СЛЕДУЮЩИЙ ДЕНЬ',nextNight:'СЛЕДУЮЩАЯ НОЧЬ · {night}',retryNight:'ПОВТОРИТЬ НОЧЬ {night}',backMenu:'ГЛАВНОЕ МЕНЮ',
   doorDeath:'Петух C{id} проник в комнату охраны через {side} дверь.',leftDoor:'левую',rightDoor:'правую',
   outageDeath:'После отключения электричества петух C{id} добрался до комнаты охраны.',testDeath:'Тестовый скример петуха C{id}.',
   ringing:'☎ ВХОДЯЩИЙ ЗВОНОК / ЛИНИЯ ОТКРЫТА',hangup:'ПОЛОЖИТЬ ТРУБКУ',
@@ -127,11 +127,11 @@ const L10N={
   mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО'},
  ja:{chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langJa:'日本語',
   warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',skipConversation:'通話をスキップ',
-  menuDesc:'午前6時まで生き残ろう。4羽のニワトリが9台のカメラの間を巡回します。ドアとライト、残り電力に注意してください。',officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
+  officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
   titleNight:'第{night}夜',pause:'一時停止',pauseTitle:'一時停止',pauseResume:'ゲームを再開',pauseRestart:'この夜をやり直す',pauseMenu:'メインメニューへ',pauseHint:'Esc または P で再開',
   winTitle:'午前6:00',winText:'第{night}夜を生き延びました！ 夜明けまでニワトリの侵入を阻止しました。',
   allNightsTitle:'全7夜クリア',allNightsText:'7夜すべての勤務を生き延びました。オフィスは無事です！',
-  loseTitle:'ゲームオーバー',nextNight:'次の夜 · 第{night}夜',retryNight:'第{night}夜をやり直す',backMenu:'メインメニューへ',
+  loseTitle:'ゲームオーバー',startNextDay:'次の日を始める',nextNight:'次の夜 · 第{night}夜',retryNight:'第{night}夜をやり直す',backMenu:'メインメニューへ',
   doorDeath:'ニワトリC{id}が{side}ドアから警備室に侵入しました。',leftDoor:'左',rightDoor:'右',
   outageDeath:'停電後、ニワトリC{id}が警備室に到達しました。',testDeath:'ニワトリC{id}のジャンプスケアテスト。',
   ringing:'☎ 着信 / 通話中',hangup:'電話を切る',
@@ -727,8 +727,30 @@ function updatePowerFailure(){
   }
 }
 
+// A separate black 6 AM screen, with cleanup of any unfinished button timer.
+let victoryButtonTimer=null;
+function clearVictorySequence(){
+  if(victoryButtonTimer!==null){clearTimeout(victoryButtonTimer);victoryButtonTimer=null;}
+  $('victoryScreen').classList.add('hidden');
+  $('victoryScreen').classList.remove('is-playing');
+  $('victoryNextBtn').classList.add('hidden');
+}
+function showVictorySequence(){
+  clearVictorySequence();
+  const screen=$('victoryScreen');
+  const button=$('victoryNextBtn');
+  button.textContent=currentNight===7?t('backMenu'):t('startNextDay');
+  screen.classList.remove('hidden');
+  void $('victoryReel').offsetWidth;
+  screen.classList.add('is-playing');
+  victoryButtonTimer=setTimeout(()=>{
+    victoryButtonTimer=null;
+    if(!screen.classList.contains('hidden'))button.classList.remove('hidden');
+  },6000); // Four seconds of number movement, then two seconds of silence.
+}
 function finishNight(success,message,attackerId=0){
   if(!state.active)return;
+  clearVictorySequence();
   if(cameraOpen)setCameraOpen(false);
   state.active=false;state.gameOver=true;
   stopPowerFailureAudio();powerFailure.active=false;
@@ -749,8 +771,14 @@ function finishNight(success,message,attackerId=0){
   $('restartBtn').textContent=success?(currentNight===7?t('backMenu'):t('nextNight',{night:currentNight+1})):t('retryNight',{night:currentNight});
   $('endingMenuBtn').classList.toggle('hidden',success&&currentNight===7);
   const reveal=()=>{$('ending').classList.remove('hidden');};
-  if(!success && attackerId>=1 && attackerId<=4){playJumpscare(attackerId,reveal);}
-  else {if(success)playSfx('chimes',.65);reveal();}
+  if(success){
+    $('hud').classList.add('hidden');
+    $('pauseBtn').classList.add('hidden');
+    $('ending').classList.add('hidden');
+    playSfx('chimes',.65);
+    showVictorySequence();
+  }else if(attackerId>=1 && attackerId<=4){playJumpscare(attackerId,reveal);}
+  else reveal();
   updateStatus();
 }
 function nearGuard(e){return e.step>=e.route.length-2;}
@@ -826,6 +854,7 @@ function moveEnemies(dt){
 cameraToggle.addEventListener('click',toggleCamera);
 cameraNodes.forEach(b=>b.addEventListener('click',()=>chooseCamera(Number(b.dataset.camera))));
 function goMenu(){
+  clearVictorySequence();
   if(state.active){state.active=false;clearHeldActions();stopAudioLoops();stopRingtone();stopPowerFailureAudio();}
   for(const a of activeOneShots){a.pause();try{a.currentTime=0;}catch(_){}}activeOneShots.clear();
   state.paused=false;pausedAudio.clear();resetJumpscare();resetPowerFailure();resetPhone();
@@ -840,6 +869,7 @@ $('restartBtn').addEventListener('click',()=>{
   start($('ending').dataset.success==='true'?currentNight+1:currentNight);
 });
 $('endingMenuBtn').addEventListener('click',goMenu);
+$('victoryNextBtn').addEventListener('click',()=>{if(currentNight===7)goMenu();else start(currentNight+1);});
 const pausedAudio=new Set();
 function pauseGameAudio(){
   for(const a of [...audioLoops.values(),...activeOneShots,phoneRingAudio,phoneVoiceAudio,powerFailure.audio].filter(Boolean)){
@@ -996,6 +1026,7 @@ function loop(timestamp){
 }
 function start(night=1){
   if(state.loaded!==names.length)return;
+  clearVictorySequence();
   currentNight=clamp(Number(night)||1,1,7);state.night=currentNight;
   const office=$('officeInput').value.trim().slice(0,44)||(gameLanguage==='ja'?'私のオフィス':'Мой офис');
   writeSave('kokhinhin_office',office);safeStore('kons-new-office',office);
