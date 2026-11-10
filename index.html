@@ -91,13 +91,13 @@
     </div>
   </section>
   <section id="newspaperIntro" class="newspaper-screen hidden" role="dialog" aria-modal="true" aria-label="Газетное объявление">
-    <div class="newspaper-paper">
-      <p class="newspaper-kicker">CLASSIFIEDS</p>
-      <h2 id="newspaperHeadline">Компания срочно ищет ночного охранника</h2>
-      <div class="newspaper-rule" aria-hidden="true"></div>
-      <p id="newspaperShift">График работы: с 00:00 до 06:00.</p>
-      <p id="newspaperDuty">Обязанности: наблюдение за офисом в ночное время.</p>
-      <p id="newspaperPay">Зарплата: 250 долларов в неделю.</p>
+    <div class="newspaper-paper" id="newspaperPaper">
+      <div class="newspaper-article">
+        <h2 id="newspaperHeadline">Компания срочно ищет ночного охранника</h2>
+        <p id="newspaperShift">График работы: с 00:00 до 06:00.</p>
+        <p id="newspaperDuty">Обязанности: наблюдение за офисом в ночное время.</p>
+        <p id="newspaperPay">Зарплата: 250 долларов в неделю.</p>
+      </div>
     </div>
   </section>
   <button type="button" id="pauseBtn" class="pause-floating hidden" aria-label="Пауза" title="Пауза (Esc / P)">Ⅱ</button>
@@ -138,6 +138,15 @@
       <span class="victory-suffix">AM</span>
     </div>
     <button type="button" id="victoryNextBtn" class="primary victory-next hidden" data-i18n="startNextDay">НАЧАТЬ СЛЕДУЮЩИЙ ДЕНЬ</button>
+  </section>
+  <section id="resignationScreen" class="resignation-screen hidden" role="dialog" aria-modal="true" aria-label="Заявление об увольнении">
+    <div id="resignationPaper" class="resignation-paper">
+      <div class="resignation-content">
+        <p id="resignationDirector" class="resignation-director">Директору компании</p>
+        <p id="resignationText" class="resignation-message">Прошу вас уволить меня по собственному желанию.</p>
+      </div>
+    </div>
+    <button type="button" id="resignationMenuBtn" class="primary resignation-menu">ГЛАВНОЕ МЕНЮ</button>
   </section>
   <section id="ending" class="hidden" role="dialog" aria-modal="true" aria-labelledby="endingTitle">
     <div class="ending-card"><p id="endingNightLabel" class="eyebrow">Ночь 1</p><h2 id="endingTitle">НОЧЬ ОКОНЧЕНА</h2><p id="endingText"></p><button id="restartBtn" type="button" class="primary">ПОВТОРИТЬ НОЧЬ</button><button id="endingMenuBtn" type="button" class="secondary-action" data-i18n="backMenu">ГЛАВНОЕ МЕНЮ</button></div>

@@ -264,3 +264,25 @@ html, body, #app, #stage, #stage *, button, input {
   .newspaper-paper h2{font-size:clamp(24px,6.2cqw,38px)}
   .newspaper-paper p{max-width:94%;font-size:clamp(15px,3.1cqw,22px)}
 }
+
+/* v0.4.3: safely stack phone skip below the pause button, including touch screens. */
+.phone-skip{top:calc(2% + 3.15cqw + 1.4cqw);right:2.4%;left:auto;z-index:25;max-width:42%;white-space:nowrap}
+@media(pointer:coarse){.phone-skip{top:calc(2% + 5cqw + 1.5cqw);right:2.4%;max-width:50%;font-size:clamp(10px,1.7cqw,17px)}}
+
+/* The user's original newspaper graphic, with a legible article in its middle column. */
+.newspaper-screen{z-index:27;background:#000;transition:opacity .9s ease}
+.newspaper-paper{position:relative;width:min(60%,1000px);max-width:94%;max-height:95%;aspect-ratio:1007/854;box-sizing:border-box;padding:0;margin:0;flex:none;background:#ddd url('assets/ui/today_news.webp') center/100% 100% no-repeat;border:none;box-shadow:0 0 3.2cqw #000a;color:#121212;text-align:left}
+.newspaper-article{position:absolute;left:21%;top:26%;width:38%;height:64%;overflow:hidden;text-align:left;color:#131313;font-family:Georgia,'Times New Roman',serif}
+.newspaper-article h2{margin:0 0 1.3cqw;width:100%;max-width:100%;font-size:clamp(13px,1.5cqw,24px);line-height:1.17;letter-spacing:0;font-weight:800;text-wrap:balance;overflow-wrap:anywhere;color:#111}
+.newspaper-article p{width:100%;max-width:100%;margin:.8cqw 0;font-size:clamp(11px,1.13cqw,19px);line-height:1.33;color:#1e1e1e;text-align:left}
+@media(max-width:660px){.newspaper-paper{width:60%;max-width:95%;padding:0}.newspaper-article h2{font-size:clamp(11px,1.45cqw,17px)}.newspaper-article p{font-size:clamp(9px,1.1cqw,13px)}}
+
+/* Signed resignation letter appears after the seventh 6 AM clock sequence. */
+.resignation-screen{position:absolute;inset:0;z-index:32;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;opacity:0;transition:opacity .9s ease;pointer-events:none}
+.resignation-screen.is-visible{opacity:1;pointer-events:auto}
+.resignation-paper{position:relative;width:min(50%,860px);max-width:90%;max-height:78%;aspect-ratio:1007/849;background:#f7f6f4 url('assets/ui/resignation_letter.webp') center/100% 100% no-repeat;box-shadow:0 0 4cqw #000b;transform:translateY(-4%)}
+.resignation-content{position:absolute;top:12%;left:10%;right:10%;font-family:Georgia,'Times New Roman',serif;color:#141414;text-align:left;font-size:clamp(14px,1.47cqw,26px);line-height:1.55}
+.resignation-director{margin:0 0 12%;text-align:right;font-weight:600;overflow-wrap:anywhere}
+.resignation-message{margin:0;text-align:left;overflow-wrap:anywhere}
+.resignation-menu{position:absolute;bottom:3.2%;left:50%;transform:translateX(-50%);width:min(38%,550px);font-size:clamp(12px,1.4cqw,24px);z-index:2}
+@media(max-width:660px){.resignation-paper{width:51%;max-height:77%}.resignation-content{font-size:clamp(10px,1.35cqw,16px)}.resignation-menu{bottom:2%;width:44%;padding:.9cqw}}

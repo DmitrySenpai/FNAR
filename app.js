@@ -31,11 +31,11 @@ async function preloadAllGameAssets(){
     ...PRELOAD_CAMERA_NAMES.map(n=>'assets/cameras/'+n),
     ...PRELOAD_SOUND_NAMES.map(n=>'assets/sound/'+n+'.mp3'),
     ...[1,2,3,4].map(n=>'assets/screamers/rooster_'+n+'_scream.webm'),
-    'assets/sound/static-bm.webm', 'assets/menu/rooster_menu.webp'];
+    'assets/sound/static-bm.webm', 'assets/menu/rooster_menu.webp', 'assets/ui/today_news.webp', 'assets/ui/resignation_letter.webp'];
   let done=0;preloadProgress(done,paths.length);
   // file:// cannot use CacheStorage/fetch; standalone files embed their game art and audio.
   if(location.protocol==='file:'){
-    staticVideo.src=staticVideoURL();setMenuBackdrop();loadImages();preloadBusy=false;return;
+    staticVideo.src=staticVideoURL();setMenuBackdrop();setDocumentBackdrop();loadImages();preloadBusy=false;return;
   }
   let cache=null;
   try{if('caches' in window)cache=await caches.open(PRELOAD_CACHE_NAME);}catch(e){console.warn('Persistent cache unavailable',e);}
@@ -66,12 +66,17 @@ async function preloadAllGameAssets(){
   }
   staticVideo.src=staticVideoURL();
   setMenuBackdrop();
+  setDocumentBackdrop();
   loadImages();
 }
 $('preloadRetry').addEventListener('click',preloadAllGameAssets);
 function setMenuBackdrop(){
   const url=getCachedAssetURL('assets/menu/rooster_menu.webp');
   $('menuBackdrop').style.backgroundImage='linear-gradient(90deg,rgba(0,0,0,.74) 0%,rgba(0,0,0,.50) 30%,rgba(0,0,0,.07) 56%,rgba(0,0,0,0) 100%),url("'+url+'")';
+}
+function setDocumentBackdrop(){
+  $('newspaperPaper').style.backgroundImage='url("'+getCachedAssetURL('assets/ui/today_news.webp')+'")';
+  $('resignationPaper').style.backgroundImage='url("'+getCachedAssetURL('assets/ui/resignation_letter.webp')+'")';
 }
 function syncMenuStatic(){
   const el=$('menuStaticVideo');
@@ -124,7 +129,7 @@ const L10N={
   camNames:['Северная','Коридор','Правый коридор','Ресепшен','Опен-спейс','Левый коридор','Левый выход','Кабинет директора','Правый выход'],
   leftLight:'Свет слева',rightLight:'Свет справа',leftDoorLabel:'Дверь слева',rightDoorLabel:'Дверь справа',phoneLabel:'Телефон на столе',
   openCamera:'Открыть камеры наблюдения',closeCamera:'Закрыть камеры наблюдения',
-  mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.'},
+  mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.',resignationDirector:'Директору {office}',resignationText:'Прошу вас уволить меня по собственному желанию.'},
  ja:{chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langJa:'日本語',
   warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',skipConversation:'通話をスキップ',
   officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
@@ -141,7 +146,7 @@ const L10N={
   camNames:['北エリア','廊下','右の廊下','受付','オープンスペース','左の廊下','左の出口','社長室','右の出口'],
   leftLight:'左のライト',rightLight:'右のライト',leftDoorLabel:'左のドア',rightDoorLabel:'右のドア',phoneLabel:'机の電話',
   openCamera:'監視カメラを開く',closeCamera:'監視カメラを閉じる',
-  mute:'消音',unmute:'音声をオン',viewCenter:'正面',viewLeft:'左を見る',viewRight:'右を見る',newspaperHeadline:'{office} が夜勤警備員を緊急募集',newspaperShift:'勤務時間: 00:00 から 06:00。',newspaperDuty:'業務内容: 夜間のオフィス監視。',newspaperPay:'給与: 週 250 ドル。'}
+  mute:'消音',unmute:'音声をオン',viewCenter:'正面',viewLeft:'左を見る',viewRight:'右を見る',newspaperHeadline:'{office} が夜勤警備員を緊急募集',newspaperShift:'勤務時間: 00:00 から 06:00。',newspaperDuty:'業務内容: 夜間のオフィス監視。',newspaperPay:'給与: 週 250 ドル。',resignationDirector:'{office} の社長殿',resignationText:'一身上の都合により、退職させていただきたくお願い申し上げます。'}
 };
 let gameLanguage='ru',currentNight=1,unlockedNight=Math.max(1,Math.min(7,Number(readSave('kokhinhin_unlocked'))||1));
 let sevenNightsComplete=readSave('kokhinhin_complete')==='1';
@@ -155,7 +160,7 @@ function updateContinueButton(){
   b.textContent=t('continue',{night:unlockedNight});
 }
 const NEWSPAPER_SHOW_MS=5000,NEWSPAPER_FADE_MS=900;
-let newspaperStartTimer=null,newspaperHideTimer=null;
+let newspaperStartTimer=null,newspaperHideTimer=null,newspaperWelcomeTimer=null;
 function officeNameValue(){
   return $('officeInput').value.trim().slice(0,44)||(gameLanguage==='ja'?'私のオフィス':'Мой офис');
 }
@@ -168,6 +173,7 @@ function persistOfficeName(){
 function clearNewspaperIntro(){
   if(newspaperStartTimer!==null){clearTimeout(newspaperStartTimer);newspaperStartTimer=null;}
   if(newspaperHideTimer!==null){clearTimeout(newspaperHideTimer);newspaperHideTimer=null;}
+  if(newspaperWelcomeTimer!==null){clearTimeout(newspaperWelcomeTimer);newspaperWelcomeTimer=null;}
   const scr=$('newspaperIntro');
   scr.classList.add('hidden');
   scr.classList.remove('is-visible','is-leaving');
@@ -183,10 +189,16 @@ function showNewspaperIntro(night){
   clearNewspaperIntro();
   fillNewspaperIntro();
   const scr=$('newspaperIntro');
-  $('welcome').classList.add('hidden');
-  syncMenuStatic();
+  // Keep the menu visible underneath until the newspaper fully fades in.
+  // This prevents the security room canvas from flashing for one frame.
   scr.classList.remove('hidden');
-  requestAnimationFrame(()=>scr.classList.add('is-visible'));
+  void scr.offsetWidth;
+  scr.classList.add('is-visible');
+  newspaperWelcomeTimer=setTimeout(()=>{
+    newspaperWelcomeTimer=null;
+    $('welcome').classList.add('hidden');
+    syncMenuStatic();
+  },NEWSPAPER_FADE_MS+80);
   newspaperStartTimer=setTimeout(()=>{
     newspaperStartTimer=null;
     start(night,{suppressIntro:true});
@@ -774,6 +786,25 @@ function updatePowerFailure(){
 
 // A separate black 6 AM screen, with cleanup of any unfinished button timer.
 let victoryButtonTimer=null;
+let resignationFadeTimer=null;
+function clearResignation(){
+  if(resignationFadeTimer!==null){clearTimeout(resignationFadeTimer);resignationFadeTimer=null;}
+  const screen=$('resignationScreen');
+  screen.classList.add('hidden');screen.classList.remove('is-visible');
+}
+function showResignation(){
+  const screen=$('resignationScreen');
+  $('resignationDirector').textContent=t('resignationDirector',{office:officeNameValue()});
+  $('resignationText').textContent=t('resignationText');
+  $('resignationMenuBtn').textContent=t('backMenu');
+  screen.classList.remove('hidden');
+  void screen.offsetWidth;
+  screen.classList.add('is-visible');
+  resignationFadeTimer=setTimeout(()=>{
+    resignationFadeTimer=null;
+    $('victoryScreen').classList.add('hidden');
+  },950);
+}
 function clearVictorySequence(){
   if(victoryButtonTimer!==null){clearTimeout(victoryButtonTimer);victoryButtonTimer=null;}
   $('victoryScreen').classList.add('hidden');
@@ -784,13 +815,16 @@ function showVictorySequence(){
   clearVictorySequence();
   const screen=$('victoryScreen');
   const button=$('victoryNextBtn');
-  button.textContent=currentNight===7?t('backMenu'):t('startNextDay');
+  button.textContent=t('startNextDay');
   screen.classList.remove('hidden');
   void $('victoryReel').offsetWidth;
   screen.classList.add('is-playing');
   victoryButtonTimer=setTimeout(()=>{
     victoryButtonTimer=null;
-    if(!screen.classList.contains('hidden'))button.classList.remove('hidden');
+    if(!screen.classList.contains('hidden')){
+      if(currentNight===7)showResignation();
+      else button.classList.remove('hidden');
+    }
   },7200); // 1.2s dissolve + 4s number roll + 2s pause.
 }
 function finishNight(success,message,attackerId=0){
@@ -939,6 +973,7 @@ cameraToggle.addEventListener('click',toggleCamera);
 cameraNodes.forEach(b=>b.addEventListener('click',()=>chooseCamera(Number(b.dataset.camera))));
 function goMenu(){
   clearVictorySequence();
+  clearResignation();
   clearNewspaperIntro();
   if(state.active){state.active=false;clearHeldActions();stopAudioLoops();stopRingtone();stopPowerFailureAudio();}
   for(const a of activeOneShots){a.pause();try{a.currentTime=0;}catch(_){}}activeOneShots.clear();
@@ -955,6 +990,7 @@ $('restartBtn').addEventListener('click',()=>{
 });
 $('endingMenuBtn').addEventListener('click',goMenu);
 $('victoryNextBtn').addEventListener('click',()=>{if(currentNight===7)goMenu();else start(currentNight+1);});
+$('resignationMenuBtn').addEventListener('click',goMenu);
 const pausedAudio=new Set();
 function pauseGameAudio(){
   for(const a of [...audioLoops.values(),...activeOneShots,phoneRingAudio,phoneVoiceAudio,powerFailure.audio].filter(Boolean)){
@@ -1113,6 +1149,7 @@ function start(night=1,options={}){
   if(state.loaded!==names.length)return;
   if(options && options.intro){showNewspaperIntro(night);return;}
   clearVictorySequence();
+  clearResignation();
   currentNight=clamp(Number(night)||1,1,7);state.night=currentNight;
   persistOfficeName();
   $('officeInput').blur();
