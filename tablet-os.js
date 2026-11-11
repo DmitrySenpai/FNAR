@@ -39,6 +39,12 @@
   const tr=()=>lang()==='ja'?ja:ru;
   const random=(a,b)=>a+Math.random()*(b-a);
   const choose=(a)=>a[Math.floor(Math.random()*a.length)];
+  // Ads are frequent only while a camera tablet is open, from night 4 onward.
+  // Shorten the delay slightly on nights 5–7.
+  function nextAdDelay(extra=0){
+    const factor=Math.max(.7,1-Math.max(0,game.currentNight-4)*.085);
+    return random(10,18)*factor+extra;
+  }
   const media=name=>`assets/ui/tablet/${name}.webp`;
   const html=(tag,cls,where)=>{const e=document.createElement(tag);e.className=cls;where.appendChild(e);return e;};
   const os=html('div','tablet-os-layer hidden',tablet);
@@ -82,7 +88,7 @@
     usbHeading.textContent=tr().usbHeader;usbBody.textContent=tr().usbBody;
   }
   function reset(){
-    state.mode='idle';state.adVisible=false;state.adCountdown=random(22,42);state.stageIndex=-1;state.stageRemaining=0;state.usbRemaining=0;
+    state.mode='idle';state.adVisible=false;state.adCountdown=nextAdDelay();state.stageIndex=-1;state.stageRemaining=0;state.usbRemaining=0;
     previousElapsed=null;ad.classList.add('hidden');os.classList.add('hidden');usb.classList.add('hidden');stopSound();pausedAudio=false;
   }
   function displayStage(stage){
@@ -104,7 +110,7 @@
     state.stageRemaining=stage.sec;
     displayStage(stage);
   }
-  function complete(){state.mode='idle';state.stageIndex=-1;os.classList.add('hidden');usb.classList.add('hidden');state.adCountdown=random(27,52);}
+  function complete(){state.mode='idle';state.stageIndex=-1;os.classList.add('hidden');usb.classList.add('hidden');state.adCountdown=nextAdDelay(3);}
   function reboot(){
     if(!game.state.active)return;
     state.adVisible=false;ad.classList.add('hidden');state.mode='reboot';os.classList.remove('hidden');
@@ -116,13 +122,13 @@
     updateLocalization();usb.classList.remove('hidden');audioSound('os_usb_remove');
   }
   function finishUSB(){
-    state.mode='idle';state.usbRemaining=0;usb.classList.add('hidden');audioSound('os_usb_connect');state.adCountdown=random(27,52);
+    state.mode='idle';state.usbRemaining=0;usb.classList.add('hidden');audioSound('os_usb_connect');state.adCountdown=nextAdDelay(3);
   }
   function dismiss(accepted){
     if(!state.adVisible)return;
     state.adVisible=false;ad.classList.add('hidden');
     if(accepted){state.accepted++;if(Math.random()<.5)reboot();else disconnectUSB();}
-    else {state.declined++;state.adCountdown=random(26,51);}
+    else {state.declined++;state.adCountdown=nextAdDelay();}
   }
   function showAd(){
     if(!game.state.active||game.currentNight<4||state.mode!=='idle'||state.adVisible)return false;

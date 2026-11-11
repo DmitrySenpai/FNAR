@@ -40,5 +40,11 @@
 /* Net Video splash opens over the restored desktop, not instead of it. */
 .tablet-os-splash{position:absolute;z-index:2;top:50%;left:50%;width:min(55%,760px);aspect-ratio:1012 / 806;max-height:83%;transform:translate(-50%,-50%);background:#f7f8fa center / contain no-repeat;box-shadow:0 1cqw 4cqw #000c;border:1px solid #d3d3dd}
 .tablet-os-layer[data-phase='boot'] .tablet-os-picture{background-size:contain}
+/* v0.4.6: never crop the Door XP desktop inside the camera tablet. */
+.tablet-os-layer[data-phase='desktop'] .tablet-os-picture,
+.tablet-os-layer[data-phase='netvideo'] .tablet-os-picture{
+  background-size:contain;
+  background-color:#000;
+}
 .tablet-os-layer[data-phase='netvideo'] .tablet-os-center{z-index:3;align-items:center;justify-content:flex-end;padding:1%}
 .tablet-os-layer[data-phase='netvideo'] .tablet-os-subtitle{font-size:clamp(12px,1.15cqw,21px);border-radius:3px}
