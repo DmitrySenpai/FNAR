@@ -43,7 +43,8 @@
   const html=(tag,cls,where)=>{const e=document.createElement(tag);e.className=cls;where.appendChild(e);return e;};
   const os=html('div','tablet-os-layer hidden',tablet);
   os.setAttribute('aria-live','polite');
-  os.innerHTML=`<div class="tablet-os-picture"></div><div class="tablet-os-center"><div class="tablet-os-title"></div><div class="tablet-os-subtitle"></div></div><div class="tablet-os-bios"><strong></strong><pre></pre></div>`;
+  os.innerHTML=`<div class="tablet-os-picture"></div><div class="tablet-os-splash hidden" aria-hidden="true"></div><div class="tablet-os-center"><div class="tablet-os-title"></div><div class="tablet-os-subtitle"></div></div><div class="tablet-os-bios"><strong></strong><pre></pre></div>`;
+  const splash=os.querySelector('.tablet-os-splash');
   const pic=os.querySelector('.tablet-os-picture'),title=os.querySelector('.tablet-os-title'),subtitle=os.querySelector('.tablet-os-subtitle'),bios=os.querySelector('.tablet-os-bios');
   const ad=html('section','tablet-popup hidden',tablet);
   ad.setAttribute('role','dialog');ad.setAttribute('aria-modal','true');
@@ -86,14 +87,14 @@
   }
   function displayStage(stage){
     os.dataset.phase=stage.id;
-    pic.style.backgroundImage='none';
+    pic.style.backgroundImage='none';splash.classList.add('hidden');
     title.textContent='';subtitle.textContent='';bios.querySelector('strong').textContent='';bios.querySelector('pre').textContent='';
     if(stage.id==='shutdown'){pic.style.backgroundImage=`url("${media('shutdown')}")`;title.textContent=tr().shutdown;}
     else if(stage.id==='bios'){bios.querySelector('strong').textContent=tr().biosTitle;bios.querySelector('pre').textContent=tr().biosText;}
     else if(stage.id==='boot'){pic.style.backgroundImage=`url("${media('boot')}")`;subtitle.textContent=tr().booting;}
     else if(stage.id==='welcome'){pic.style.backgroundImage=`url("${media('shutdown')}")`;title.textContent=tr().welcome;}
     else if(stage.id==='desktop'){pic.style.backgroundImage=`url("${media('desktop')}")`;}
-    else if(stage.id==='netvideo'){pic.style.backgroundImage=`url("${media('netvideo')}")`;subtitle.textContent=tr().startVideo;}
+    else if(stage.id==='netvideo'){pic.style.backgroundImage=`url("${media('desktop')}")`;splash.style.backgroundImage=`url("${media('netvideo')}")`;splash.classList.remove('hidden');subtitle.textContent=tr().startVideo;}
     if(stage.sound)audioSound(stage.sound);
   }
   function startStage(index){
