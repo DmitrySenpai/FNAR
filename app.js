@@ -185,9 +185,20 @@ function fillNewspaperIntro(){
   $('newspaperDuty').textContent=t('newspaperDuty');
   $('newspaperPay').textContent=t('newspaperPay');
 }
+// Scale the newspaper as one unchanging layout, instead of responsively
+// reflowing the article over the underlying image at every viewport size.
+function updateNewspaperScale(){
+  const paper=$('newspaperPaper');
+  if(!paper)return;
+  const w=stage.clientWidth, h=stage.clientHeight;
+  if(!w||!h)return;
+  const scale=Math.min((w*.92)/1007,(h*.92)/854);
+  paper.style.setProperty('--newspaper-scale',String(scale));
+}
 function showNewspaperIntro(night){
   clearNewspaperIntro();
   fillNewspaperIntro();
+  updateNewspaperScale();
   const scr=$('newspaperIntro');
   // Keep the menu visible underneath until the newspaper fully fades in.
   // This prevents the security room canvas from flashing for one frame.
@@ -1179,6 +1190,8 @@ $('closeSettings').addEventListener('click',toggleSettings);$('closeSettingsPrim
 $('fullscreenBtn').addEventListener('click',toggleFullscreen);
 for(const s of ['turnAmount','fishAmount','smoothAmount'])$(s).addEventListener('input',setSliders);
 window.addEventListener('resize',resize);document.addEventListener('fullscreenchange',resize);
+window.addEventListener('resize',updateNewspaperScale);
+if(window.ResizeObserver)new ResizeObserver(updateNewspaperScale).observe(stage);
 if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);
 // In-browser testing helpers: 12 AM..6 AM, without advancing the real wall clock.
 function debugFinishDay(){
