@@ -1,0 +1,38 @@
+/* Tablet OS popups, camera disconnects and faux 2000s workstation boot. */
+.tablet-os-layer,.tablet-popup{position:absolute;inset:0;z-index:22;pointer-events:none}
+.tablet-os-layer{background:#000;color:#fff;overflow:hidden}
+.tablet-os-picture{position:absolute;inset:0;background-position:center;background-size:cover;background-repeat:no-repeat}
+.tablet-os-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1cqw;text-align:center;padding:3%}
+.tablet-os-title{font-family:'Segoe UI',Arial,sans-serif;font-size:clamp(17px,3.6cqw,58px);text-shadow:0 .15cqw .7cqw #0007}
+.tablet-os-subtitle{font-family:'Segoe UI',Arial,sans-serif;font-size:clamp(12px,1.55cqw,26px);text-shadow:0 1px 5px #000}
+.tablet-os-bios{position:absolute;top:8%;left:7%;width:86%;white-space:pre-line;display:none;color:#ddd;font:clamp(11px,1.7cqw,28px)/1.55 Consolas,'Courier New',monospace}
+.tablet-os-bios strong{display:block;font-size:1.3em;margin-bottom:1.7em}
+.tablet-os-layer[data-phase='black'] .tablet-os-center,.tablet-os-layer[data-phase='black'] .tablet-os-bios{display:none}
+.tablet-os-layer[data-phase='bios'] .tablet-os-bios{display:block}
+.tablet-os-layer[data-phase='bios'] .tablet-os-center{display:none}
+.tablet-os-layer[data-phase='shutdown'],.tablet-os-layer[data-phase='welcome']{background:linear-gradient(#0031a3 0%,#5b8deb 50%,#1240bf 95%)}
+.tablet-os-layer[data-phase='boot']{background:#000}
+.tablet-os-layer[data-phase='desktop']{background:linear-gradient(155deg,#62549f,#ffb26b 72%,#272357)}
+.tablet-os-layer[data-phase='netvideo']{background:#e4e5ed;color:#151a37}
+.tablet-os-layer[data-phase='netvideo'] .tablet-os-center{align-items:flex-end;justify-content:flex-end;padding:3%}
+.tablet-os-layer[data-phase='netvideo'] .tablet-os-subtitle{background:#ffffffd9;color:#13152c;padding:.4em .8em}
+.tablet-usb-failure{position:absolute;inset:0;z-index:3;background:#020405;display:grid;place-items:center;pointer-events:none;color:#ddd;text-align:center;font-family:Consolas,'Courier New',monospace}
+.tablet-usb-inner{max-width:65%;padding:2cqw;border:1px solid #76848c66;background:#050708}
+.tablet-usb-icon{font-size:clamp(22px,5cqw,76px);color:#bbb}
+.tablet-usb-inner strong{display:block;font-size:clamp(12px,1.65cqw,28px);color:#fff;margin:.7cqw auto}
+.tablet-usb-inner p{margin:0;line-height:1.55;font-size:clamp(10px,1.14cqw,19px);color:#ced2d3}
+.tablet-popup{display:grid;place-items:center;pointer-events:auto;padding:4%;background:rgba(0,0,0,.08)}
+.tablet-popup-dialog{width:min(57cqw,800px);min-width:min(92%,280px);max-width:92%;border:.16cqw solid #133a7d;box-shadow:0 .5cqw 2cqw #000c;background:#ece9df;color:#162139;font-family:Tahoma,'Segoe UI',Arial,sans-serif;line-height:1.4}
+.tablet-popup-head{display:flex;align-items:center;gap:.6cqw;padding:.65cqw .9cqw;color:white;background:linear-gradient(#1664bc,#06418d);font-size:clamp(13px,1.3cqw,22px)}
+.tablet-popup-head span:first-child{color:#fbd459;font-size:1.3em}
+.tablet-popup-head strong{flex:1}
+.tablet-popup-close{width:1.7em;height:1.7em;border-radius:2px;text-align:center;background:#af3c2b;border:1px solid #eaa896}
+.tablet-popup-message{display:flex;align-items:flex-start;gap:1.25cqw;padding:2cqw 2cqw 1.2cqw}
+.tablet-popup-symbol{flex:none;border:.17cqw solid #3177cf;border-radius:50%;width:3cqw;height:3cqw;min-width:26px;min-height:26px;display:grid;place-items:center;color:#3177cf;font-family:Georgia,serif;font-size:clamp(16px,2.2cqw,36px);font-weight:bold}
+.tablet-popup-message h3{font-size:clamp(14px,1.55cqw,25px);margin:0 0 .5cqw;color:#1c2a3c}
+.tablet-popup-message p{font-size:clamp(12px,1.22cqw,21px);margin:0}
+.tablet-popup-buttons{display:flex;gap:1cqw;justify-content:flex-end;padding:0 2cqw 1.4cqw}
+.tablet-popup-action{font-weight:600;color:#172c45;background:linear-gradient(#fff,#d9e3eb);border:1px solid #748aa2;box-shadow:inset 0 0 0 1px white;padding:.7em 1.4em;min-width:7.3em;font-size:clamp(12px,1.18cqw,20px);cursor:pointer;touch-action:manipulation}
+.tablet-popup-action:focus-visible{outline:3px solid #5c80df;outline-offset:1px}
+.tablet-popup-action.cancel{border-color:#456b9e}
+@media(max-width:680px){.tablet-popup-dialog{width:88%;max-width:88%}.tablet-popup-message{gap:12px;padding:12px}.tablet-popup-buttons{padding:0 12px 12px;gap:8px;justify-content:center}.tablet-popup-action{padding:.55em .9em;flex:1;min-width:0}.tablet-usb-inner{max-width:86%}}
