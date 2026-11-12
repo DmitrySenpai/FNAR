@@ -49,8 +49,28 @@
   const html=(tag,cls,where)=>{const e=document.createElement(tag);e.className=cls;where.appendChild(e);return e;};
   const os=html('div','tablet-os-layer hidden',tablet);
   os.setAttribute('aria-live','polite');
-  os.innerHTML=`<div class="tablet-os-picture"></div><div class="tablet-os-splash hidden" aria-hidden="true"></div><div class="tablet-os-center"><div class="tablet-os-title"></div><div class="tablet-os-subtitle"></div></div><div class="tablet-os-bios"><strong></strong><pre></pre></div>`;
+  os.innerHTML=`<div class="tablet-os-picture"></div><div class="tablet-os-boot-progress hidden" aria-hidden="true"><span class="tablet-os-boot-slider"><i></i><i></i><i></i></span></div><div class="tablet-os-splash hidden" aria-hidden="true"></div><div class="tablet-os-center"><div class="tablet-os-title"></div><div class="tablet-os-subtitle"></div></div><div class="tablet-os-bios"><strong></strong><pre></pre></div>`;
   const splash=os.querySelector('.tablet-os-splash');
+  const bootProgress=os.querySelector('.tablet-os-boot-progress');
+  // The existing boot.webp already contains the Door XP logo and progress border.
+  // The only new graphics are three moving blue blocks, positioned inside that border.
+  const bootImage=new Image();
+  bootImage.addEventListener('load',positionBootProgress);
+  bootImage.src=media('boot');
+  function positionBootProgress(){
+    if(!bootImage.naturalWidth||!os.clientWidth||!os.clientHeight)return;
+    const aw=bootImage.naturalWidth,ah=bootImage.naturalHeight;
+    const scale=Math.min(os.clientWidth/aw,os.clientHeight/ah);
+    const renderedW=aw*scale,renderedH=ah*scale;
+    const left=(os.clientWidth-renderedW)/2,top=(os.clientHeight-renderedH)/2;
+    // Coordinates relative to the actual Door XP image, not the viewport.
+    bootProgress.style.left=(left+renderedW*0.389)+'px';
+    bootProgress.style.top=(top+renderedH*0.7145)+'px';
+    bootProgress.style.width=(renderedW*0.186)+'px';
+    bootProgress.style.height=(renderedH*0.022)+'px';
+  }
+  window.addEventListener('resize',positionBootProgress);
+  if(window.ResizeObserver)new ResizeObserver(positionBootProgress).observe(os);
   const pic=os.querySelector('.tablet-os-picture'),title=os.querySelector('.tablet-os-title'),subtitle=os.querySelector('.tablet-os-subtitle'),bios=os.querySelector('.tablet-os-bios');
   const ad=html('section','tablet-popup hidden',tablet);
   ad.setAttribute('role','dialog');ad.setAttribute('aria-modal','true');
@@ -77,8 +97,8 @@
     {id:'shutdown',sec:4,sound:'os_shutdown'},
     {id:'black',sec:1},
     {id:'bios',sec:1.45},
-    {id:'boot',sec:2.4,sound:'os_startup'},
-    {id:'welcome',sec:1.2},
+    {id:'boot',sec:2.4},
+    {id:'welcome',sec:1.2,sound:'os_startup'},
     {id:'desktop',sec:1},
     {id:'netvideo',sec:2}
   ];
@@ -94,10 +114,12 @@
   function displayStage(stage){
     os.dataset.phase=stage.id;
     pic.style.backgroundImage='none';splash.classList.add('hidden');
+    bootProgress.classList.toggle('hidden',stage.id!=='boot');
+    if(stage.id==='boot')positionBootProgress();
     title.textContent='';subtitle.textContent='';bios.querySelector('strong').textContent='';bios.querySelector('pre').textContent='';
     if(stage.id==='shutdown'){pic.style.backgroundImage=`url("${media('shutdown')}")`;title.textContent=tr().shutdown;}
     else if(stage.id==='bios'){bios.querySelector('strong').textContent=tr().biosTitle;bios.querySelector('pre').textContent=tr().biosText;}
-    else if(stage.id==='boot'){pic.style.backgroundImage=`url("${media('boot')}")`;subtitle.textContent=tr().booting;}
+    else if(stage.id==='boot'){pic.style.backgroundImage=`url("${media('boot')}")`;}
     else if(stage.id==='welcome'){pic.style.backgroundImage=`url("${media('shutdown')}")`;title.textContent=tr().welcome;}
     else if(stage.id==='desktop'){pic.style.backgroundImage=`url("${media('desktop')}")`;}
     else if(stage.id==='netvideo'){pic.style.backgroundImage=`url("${media('desktop')}")`;splash.style.backgroundImage=`url("${media('netvideo')}")`;splash.classList.remove('hidden');subtitle.textContent=tr().startVideo;}
@@ -163,6 +185,7 @@
     previousElapsed=gs.nightElapsed;
     const frozen=gs.paused||game.phoneState?.status==='talking';
     freezeSound(frozen);
+    os.classList.toggle('is-paused',frozen);
     if(!frozen&&dt>0){
       if(state.mode==='reboot'){
         state.stageRemaining-=dt;
