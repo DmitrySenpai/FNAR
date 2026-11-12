@@ -49,11 +49,6 @@
 .tablet-os-layer[data-phase='netvideo'] .tablet-os-center{z-index:3;align-items:center;justify-content:flex-end;padding:1%}
 .tablet-os-layer[data-phase='netvideo'] .tablet-os-subtitle{font-size:clamp(12px,1.15cqw,21px);border-radius:3px}
 
-/* v0.4.7 Door XP progress — the logo and empty border come from boot.webp. */
-.tablet-os-boot-progress{position:absolute;z-index:4;overflow:hidden;box-sizing:border-box;pointer-events:none}
-.tablet-os-boot-slider{position:absolute;top:1px;bottom:1px;left:0;width:20%;display:flex;gap:2px;animation:doorXpProgress 1.35s linear infinite;will-change:transform}
-.tablet-os-boot-slider i{display:block;min-width:0;flex:1;background:linear-gradient(to bottom,#c3dfff 0%,#659cf9 14%,#123bd6 34%,#001891 57%,#1d55e7 78%,#9bc8ff 100%);box-shadow:inset 1px 0 0 #ccdfff,inset -1px 0 0 #001b80}
-.tablet-os-layer.is-paused .tablet-os-boot-slider{animation-play-state:paused}
-@keyframes doorXpProgress{from{transform:translateX(-100%)}to{transform:translateX(500%)}}
+/* v0.4.8: Door XP boot is a static image, with no slider or added text. */
 /* Do not place any extra status captions over the boot logo. */
 .tablet-os-layer[data-phase='boot'] .tablet-os-center{display:none}
