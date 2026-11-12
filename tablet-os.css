@@ -52,3 +52,27 @@
 /* v0.4.8: Door XP boot is a static image, with no slider or added text. */
 /* Do not place any extra status captions over the boot logo. */
 .tablet-os-layer[data-phase='boot'] .tablet-os-center{display:none}
+
+/* v0.4.9: random bounded window positions and optional slow floating movement. */
+.tablet-popup{display:block;overflow:hidden}
+.tablet-popup-dialog{
+  position:absolute;
+  left:var(--ad-x,50%);
+  top:var(--ad-y,50%);
+  transform:translate(-50%,-50%);
+  max-width:calc(100% - 16px);
+  max-height:calc(100% - 16px);
+  overflow:auto;
+  box-sizing:border-box;
+}
+.tablet-popup-dialog.is-floating{
+  animation:fnarAdFloat var(--ad-float-time,7s) ease-in-out infinite alternate;
+}
+.tablet-popup-dialog.is-paused{animation-play-state:paused}
+@keyframes fnarAdFloat {
+  from{transform:translate(calc(-50% - var(--ad-wiggle,8px)),calc(-50% + var(--ad-wiggle,8px)))}
+  to{transform:translate(calc(-50% + var(--ad-wiggle,8px)),calc(-50% - var(--ad-wiggle,8px)))}
+}
+@media(prefers-reduced-motion:reduce){
+ .tablet-popup-dialog.is-floating{animation:none}
+}

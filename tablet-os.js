@@ -12,12 +12,34 @@
     shutdown:'Завершение работы...',biosTitle:'NET SYSTEM BIOS v3.0',biosText:'Проверка памяти... OK\nОбнаружение устройств... OK\nЗагрузка Door XP...',
     welcome:'Добро пожаловать',booting:'Загрузка системы…',startVideo:'Запуск Net Video 3.0…',
     ads:[
-      ['ПОЗДРАВЛЯЕМ!','Ваш компьютер выбран для бесплатного обновления охранной системы. Установить сейчас?'],
-      ['СРОЧНАЯ РЕКЛАМА','Подписка «Анти-Петух PRO» обещает защиту от внезапных криков. Активировать?'],
-      ['ИНТЕРНЕТ-ПРОВАЙДЕР','Ускорьте все девять камер в 100 раз! Применить экспериментальную оптимизацию?'],
-      ['ПРОВЕРКА СИСТЕМЫ','Найдено 47 подозрительных перьев. Запустить автоматическую очистку?'],
-      ['СПЕЦИАЛЬНОЕ ПРЕДЛОЖЕНИЕ','Зерно премиум-класса теперь доступно онлайн. Получить подарок?'],
-      ['ОБНОВЛЕНИЕ СЛУЖБЫ','Установлена устаревшая версия Net Video. Перейти на новую прямо сейчас?']
+      ["ВЫ ВЫИГРАЛИ!","Вы стали 47-м посетителем сайта! Получить бесплатный кулер для охранника?"],
+      ["АНТИ-ПЕТУХ PRO","Новая защита от внезапных криков и перьев. Активировать пробную версию?"],
+      ["СВЕРХСКОРОСТЬ","Ускорьте все девять камер в сто раз! Разрешить экспериментальную оптимизацию?"],
+      ["ПРОВЕРКА СИСТЕМЫ","Обнаружено 47 подозрительных перьев. Удалить их автоматически?"],
+      ["ПОДАРОК ДНЯ","Вам положен мешок элитного зерна. Подтвердить получение?"],
+      ["ВАЖНОЕ ОБНОВЛЕНИЕ","Ваша версия Net Video устарела на 29 лет. Установить обновление?"],
+      ["НОЧНОЙ БОНУС","Хотите получать двойную зарплату, не выходя из кресла? Подписаться?"],
+      ["ОЧИСТКА ПАМЯТИ","Видеопамять переполнена кадрами куриц. Начать мгновенную очистку?"],
+      ["АКЦИЯ: КОФЕ","Один бесплатный кофе за каждые шесть часов наблюдения. Забрать сейчас?"],
+      ["СРОЧНОЕ СООБЩЕНИЕ","На вашем компьютере обнаружено критическое отсутствие печенья. Исправить?"],
+      ["НАЙДЕН ВИРУС","Угроза Chicken.exe просит доступ к вашим камерам. Разрешить?"],
+      ["ПОГОДА В ОФИСЕ","С вероятностью 99% сегодня ожидается дождь из перьев. Включить прогноз?"],
+      ["NET SYSTEM PLUS","Дополнительная камера для наблюдения за самим охранником. Подключить?"],
+      ["БЕЗОПАСНАЯ НОЧЬ","Автоматический помощник обещает закрывать двери за вас. Установить?"],
+      ["СЧАСТЛИВЫЙ НОМЕР","Ваш монитор выбран для участия в лотерее «Золотой гребень». Принять участие?"],
+      ["СИСТЕМНЫЙ СОВЕТ","Рекомендуем отключить лишние фонарики для экономии энергии. Применить?"],
+      ["ОФИСНЫЕ НОВОСТИ","Всем сотрудникам разрешено смотреть камеры с закрытыми глазами. Подробнее?"],
+      ["РАСШИРЕНИЕ БРАУЗЕРА","Переводчик языка петухов доступен бесплатно. Установить расширение?"],
+      ["ПРЕМИУМ-ПОДПИСКА","Уберите рекламу навсегда всего за 250 долларов в неделю. Оформить?"],
+      ["ЦИФРОВАЯ УБОРКА","В папке «Корзина» найдены 128 виртуальных скорлупок. Очистить?"],
+      ["СЕКРЕТНОЕ ПРЕДЛОЖЕНИЕ","Защитите офис при помощи инновационной шапочки из фольги. Заказать?"],
+      ["ЗАПРОС ДОСТУПА","Приложение Rooster Assistant хочет управлять вашим USB-хабом. Разрешить?"],
+      ["ОБНАРУЖЕН ПРИНТЕР","Ваш принтер печатает загадочные следы лап. Запустить диагностику?"],
+      ["НЕТ СОЕДИНЕНИЯ?","Наш мастер восстановит интернет за три хлопка крыльями. Вызвать мастера?"],
+      ["ПОДТВЕРДИТЕ ВОЗРАСТ","Для просмотра опасных куриных мемов подтвердите, что вам уже 18 лет."],
+      ["ОФИСНЫЙ РАДАР","Выявлено необычное движение в коридоре. Запустить платный анализ?"],
+      ["ПЕРСОНАЛЬНАЯ СКИДКА","Только сегодня: 90% на годовой запас батареек. Получить купон?"],
+      ["РОЗЫГРЫШ СРЕДИ ОХРАННИКОВ","Приз — выходной после седьмой смены. Подать заявку?"]
     ]
   };
   const ja={
@@ -26,12 +48,34 @@
     shutdown:'シャットダウンしています…',biosTitle:'NET SYSTEM BIOS v3.0',biosText:'メモリのチェック... OK\nデバイスの確認... OK\nDoor XP を起動中...',
     welcome:'ようこそ',booting:'システムを起動中…',startVideo:'Net Video 3.0 を起動中…',
     ads:[
-      ['おめでとうございます！','セキュリティシステムの無料アップグレードに当選しました。インストールしますか？'],
-      ['特別なお知らせ','突然のニワトリの叫び声から守る「Anti-Rooster PRO」を有効にしますか？'],
-      ['インターネット接続','9台の監視カメラを100倍高速化！実験的な最適化を適用しますか？'],
-      ['システム警告','47枚の不審な羽を発見しました。自動クリーニングしますか？'],
-      ['今だけ限定','プレミアム飼料の特典を受け取りますか？'],
-      ['更新の確認','Net Video は旧バージョンです。今すぐアップデートしますか？']
+      ["当選のお知らせ","あなたは本日47番目の訪問者です！警備員用の冷水機を無料で受け取りますか？"],
+      ["ANTI-ROOSTER PRO","突然の鳴き声や羽から守る最新サービス。お試し版を有効にしますか？"],
+      ["超高速モード","9台の監視カメラを100倍高速化！実験的な最適化を許可しますか？"],
+      ["システム検査","不審な羽を47枚検出しました。自動的に削除しますか？"],
+      ["本日のプレゼント","高級飼料を一袋プレゼント！今すぐ受け取りますか？"],
+      ["重要な更新","Net Videoは29年間更新されていません。今すぐ更新しますか？"],
+      ["夜勤ボーナス","椅子に座ったまま給料が2倍になるサービスに登録しますか？"],
+      ["メモリの最適化","監視映像のニワトリでメモリがいっぱいです。今すぐ整理しますか？"],
+      ["コーヒー特典","監視6時間につきコーヒー1杯無料！今すぐ受け取りますか？"],
+      ["緊急通知","コンピューターにクッキーが足りません。問題を修復しますか？"],
+      ["ウイルスを検出","Chicken.exeがカメラへのアクセスを要求しています。許可しますか？"],
+      ["オフィスの天気","今夜は99％の確率で羽が降る見込みです。予報を表示しますか？"],
+      ["NET SYSTEM PLUS","警備員自身を監視する追加カメラを接続しますか？"],
+      ["安全な夜","AIが自動的にドアを閉めます。今すぐインストールしますか？"],
+      ["ラッキーナンバー","「黄金のトサカ」抽選会への参加権を獲得しました。応募しますか？"],
+      ["システムのおすすめ","節電のために余分なライトを消しますか？"],
+      ["オフィスニュース","全社員が目を閉じたままカメラを見られるようになりました。詳細を見る？"],
+      ["ブラウザー拡張機能","ニワトリ語の翻訳ツールが無料で使えます。インストールしますか？"],
+      ["プレミアム会員","広告を永久に非表示！週250ドルで申し込みますか？"],
+      ["デジタル清掃","ごみ箱から仮想の卵殻を128個検出しました。削除しますか？"],
+      ["極秘セール","アルミホイル製の帽子でオフィスを守りましょう。注文しますか？"],
+      ["アクセス許可","Rooster AssistantがUSBハブの操作を要求しています。許可しますか？"],
+      ["プリンターを検出","プリンターが謎の足跡を印刷しています。診断しますか？"],
+      ["接続できませんか？","羽ばたき3回でインターネットを修復！技術者を呼びますか？"],
+      ["年齢確認","危険なニワトリのミームを見るには18歳以上であることを確認してください。"],
+      ["オフィスレーダー","廊下で不審な動きを検知しました。有料解析を開始しますか？"],
+      ["あなただけの割引","本日限定！一年分の電池が90％オフ。クーポンを受け取りますか？"],
+      ["警備員限定の抽選","景品は7日目の勤務後の休日です。応募しますか？"]
     ]
   };
   const safeRead=key=>{try{return localStorage.getItem(key)}catch(_){return null}};
@@ -45,7 +89,7 @@
     const factor=Math.max(.7,1-Math.max(0,game.currentNight-4)*.085);
     return random(10,18)*factor+extra;
   }
-  const media=name=>`assets/ui/tablet/${name}.webp`;
+  const media=name=>`assets/ui/tablet/${name}.webp${name==='boot'?'?v=049':''}`;
   const html=(tag,cls,where)=>{const e=document.createElement(tag);e.className=cls;where.appendChild(e);return e;};
   const os=html('div','tablet-os-layer hidden',tablet);
   os.setAttribute('aria-live','polite');
@@ -57,6 +101,29 @@
   ad.setAttribute('role','dialog');ad.setAttribute('aria-modal','true');
   ad.innerHTML=`<div class="tablet-popup-dialog"><div class="tablet-popup-head"><span>●</span><strong></strong><span class="tablet-popup-close" aria-hidden="true">×</span></div><div class="tablet-popup-message"><span class="tablet-popup-symbol">i</span><div><h3></h3><p></p></div></div><div class="tablet-popup-buttons"></div></div>`;
   const popupHeading=ad.querySelector('.tablet-popup-head strong'), popupTitle=ad.querySelector('h3'), popupText=ad.querySelector('p'), buttons=ad.querySelector('.tablet-popup-buttons');
+  const popupDialog=ad.querySelector('.tablet-popup-dialog');
+  let lastAdIndex=-1;
+  let adMoving=false;
+  function placeAdWindow(){
+    if(!state.adVisible || !game.cameraOpen || ad.classList.contains('hidden'))return;
+    const containerWidth=ad.clientWidth,containerHeight=ad.clientHeight;
+    if(!containerWidth||!containerHeight)return;
+    const popupWidth=popupDialog.offsetWidth,popupHeight=popupDialog.offsetHeight;
+    const wiggle=adMoving?Math.min(16,containerWidth*.015,containerHeight*.03):0;
+    const margin=8+wiggle;
+    const xLow=popupWidth/2+margin,xHigh=containerWidth-popupWidth/2-margin;
+    const yLow=popupHeight/2+margin,yHigh=containerHeight-popupHeight/2-margin;
+    if(xHigh<=xLow || yHigh<=yLow)adMoving=false;
+    const x=xHigh>xLow?random(xLow,xHigh):containerWidth/2;
+    const y=yHigh>yLow?random(yLow,yHigh):containerHeight/2;
+    popupDialog.style.setProperty('--ad-x',x+'px');
+    popupDialog.style.setProperty('--ad-y',y+'px');
+    popupDialog.style.setProperty('--ad-wiggle',wiggle+'px');
+    popupDialog.style.setProperty('--ad-float-time',random(5,10).toFixed(2)+'s');
+    popupDialog.classList.toggle('is-floating',adMoving);
+  }
+  window.addEventListener('resize',()=>{if(state.adVisible)requestAnimationFrame(placeAdWindow)});
+  if(window.ResizeObserver)new ResizeObserver(()=>{if(state.adVisible)requestAnimationFrame(placeAdWindow)}).observe(tablet);
   const usb=html('div','tablet-usb-failure hidden',feed);
   usb.innerHTML=`<div class="tablet-usb-inner"><div class="tablet-usb-icon">▣</div><strong></strong><p></p></div>`;
   const usbHeading=usb.querySelector('strong'),usbBody=usb.querySelector('p');
@@ -90,7 +157,7 @@
   }
   function reset(){
     state.mode='idle';state.adVisible=false;state.adCountdown=nextAdDelay();state.stageIndex=-1;state.stageRemaining=0;state.usbRemaining=0;
-    previousElapsed=null;ad.classList.add('hidden');os.classList.add('hidden');usb.classList.add('hidden');stopSound();pausedAudio=false;
+    previousElapsed=null;ad.classList.add('hidden');popupDialog.classList.remove('is-floating','is-paused');adMoving=false;os.classList.add('hidden');usb.classList.add('hidden');stopSound();pausedAudio=false;
   }
   function displayStage(stage){
     os.dataset.phase=stage.id;
@@ -127,14 +194,21 @@
   }
   function dismiss(accepted){
     if(!state.adVisible)return;
-    state.adVisible=false;ad.classList.add('hidden');
+    state.adVisible=false;ad.classList.add('hidden');popupDialog.classList.remove('is-floating','is-paused');
     if(accepted){state.accepted++;if(Math.random()<.5)reboot();else disconnectUSB();}
     else {state.declined++;state.adCountdown=nextAdDelay();}
   }
   function showAd(){
     if(!game.state.active||game.currentNight<4||state.mode!=='idle'||state.adVisible)return false;
     state.adVisible=true;state.shown++;
-    const [h,txt]=choose(tr().ads);popupHeading.textContent=tr().windowTitle;popupTitle.textContent=h;popupText.textContent=txt;
+    const adTexts=tr().ads;
+    let index=Math.floor(Math.random()*adTexts.length);
+    if(adTexts.length>1 && index===lastAdIndex)index=(index+1+Math.floor(Math.random()*(adTexts.length-1)))%adTexts.length;
+    lastAdIndex=index;
+    const [h,txt]=adTexts[index];
+    popupHeading.textContent=tr().windowTitle;popupTitle.textContent=h;popupText.textContent=txt;
+    adMoving=Math.random()<.5;
+    popupDialog.classList.remove('is-floating','is-paused');
     buttons.replaceChildren();
     const order=Math.random()<.5?['accept','cancel']:['cancel','accept'];
     order.forEach(kind=>{
@@ -143,6 +217,7 @@
     });
     audioSound('os_info');
     ad.classList.toggle('hidden',!game.cameraOpen);
+    if(game.cameraOpen)requestAnimationFrame(placeAdWindow);
     return true;
   }
   function ui(){
@@ -164,6 +239,7 @@
     previousElapsed=gs.nightElapsed;
     const frozen=gs.paused||game.phoneState?.status==='talking';
     freezeSound(frozen);
+    popupDialog.classList.toggle('is-paused',frozen);
     if(!frozen&&dt>0){
       if(state.mode==='reboot'){
         state.stageRemaining-=dt;

@@ -10,7 +10,7 @@ const names = [
 ];
 const src = f => window.KONS_EMBEDDED_ASSETS?.[f] || getCachedAssetURL('assets/room/'+f);
 // Preload before the first night so all effects and camera frames are local when played.
-const PRELOAD_CACHE_NAME='fnar-game-assets-v045';
+const PRELOAD_CACHE_NAME='fnar-game-assets-v049';
 const cachedAssetURLs=new Map();
 function getCachedAssetURL(path){return cachedAssetURLs.get(path)||path;}
 const PRELOAD_SOUND_NAMES=["ambience","ambient_room","beep","blip","chimes","door","hang-up","knock-2","knock-3","knock","light","open-camera","os_balloon","os_info","os_shutdown","os_startup","os_usb_connect","os_usb_remove","phone-line","phone","phone_01","phone_02","phone_03","phone_04","phone_05","power-outage","running-fast","running","scream","static-bm"];
