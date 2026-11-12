@@ -512,15 +512,13 @@ const CAMS = [
   ['Кабинет директора','cam08','50,57,67'],
   ['Правый выход','cam09','47,51,64']
 ];
-const NIGHT_LENGTH=360; // six game hours at 60 seconds/hour
-// Camera artwork routes, different wake-up times and different step intervals.
-// Only ONE rooster may reach the final two camera nodes / office doors at a time.
-const ENEMIES=[
-  {id:1,side:'left',route:[5,4,6,7],min:10,max:17,initial:8,roam:.17},
-  {id:2,side:'right',route:[1,8,3,9],min:14,max:23,initial:49,roam:.28},
-  {id:3,side:'right',route:[8,3,9],min:17,max:27,initial:108,roam:.32},
-  {id:4,side:'left',route:[2,5,4,6,7],min:13,max:22,initial:165,roam:.28}
-];
+// Pure night and enemy tuning lives in fnar-ai.js; keep its array identity for debug.
+const AI=window.FNAR_AI;
+if(!AI)throw new Error('fnar-ai.js must load before app.js');
+const NIGHT_LENGTH=AI.NIGHT_LENGTH;
+const NIGHT_CONFIG=AI.NIGHT_CONFIG;
+const aiSession=AI.createNight(1);
+const ENEMIES=aiSession.enemies;
 const cameraScreen=$('cameraScreen'),cameraToggle=$('cameraToggle'),cameraFeed=$('cameraFeed');
 const cameraNodes=[...document.querySelectorAll('.cam-node')];
 const CAM_PICTURE=$('cameraPicture'),CAM_EMPTY=$('feedEmpty');
@@ -528,27 +526,15 @@ const cameraCache=new Map();const cameraUnavailable=new Set();
 const CAMERA_VARIANTS=new Set(["cam01.webp", "cam01_c2.webp", "cam02.webp", "cam02_c4.webp", "cam03.webp", "cam03_c2.webp", "cam03_c2_c3.webp", "cam03_c3.webp", "cam04.webp", "cam04_c1.webp", "cam04_c1_c4.webp", "cam04_c4.webp", "cam05.webp", "cam05_c1.webp", "cam05_c4.webp", "cam05_c4_c1.webp", "cam06.webp", "cam06_c1.webp", "cam06_c1_c4.webp", "cam06_c4.webp", "cam07.webp", "cam07_c1.webp", "cam07_c1_c4.webp", "cam07_c4.webp", "cam08.webp", "cam08_c2.webp", "cam08_c2_c3.webp", "cam08_c3.webp", "cam09.webp", "cam09_c2.webp", "cam09_c2_c3.webp", "cam09_c3.webp"]);
 let cameraOpen=false,currentCamera=1,cameraFlashTimer=0,shownCameraFile='';
 function randomBetween(min,max){return min+Math.random()*(max-min);}
-function imageDelay(e){
-  const urgency=clamp(state.nightElapsed/NIGHT_LENGTH,0,1);
-  const nightFactor=1-(currentNight-1)*.075;
-  return randomBetween(e.min,e.max)*nightFactor*(1-.22*urgency);
-}
 function resetEnemies(){
-  ENEMIES.forEach(e=>{
-    e.step=0;e.phase='dormant';e.nextMove=e.initial*(1-(currentNight-1)*.075)+randomBetween(0,9);
-    e.attack=0;e.blocked=0;e.knocks=0;e.cycles=0;e.retreatTo=0;
-    // From night 2, C3 becomes agitated if CAM 08 is ignored.
-    if(e.id===3){
-      e.anger=0;e.watchTime=0;e.angerThreshold=Math.max(24,38-(currentNight-2)*2.7);
-      if(currentNight>=2)e.nextMove=30+randomBetween(0,8);
-    }
-  });
+  AI.resetNight(aiSession,currentNight);
+  enemySoundLast.clear();
+  shownCameraFile='';
 }
 function cameraImageURL(file){return window.KONS_EMBEDDED_CAMERAS?.[file] || getCachedAssetURL('assets/cameras/'+file);}
 function cameraFile(){
   const code='cam'+String(currentCamera).padStart(2,'0');
-  const current=ENEMIES.filter(e=>e.phase!=='dormant' && e.step<e.route.length && e.route[e.step]===currentCamera)
-    .map(e=>e.id).sort((a,b)=>a-b);
+  const current=AI.visibleIds(aiSession,currentCamera);
   const full=code+current.map(id=>'_c'+id).join('')+'.webp';
   if(CAMERA_VARIANTS.has(full))return full;
   // Original image set also has a few reversed-order combinations.
@@ -875,107 +861,57 @@ function finishNight(success,message,attackerId=0){
   else reveal();
   updateStatus();
 }
-function nearGuard(e){return e.step>=e.route.length-2;}
-function footstep(e,fast=false){
-  if(!nearGuard(e)||powerFailure.active)return;
-  playSfx(fast?'running-fast':'running',fast?.32:.23);
-}
-function retreatEnemy(e,fromDoor=true){
-  e.phase='retreat';e.attack=0;e.blocked=0;e.knocks=0;
-  if(e.id===3&&currentNight>=2){e.anger=0;e.watchTime=0;}
-  if(fromDoor)e.cycles++;
-  // Two camera positions from the door; another bird can now take a turn.
-  e.retreatTo=Math.max(0,e.route.length-3);
-  e.nextMove=randomBetween(1,2.4);
-}
-function isThreatening(e){
-  return e.phase!=='dormant' && e.step>=e.route.length-2;
+// Sounds are emitted for nearby moves, never for every distant camera change.
+const enemySoundLast=new Map();
+function enemySound(e,kind,fast=false){
+  if(powerFailure.active || !state.active)return;
+  const now=state.nightElapsed;
+  const type=kind==='knock'?'knock':kind==='anger'?'anger':kind==='warn'?'warning':'steps';
+  const gap={knock:2.8,anger:5.0,warning:1.5,steps:1.4}[type];
+  const last=enemySoundLast.get(type)??-999;
+  if(now-last<gap)return;
+  enemySoundLast.set(type,now);
+  if(type==='knock')playSfx(['knock','knock-2','knock-3'][(e.id+e.cycles)%3],.49);
+  else if(type==='anger')playSfx('running',.18);
+  else if(type==='warning')playSfx(e.id===2?'knock-2':e.id===4?'running-fast':e.id===3?'running-fast':'running',.47);
+  else if(fast)playSfx('running-fast',.37);
+  else playSfx('running',.24);
 }
 function moveEnemies(dt){
+  if(!state.active||powerFailure.active)return;
+  // A disconnected or rebooting CCTV tablet cannot calm C2/C3 by merely
+  // leaving their camera number selected behind an obscuring system screen.
+  const tabletStatus=window.FNARTabletDebug?.status;
+  const actuallyWatching=cameraOpen && (!tabletStatus ||
+    (tabletStatus.mode==='idle' && !tabletStatus.adVisible));
+  const events=AI.tick(aiSession,dt,{
+    cameraOpen:actuallyWatching,
+    camera:currentCamera,
+    leftClosed:state.leftDoorPos>.88,
+    rightClosed:state.rightDoorPos>.88
+  });
   let changed=false;
-  for(const e of ENEMIES){
-    if(!state.active||powerFailure.active)return;
-    // After waking up C3 waits in the director's office. Keeping CAM 08 on
-    // him for at least 1.4s calms him; quickly switching does not help.
-    if(e.id===3&&currentNight>=2){
-      if(e.phase==='dormant'){
-        e.nextMove-=dt;
-        if(e.nextMove<=0){e.phase='watch';e.step=0;e.anger=0;e.watchTime=0;changed=true;}
-        continue;
-      }
-      if(e.phase==='watch'){
-        const watching=cameraOpen&&currentCamera===8;
-        e.watchTime=watching?Math.min(4,e.watchTime+dt):0;
-        e.anger=clamp(e.anger+(e.watchTime>=1.4?-3.5:1)*dt,0,e.angerThreshold);
-        if(e.anger>=e.angerThreshold){
-          e.phase='rush';e.nextMove=.45;e.watchTime=0;changed=true;
-        }
-        continue;
-      }
-      if(e.phase==='rush'){
-        e.nextMove-=dt;
-        if(e.nextMove>0)continue;
-        // Rush respects the existing one-rooster-near-guard rule.
-        if(e.step+1>=e.route.length-2 && ENEMIES.some(other=>other!==e&&isThreatening(other))){
-          e.nextMove=randomBetween(1,2.3);continue;
-        }
-        if(e.step>=e.route.length-1){
-          e.step=e.route.length;e.phase='door';e.attack=0;e.blocked=0;e.knocks=0;
-          footstep(e,true);
-        }else{
-          e.step++;footstep(e,true);e.nextMove=randomBetween(.8,1.5);
-        }
-        changed=true;continue;
-      }
-    }
-    if(e.phase==='door'){
-      const closed=state[e.side+'DoorPos']>.88;
-      if(closed){
-        e.attack=0;e.blocked+=dt;
-        if(!e.knocks){playSfx(['knock','knock-2','knock-3'][(e.id+e.cycles)%3],.48);e.knocks=1;}
-        if(e.blocked>=4.2+Math.max(0,currentNight-1)*.22){retreatEnemy(e,true);changed=true;}
-      }else{
-        e.blocked=0;e.knocks=0;e.attack+=dt;
-        if(e.attack>=7.4+e.id*.45-(currentNight-1)*.5){
-          finishNight(false,t('doorDeath',{id:e.id,side:t(e.side==='left'?'leftDoor':'rightDoor')}),e.id);return;
-        }
-      }
-      continue;
-    }
-    e.nextMove-=dt;
-    if(e.nextMove>0)continue;
-    if(e.phase==='dormant'){
-      e.phase='approach';e.nextMove=imageDelay(e)*.6;changed=true;continue;
-    }
-    if(e.phase==='rest'){
-      e.phase='approach';e.nextMove=imageDelay(e)*.5;continue;
-    }
-    if(e.phase==='retreat'){
-      const previous=e.step;e.step=Math.max(e.retreatTo,e.step-1);
-      if(e.step!==previous){changed=true;footstep(e,true);}
-      if(e.step<=e.retreatTo){
-        if(e.id===3&&currentNight>=2){e.phase='watch';e.anger=0;e.watchTime=0;e.nextMove=0;}
-        else {e.phase='rest';e.nextMove=(randomBetween(24,39)+e.id*3.5)*(1-(currentNight-1)*.075);}
-      }else e.nextMove=randomBetween(2.8,5.8);
-      continue;
-    }
-    // A rooster outside the last two camera nodes must wait its turn.
-    const enteringDanger=e.step+1>=e.route.length-2;
-    const occupied=ENEMIES.some(other=>other!==e && isThreatening(other));
-    if(enteringDanger && occupied){
-      // Patrol an earlier node instead of waiting in a queue just by the door.
-      if(e.step>0&&Math.random()<.42){e.step--;changed=true;}
-      e.nextMove=randomBetween(10,20);continue;
-    }
-    // Nonlinear patrols: birds can step backwards before the final stretch.
-    if(!enteringDanger && e.step>0 && Math.random()<e.roam*(1-(currentNight-1)*.07)) {
-      e.step--;changed=true;e.nextMove=imageDelay(e)*.7;continue;
-    }
-    if(e.step>=e.route.length-1){
-      e.step=e.route.length;e.phase='door';e.attack=0;e.blocked=0;e.knocks=0;
-      e.nextMove=0;changed=true;footstep(e,true);
-    }else{
-      e.step++;changed=true;footstep(e,false);e.nextMove=imageDelay(e);
+  for(const event of events){
+    const e=ENEMIES.find(item=>item.id===event.id);
+    if(!e)continue;
+    if(['wake','move','warning','retreat','rest','resume','rush'].includes(event.type))changed=true;
+    if(event.type==='move'){
+      if((event.step>=e.route.length-2 || event.fast) && !event.back)
+        enemySound(e,'steps',Boolean(event.fast));
+    }else if(event.type==='warning'){
+      // The attack countdown starts only now, with at least three seconds of reaction time.
+      enemySound(e,'warn');
+    }else if(event.type==='knock'){
+      enemySound(e,'knock');
+    }else if(event.type==='anger'){
+      enemySound(e,'anger');
+    }else if(event.type==='rush'){
+      enemySound(e,'steps',true);
+    }else if(event.type==='retreat'){
+      enemySound(e,'steps',false);
+    }else if(event.type==='attack'){
+      finishNight(false,t('doorDeath',{id:e.id,side:t(e.side==='left'?'leftDoor':'rightDoor')}),e.id);
+      return;
     }
   }
   if(changed){needsComposing=true;updateCameraScene();}
@@ -1218,10 +1154,10 @@ function debugSetTime(hourOrText,minutes=0){
   return state.nightElapsed;
 }
 window.KokhinhinDebug={state,toggleDoor,setLight,findHit,imagePos,setView(v){state.target=state.yaw=clamp(v,-1,1);},get frames(){return state.frames;},get assets(){return state.loaded;},toggleCamera,setCameraOpen,chooseCamera,get currentCamera(){return currentCamera;},get cameraOpen(){return cameraOpen;},
-  enemies:ENEMIES,resetEnemies,
+  enemies:ENEMIES,resetEnemies,NIGHT_CONFIG,AI,
   setEnemyStep(id,step){const e=ENEMIES.find(e=>e.id===id);if(!e)return;
-    e.step=clamp(step,0,e.route.length);e.phase=e.step===e.route.length?'door':'approach';
-    e.attack=0;e.blocked=0;e.knocks=0;e.nextMove=5;needsComposing=true;updateCameraScene();},
+    e.step=clamp(step,0,e.route.length);e.phase=e.step===e.route.length?AI.PHASES.DOOR:AI.PHASES.APPROACH;
+    e.attack=0;e.blocked=0;e.knocks=0;e.nextMove=5;e.burst=0;needsComposing=true;updateCameraScene();},
   setPower(value){state.power=clamp(value,0,100);updateOfficePower();},
   startPowerFailure, powerFailure, setNightElapsed(value){state.nightElapsed=clamp(value,0,NIGHT_LENGTH);updateClock();},
   finishNight:finishNight,setTime:debugSetTime,finishDay:debugFinishDay,winNight:debugFinishDay,triggerScreamer(id){if(state.active)finishNight(false,'Тестовый скример петуха C'+id+'.',Number(id));},
