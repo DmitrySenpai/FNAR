@@ -879,8 +879,13 @@ function enemySound(e,kind,fast=false){
 }
 function moveEnemies(dt){
   if(!state.active||powerFailure.active)return;
+  // A disconnected or rebooting CCTV tablet cannot calm C2/C3 by merely
+  // leaving their camera number selected behind an obscuring system screen.
+  const tabletStatus=window.FNARTabletDebug?.status;
+  const actuallyWatching=cameraOpen && (!tabletStatus ||
+    (tabletStatus.mode==='idle' && !tabletStatus.adVisible));
   const events=AI.tick(aiSession,dt,{
-    cameraOpen,
+    cameraOpen:actuallyWatching,
     camera:currentCamera,
     leftClosed:state.leftDoorPos>.88,
     rightClosed:state.rightDoorPos>.88
