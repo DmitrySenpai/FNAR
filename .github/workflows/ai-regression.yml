@@ -1,0 +1,30 @@
+name: FNAR AI regression
+on:
+  push:
+    paths:
+      - 'fnar-ai.js'
+      - 'app.js'
+      - 'index.html'
+      - 'tests/ai-simulation.test.cjs'
+      - '.github/workflows/ai-regression.yml'
+  pull_request:
+    paths:
+      - 'fnar-ai.js'
+      - 'app.js'
+      - 'index.html'
+      - 'tests/ai-simulation.test.cjs'
+      - '.github/workflows/ai-regression.yml'
+jobs:
+  ai-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax
+        run: |
+          node --check fnar-ai.js
+          node --check app.js
+      - name: Simulate all seven nights and run assertions
+        run: node --test tests/ai-simulation.test.cjs
