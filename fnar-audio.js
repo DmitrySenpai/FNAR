@@ -58,6 +58,7 @@
     const length = response.headers.get('Content-Length');
     if(length!==null && (!/^\d+$/.test(length)||Number(length)!==bytes.byteLength))
       throw Error('Incomplete HTTP 200 response');
+    if(!bytes.byteLength)throw Error('Empty HTTP 200 response');
     return bytes;
   }
   async function fetchFull(path) {
@@ -115,7 +116,8 @@
       const retained=blobs.get(path);
       if(retained)return retained;
       const cache=await getCache();
-      let response=cache && await cache.match(path);
+      let response=null;
+      if(cache){try{response=await cache.match(path);}catch(error){warnOnce('Cache read unavailable: '+path,error);}}
       // Only full cache entries are valid. Purge suspect old entries.
       if(response){
         const len=response.headers.get('Content-Length');
@@ -124,15 +126,16 @@
           try{await cache.delete(path);}catch(_){}response=null;
         }
       }
-      if(!response) {
-        response=await fetchFull(path);
-        if(cache) {
-          try{await cache.put(path,response.clone());}
-          catch(e){warnOnce('Could not persist '+path,e);}
-        }
-      }
+      const downloaded=!response;
+      if(!response)response=await fetchFull(path);
       const blob=await response.blob();
       if(!blob.size)throw Error('Empty resource: '+path);
+      if(downloaded&&cache){
+        try{await cache.put(path,new Response(blob,{status:200,
+          headers:{'Content-Type':response.headers.get('Content-Type')||guessType(path),
+                   'Content-Length':String(blob.size)}}));}
+        catch(e){warnOnce('Could not persist '+path,e);}
+      }
       completed++;
       blobs.set(path,blob);
       return blob;
