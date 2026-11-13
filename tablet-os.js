@@ -211,7 +211,7 @@
   const activeAudio=new Set();
   const audioSound=(name,volume=.65,loop=false)=>{
     if(safeRead('kons-muted')==='1')return;
-    const a=AudioManager.play(name,Math.min(.65,Math.max(0,volume)),{loop});
+    const a=AudioManager.play(name,Math.min(.65,Math.max(0,volume)),{loop,url:window.KONS_EMBEDDED_SOUNDS?.[name]});
     if(!a)return;
     activeAudio.add(a);
     const previous=a.onended;
@@ -225,7 +225,7 @@
     // Web Audio effects share the game's context; do not restart stopped sources.
     if(freeze)AudioManager.setPaused(true);
     else if(!game.state.paused)AudioManager.setPaused(false);
-    for(const a of activeAudio){if(!AudioManager.isShort(a.__name||'')){
+    for(const a of activeAudio){if(!a.__webAudio){
       if(freeze||safeRead('kons-muted')==='1')a.pause();else if(a.paused)a.play().catch(()=>{});
     }}
   }
