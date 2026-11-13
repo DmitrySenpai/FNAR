@@ -19,7 +19,7 @@ jobs:
       - name: Validate JavaScript syntax
         run: |
           set -e
-          for file in app.js fnar-ai.js fnar-power.js fnar-audio-settings.js fnar-atmosphere.js fnar-endings.js fnar-tablet-faults.js tablet-os.js phone-dialogues.js fnar-audio.js; do
+          for file in app.js fnar-ai.js fnar-power.js fnar-audio-settings.js fnar-atmosphere.js fnar-endings.js fnar-tablet-faults.js tablet-os.js phone-dialogues.js fnar-audio.js fnar-camera-transition.js; do
             node --check "$file"
           done
           if test -f fnar-company.js; then node --check fnar-company.js; fi
