@@ -56,13 +56,21 @@ test('All main entry points use the guarded fade and active game is deferred',()
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
 
-test('Four custom portraits are valid square PNG assets',()=>{
+test('All four Custom Night portraits remain original 1152×1536, never thumbnails',()=>{
   for(let i=1;i<=4;i++){
     const file=fs.readFileSync(path.join(root,'assets','ui','custom','c'+i+'.png'));
-    assert.ok(file.length>1000,'portrait is not empty');
-    assert.equal(file.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+    assert.ok(file.length>500_000,'portrait must contain full resolution image data: C'+i);
+    assert.equal(file.subarray(0,8).toString('hex'),'89504e470d0a1a0a','true PNG file C'+i);
     const width=file.readUInt32BE(16),height=file.readUInt32BE(20);
-    assert.equal(width,height,'square portrait '+i);
-    assert.ok(width>=48,'portrait too small for game '+i);
+    assert.ok(width>=512 && height>=512,'reject thumbnail portrait C'+i);
+    assert.equal(width,1152,'original C'+i+' width');
+    assert.equal(height,1536,'original C'+i+' height');
   }
+});
+test('Custom portraits use natural interpolation and new FNAR asset cache',()=>{
+  const app=source('app.js'),css=source('style.css');
+  assert.match(app,/PRELOAD_CACHE_NAME='fnar-game-assets-v050'/);
+  assert.match(css,/#customScreen \.custom-ai-portrait\{[^}]*image-rendering:auto;filter:none;/);
+  assert.match(css,/#customScreen \.custom-ai-portrait\{[^}]*object-position:center top;/);
+  assert.doesNotMatch(css,/image-rendering:\s*(?:pixelated|crisp-edges)/);
 });
