@@ -44,8 +44,8 @@ async function preloadAllGameAssets(){
       const path=paths[next++];
       try{
         if(!cachedAssetURLs.has(path)){
-          const blob=await AudioManager.getAsset(path);
-          cachedAssetURLs.set(path,URL.createObjectURL(blob));
+          const assetURL=await AudioManager.getURL(path);
+          cachedAssetURLs.set(path,assetURL);
           if(path.startsWith('assets/sound/') && path.endsWith('.mp3')){
             const name=path.slice('assets/sound/'.length,-4);
             if(AudioManager.isShort(name)) await AudioManager.preload(name);
@@ -418,7 +418,7 @@ function updateMuteUI(){
 }
 function playSfx(name,volume=.45){
   if(soundMuted)return null;
-  const a=AudioManager.play(name,clamp(volume,0,1));
+  const a=AudioManager.play(name,clamp(volume,0,1),{url:soundURL(name)});
   if(a){activeOneShots.add(a);
     const previous=a.onended;
     a.onended=()=>{activeOneShots.delete(a);if(typeof previous==='function')previous();};
@@ -1016,7 +1016,7 @@ function finishNight(success,message,attackerId=0){
   state.leftLight=false;state.rightLight=false;needsComposing=true;
   $('pauseBtn').classList.add('hidden');
   cameraToggle.classList.add('hidden');
-  stopAudioLoops();
+  stopAudioLoops();AudioManager.stopAll();activeOneShots.clear();
   if(success){
     if(currentNight===7){
       sevenNightsComplete=true;customCompleted=true;
@@ -1130,6 +1130,7 @@ const pausedAudio=new Set();
 function pauseGameAudio(){
   AudioManager.setPaused(true);
   for(const a of [...audioLoops.values(),...activeOneShots,phoneRingAudio,phoneVoiceAudio,powerFailure.audio].filter(Boolean)){
+    if(a.__webAudio)continue; // AudioContext suspension preserves decoded effect positions.
     if(!a.paused){pausedAudio.add(a);a.pause();}
   }
 }
