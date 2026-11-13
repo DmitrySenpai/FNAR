@@ -30,7 +30,7 @@ test('Signature is vector drawing, not a font or preprinted text',()=>{
 });
 test('Retro Custom Night uses four stable images and local per-AI updates',()=>{
   const app=source('app.js'),html=source('index.html'),css=source('style.css');
-  assert.match(app,/picture\.src='assets\/ui\/custom\/c'/);
+  assert.match(app,/picture\\.src=getCachedAssetURL\\('assets\\/ui\\/custom\\/c'/);
   assert.match(app,/picture\.className='custom-ai-portrait'/);
   assert.match(app,/customAI\[i\]=clamp\(customAI\[i\]\+delta,0,20\)/);
   assert.match(app,/writeSave\('kokhinhin_custom_ai'/);
@@ -53,5 +53,5 @@ test('All main entry points use the guarded fade and active game is deferred',()
   assert.match(app,/transitionToNight\(night,\{fromNewspaper:true\}\)/);
   assert.match(app,/function goMenu\(\)\{return sceneTransition/);
   assert.match(app,/transitionToNight\(currentNight\)/);
-  assert.match(app,/prefers-reduced-motion:reduce/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
 });
