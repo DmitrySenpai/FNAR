@@ -473,3 +473,41 @@ html, body, #app, #stage, #stage *, button, input {
   #nightSelectScreen:not(.hidden),#customScreen:not(.hidden){animation:none}
   .screen-transition{transition-duration:0ms!important}
 }
+
+/* Release: game text cannot be selected accidentally, but editing remains enabled. */
+#app, #stage, #stage * {
+  -webkit-user-select:none;
+  user-select:none;
+}
+#officeInput, #app input, #app textarea, #app [contenteditable="true"] {
+  -webkit-user-select:text;
+  user-select:text;
+}
+/* All three languages share a vertical, centered black opening screen. */
+#languageScreen .language-buttons {
+  display:flex;
+  flex-direction:column;
+  flex-wrap:nowrap;
+  justify-content:center;
+  align-items:stretch;
+  gap:1.45cqw;
+  width:min(56%,420px);
+  max-width:90%;
+  margin:0 auto;
+}
+#languageScreen .language-buttons .primary {
+  width:100%;
+  flex:0 0 auto;
+  min-width:0;
+  padding:1.2cqw 1.5cqw;
+  font-size:clamp(14px,2cqw,32px);
+  white-space:nowrap;
+}
+.phone-dialog-text { overflow-wrap:anywhere; }
+@media(max-width:660px) {
+  #languageScreen .language-buttons {width:min(78%,420px);gap:2cqw;}
+  #languageScreen .language-buttons .primary {padding:1.8cqw 1.5cqw;}
+}
+
+#languageScreen .language-choice {width:100%;display:flex;flex-direction:column;align-items:center;gap:1.8cqw;}
+#languageScreen .language-choice h2 {margin:0;color:#eee;font-size:clamp(15px,2.4cqw,38px);text-align:center;letter-spacing:.09em;}

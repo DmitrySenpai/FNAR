@@ -42,6 +42,42 @@
       ["РОЗЫГРЫШ СРЕДИ ОХРАННИКОВ","Приз — выходной после седьмой смены. Подать заявку?"]
     ]
   };
+  const en={
+    windowTitle:'Net System — Information',accept:'Accept',cancel:'Cancel',
+    usbHeader:'DEVICES NOT FOUND',usbBody:'No cameras are responding. You can still switch cameras. Waiting for the USB connection to recover…',
+    shutdown:'Shutting Down…',biosTitle:'NET SYSTEM BIOS v3.0',biosText:'Checking memory... OK\\nDetecting devices... OK\\nStarting Door XP...',
+    welcome:'Welcome',booting:'Starting system…',startVideo:'Starting Net Video 3.0…',
+    ads:[
+      ["YOU'VE WON!","You are this website's 47th visitor! Claim a free water cooler for your security office?"],
+      ["ANTI-ROOSTER PRO","New protection against sudden crowing and flying feathers. Activate your free trial?"],
+      ["HYPERSPEED","Make all nine cameras 100 times faster! Enable experimental optimization?"],
+      ["SYSTEM SCAN","47 suspicious feathers detected. Remove them automatically?"],
+      ["GIFT OF THE DAY","You've won a bag of premium chicken feed. Claim your prize?"],
+      ["IMPORTANT UPDATE","Your version of Net Video is 29 years out of date. Install the update?"],
+      ["NIGHT SHIFT BONUS","Want to double your salary without leaving your chair? Subscribe now?"],
+      ["MEMORY CLEANUP","Video memory is full of chicken footage. Start an instant cleanup?"],
+      ["COFFEE DEAL","Get one free coffee for every six hours of surveillance. Redeem now?"],
+      ["URGENT MESSAGE","Your computer is suffering from a critical cookie shortage. Fix it?"],
+      ["VIRUS DETECTED","Chicken.exe is requesting access to your cameras. Allow access?"],
+      ["OFFICE WEATHER","There is a 99% chance of feather showers tonight. View the forecast?"],
+      ["NET SYSTEM PLUS","Connect an extra camera to monitor the security guard himself?"],
+      ["SAFE NIGHT","An automated assistant promises to close doors for you. Install it?"],
+      ["LUCKY NUMBER","Your monitor has been selected for the Golden Comb lottery. Enter now?"],
+      ["SYSTEM ADVICE","We recommend turning off unnecessary flashlights to save power. Apply?"],
+      ["OFFICE NEWS","Employees may now watch cameras with their eyes closed. Learn more?"],
+      ["BROWSER EXTENSION","Translate rooster language for free. Install the extension?"],
+      ["PREMIUM MEMBERSHIP","Remove all ads forever for just 250 dollars per week. Sign up?"],
+      ["DIGITAL HOUSEKEEPING","128 virtual eggshells found in the Recycle Bin. Empty it?"],
+      ["TOP SECRET OFFER","Protect your office with a revolutionary tinfoil hat. Order now?"],
+      ["ACCESS REQUEST","Rooster Assistant wants to control your USB hub. Grant permission?"],
+      ["PRINTER DETECTED","Your printer is producing mysterious claw prints. Run diagnostics?"],
+      ["NO CONNECTION?","Our technician can restore your internet with three wing flaps. Call now?"],
+      ["VERIFY YOUR AGE","Please confirm you are over 18 to view dangerous chicken memes."],
+      ["OFFICE RADAR","Unusual movement detected in the corridor. Start a paid analysis?"],
+      ["PERSONAL DISCOUNT","Today only: 90% off a year's supply of batteries. Get your coupon?"],
+      ["SECURITY GUARD GIVEAWAY","Win a day off after your seventh shift. Enter the giveaway?"]
+    ]
+  };
   const ja={
     windowTitle:'Net System — お知らせ',accept:'承諾',cancel:'キャンセル',
     usbHeader:'カメラに接続できません',usbBody:'すべてのカメラが使用できません。カメラの切り替えは可能です。USBの再接続を待機中…',
@@ -81,6 +117,19 @@
   const FAULTS=window.FNAR_TABLET_FAULTS;
   if(!FAULTS)throw new Error('fnar-tablet-faults.js must load before tablet-os.js');
   const uiText={
+    en:{
+      frozen:'WARNING: VIDEO FEED FROZEN',stale:'PLAYBACK DELAY DETECTED',signal:'NO SIGNAL',
+      lag:'Video system is processing your request…',
+      crashTitle:'Net Video 3.0 — Application Error',
+      crashBody:'Net Video 3.0 has encountered a critical error and must close.',
+      crashCode:'Error code: 0xC0000005',close:'Close',launch:'Start Net Video 3.0',
+      audio:'NET SYSTEM — Playing advertisement',chickenTitle:'Chicken.exe — Installation Complete',
+      chickenBody:'Congratulations! Your computer is now protected by chicken technology!',
+      chickenWatch:'CHICKEN.EXE IS WATCHING YOU',chickenAlert:'Your chicken protection is working correctly!',
+      chickenEgg:'System detected 47 chicken footprints.',chickenUpdate:'Chicken.exe is updating its beak…',
+      chickenSystemTitle:'Chicken.exe — System Warning',
+      chickenSystemBody:'Unauthorized feather activity detected in system memory.'
+    },
     ru:{
       frozen:'WARNING: VIDEO FEED FROZEN',stale:'PLAYBACK DELAY DETECTED',signal:'NO SIGNAL',
       lag:'Видеосистема обрабатывает запрос…',
@@ -110,8 +159,8 @@
   };
   const faultText=()=>uiText[lang()];
   const safeRead=key=>{try{return localStorage.getItem(key)}catch(_){return null}};
-  const lang=()=>document.documentElement.lang==='ja'||safeRead('kokhinhin_lang')==='ja'?'ja':'ru';
-  const tr=()=>lang()==='ja'?ja:ru;
+  const lang=()=>['ru','en','ja'].includes(document.documentElement.lang)?document.documentElement.lang:'ru';
+  const tr=()=>({ru,en,ja})[lang()]||ru;
   const random=(a,b)=>a+Math.random()*(b-a);
   const choose=(a)=>a[Math.floor(Math.random()*a.length)];
   // The ad countdown is consumed only while CCTV is open and fully operational.

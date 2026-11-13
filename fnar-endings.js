@@ -1,4 +1,4 @@
-/* Bilingual company documents for nights 5, 6 and Custom Night.
+/* Trilingual company documents for nights 5, 6 and Custom Night.
    Pure data builder; safe for Node regression tests and browser rendering. */
 (function(root,factory){
   const api=factory();
@@ -7,6 +7,39 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
   const DOCUMENTS={
+    en:{
+      5:{title:'SALARY PAYMENT NOTICE',stamp:'',
+        lines:[
+          ['This notice confirms that the night security employee has successfully completed five night shifts.'],
+          ['Period of employment: 5 nights.'],
+          ['Salary paid: 250 dollars.',true],
+          ['Payment has been issued in accordance with company policy.'],
+          ['Thank you for your hard work!']
+        ]},
+      6:{title:'ADDITIONAL PAYMENT NOTICE',stamp:'OVERTIME SHIFT',
+        lines:[
+          ['Dear Employee,'],
+          ['Having successfully completed an additional night shift, you have been awarded a bonus by company management.'],
+          ['Base salary: 250 dollars.'],
+          ['Additional payment: {bonus} dollars.'],
+          ['Total payment: {total} dollars.',true],
+          ['Thank you for working beyond your regular schedule.'],
+          ['We look forward to working with you again!']
+        ]},
+      7:{title:'NOTICE OF TERMINATION',stamp:'TERMINATED',
+        lines:[
+          ['Dear Employee,'],
+          ['Following an inspection of the premises after your final night shift, company management has decided to terminate your employment.'],
+          ['Reason for termination: Violation of workplace rules and disorderly conduct in the office.',true],
+          ['The inspection revealed the following violations:'],
+          ['• Failure to maintain order in the workplace.'],
+          ['• Unsatisfactory condition of company premises.'],
+          ['• Failure to comply with internal company policies.'],
+          ['For these reasons, you are relieved of your position as night security guard.'],
+          ['This decision is final.',true],
+          ['Thank you for your service.']
+        ]}
+    },
     ru:{
       5:{title:'УВЕДОМЛЕНИЕ О ВЫПЛАТЕ ЗАРАБОТНОЙ ПЛАТЫ',stamp:'',
         lines:[
@@ -76,14 +109,14 @@
   };
   function getDocument(night,lang='ru',office='',bonus=50){
     if(!Number.isInteger(night)||night<5||night>7)return null;
-    const japanese=lang==='ja',source=DOCUMENTS[japanese?'ja':'ru'][night];
+    const japanese=lang==='ja',english=lang==='en',source=DOCUMENTS[japanese?'ja':english?'en':'ru'][night];
     const overtime=Number.isFinite(Number(bonus))?Math.max(0,Number(bonus)):50;
     const vars={bonus:overtime,total:250+overtime};
     return {
       title:source.title,stamp:source.stamp,
-      company:(japanese?'会社名：':'Компания: ')+String(office),
-      signer:japanese?'会社管理部':'Администрация компании',
-      signatureLabel:japanese?'署名':'Подпись',
+      company:(japanese?'会社名：':english?'Company: ':'Компания: ')+String(office),
+      signer:japanese?'会社管理部':english?'Company Management':'Администрация компании',
+      signatureLabel:japanese?'署名':english?'Signature':'Подпись',
       lines:source.lines.map(([value,strong=false])=>({
         text:value.replace(/\{(bonus|total)\}/g,(_,name)=>String(vars[name])),strong
       }))
