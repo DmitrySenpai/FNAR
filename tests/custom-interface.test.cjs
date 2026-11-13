@@ -55,3 +55,14 @@ test('All main entry points use the guarded fade and active game is deferred',()
   assert.match(app,/transitionToNight\(currentNight\)/);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
+
+test('Four custom portraits are valid square PNG assets',()=>{
+  for(let i=1;i<=4;i++){
+    const file=fs.readFileSync(path.join(root,'assets','ui','custom','c'+i+'.png'));
+    assert.ok(file.length>1000,'portrait is not empty');
+    assert.equal(file.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+    const width=file.readUInt32BE(16),height=file.readUInt32BE(20);
+    assert.equal(width,height,'square portrait '+i);
+    assert.ok(width>=48,'portrait too small for game '+i);
+  }
+});
