@@ -78,6 +78,9 @@ button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opac
 .camera-rooster-signal.is-active{
   animation:camera-rooster-signal 500ms linear both;
 }
+@media (prefers-reduced-motion:reduce){
+  .camera-rooster-signal.is-active{animation:none;opacity:.14}
+}
 @keyframes camera-rooster-signal{
   0%{opacity:0;background-position:0 0,0 0}
   18%{opacity:.11;background-position:0 1px,4px 0}
