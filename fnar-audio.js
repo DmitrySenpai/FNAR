@@ -220,6 +220,7 @@
         get loop(){return loop;},
         get onended(){return ended;},set onended(fn){ended=fn;},
         get onerror(){return error;},set onerror(fn){error=fn;},
+        dispose(){pause();disposed=true;active.delete(handle);mixer?.forget(handle);try{gain.disconnect();}catch(_){}},
         addEventListener(type,fn){if(!listeners.has(type))listeners.set(type,new Set());listeners.get(type).add(fn);},
         removeEventListener(type,fn){listeners.get(type)?.delete(fn);}
       };
@@ -244,10 +245,14 @@
     if(!paused)handle.play().catch(e=>warnOnce('Playback blocked: '+name,e));
     return handle;
   }
+  function release(token){
+    if(!token)return;
+    if(typeof token.dispose==='function')token.dispose();
+    else {token.pause();active.delete(token);global.FNAR_AUDIO_SETTINGS?.forget(token);}
+  }
   function stop(name) {
     for(const token of [...active])if(!name||token.__name===name){
-      token.pause();try{token.currentTime=0;}catch(_){}
-      active.delete(token);global.FNAR_AUDIO_SETTINGS?.forget(token);
+      release(token);try{token.currentTime=0;}catch(_){}
     }
   }
   const stopAll=()=>stop();
@@ -278,7 +283,7 @@
     const result={available:true,entries:keys.length,valid,invalid};
     console.table(result);return result;
   }
-  const api={getAsset,getURL,preload,unlock,play,stop,stopAll,setMuted,setPaused,
+  const api={getAsset,getURL,preload,unlock,play,stop,stopAll,release,setMuted,setPaused,
     cleanOldCaches,checkCache,fetchFull,contentRange,
     isShort:name=>SHORT.has(name),hasBuffer:name=>audioBuffers.has(name),cacheName:CACHE,
     status(){const result={cachedObjectURLs:urls.size,decoded:audioBuffers.size,
