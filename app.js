@@ -31,7 +31,8 @@ async function preloadAllGameAssets(){
     ...PRELOAD_CAMERA_NAMES.map(n=>'assets/cameras/'+n),
     ...PRELOAD_SOUND_NAMES.map(n=>'assets/sound/'+n+'.mp3'),
     ...[1,2,3,4].map(n=>'assets/screamers/rooster_'+n+'_scream.webm'),
-    'assets/sound/static-bm.webm', 'assets/menu/rooster_menu.webp', 'assets/ui/today_news.webp', 'assets/ui/tablet/shutdown.webp', 'assets/ui/tablet/desktop.webp', 'assets/ui/tablet/netvideo.webp', 'assets/ui/tablet/boot.webp'];
+    'assets/sound/static-bm.webm', 'assets/menu/rooster_menu.webp', 'assets/ui/today_news.webp',
+    ...[1,2,3,4].map(n=>'assets/ui/custom/c'+n+'.png'), 'assets/ui/director_signature.svg', 'assets/ui/tablet/shutdown.webp', 'assets/ui/tablet/desktop.webp', 'assets/ui/tablet/netvideo.webp', 'assets/ui/tablet/boot.webp'];
   let done=0;preloadProgress(done,paths.length);
   // file:// cannot use CacheStorage/fetch; standalone files embed their game art and audio.
   if(location.protocol==='file:'){
@@ -128,7 +129,7 @@ const L10N={
   camNames:['Северная','Коридор','Правый коридор','Ресепшен','Опен-спейс','Левый коридор','Левый выход','Кабинет директора','Правый выход'],
   leftLight:'Свет слева',rightLight:'Свет справа',leftDoorLabel:'Дверь слева',rightDoorLabel:'Дверь справа',phoneLabel:'Телефон на столе',
   openCamera:'Открыть камеры наблюдения',closeCamera:'Закрыть камеры наблюдения',
-  mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.',nightSelectTitle:'ВЫБОР НОЧИ',night6:'6 НОЧЬ',night:'Ночь {night}',custom:'CUSTOM',startNight:'НАЧАТЬ НОЧЬ',back:'НАЗАД',locked:'ЗАБЛОКИРОВАНО',aiLevel:'AI: {level}',payrollTitle:'УВЕДОМЛЕНИЕ О ВЫПЛАТЕ ЗАРАБОТНОЙ ПЛАТЫ',bonusTitle:'УВЕДОМЛЕНИЕ О ДОПОЛНИТЕЛЬНОЙ ВЫПЛАТЕ',dismissalTitle:'УВЕДОМЛЕНИЕ ОБ УВОЛЬНЕНИИ',company:'Компания: {office}',signature:'Администрация компании  /  Подпись: __________',overtime:'СВЕРХУРОЧНАЯ СМЕНА',dismissed:'УВОЛЕН'},
+  mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.',nightSelectTitle:'ВЫБОР НОЧИ',night6:'6 НОЧЬ',night:'Ночь {night}',custom:'CUSTOM',startNight:'НАЧАТЬ',customDifficulty:'(0–2) EASY   (3–6) MED   (7–12) HARD   (13–20) EXTREME',back:'НАЗАД',locked:'ЗАБЛОКИРОВАНО',aiLevel:'AI: {level}',payrollTitle:'УВЕДОМЛЕНИЕ О ВЫПЛАТЕ ЗАРАБОТНОЙ ПЛАТЫ',bonusTitle:'УВЕДОМЛЕНИЕ О ДОПОЛНИТЕЛЬНОЙ ВЫПЛАТЕ',dismissalTitle:'УВЕДОМЛЕНИЕ ОБ УВОЛЬНЕНИИ',company:'Компания: {office}',signature:'Администрация компании  /  Подпись: __________',overtime:'СВЕРХУРОЧНАЯ СМЕНА',dismissed:'УВОЛЕН'},
  ja:{chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langJa:'日本語',
   warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',skipConversation:'通話をスキップ',
   officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
@@ -145,7 +146,7 @@ const L10N={
   camNames:['北エリア','廊下','右の廊下','受付','オープンスペース','左の廊下','左の出口','社長室','右の出口'],
   leftLight:'左のライト',rightLight:'右のライト',leftDoorLabel:'左のドア',rightDoorLabel:'右のドア',phoneLabel:'机の電話',
   openCamera:'監視カメラを開く',closeCamera:'監視カメラを閉じる',
-  mute:'消音',unmute:'音声をオン',viewCenter:'正面',viewLeft:'左を見る',viewRight:'右を見る',newspaperHeadline:'{office} が夜勤警備員を緊急募集',newspaperShift:'勤務時間: 00:00 から 06:00。',newspaperDuty:'業務内容: 夜間のオフィス監視。',newspaperPay:'給与: 週 250 ドル。',nightSelectTitle:'夜の選択',night6:'第6夜',night:'第{night}夜',custom:'カスタム',startNight:'夜を開始',back:'戻る',locked:'ロック中',aiLevel:'AI: {level}',payrollTitle:'給与支払通知書',bonusTitle:'追加手当支給通知書',dismissalTitle:'解雇通知書',company:'会社名：{office}',signature:'会社管理部  /  署名：__________',overtime:'時間外勤務',dismissed:'解雇'}
+  mute:'消音',unmute:'音声をオン',viewCenter:'正面',viewLeft:'左を見る',viewRight:'右を見る',newspaperHeadline:'{office} が夜勤警備員を緊急募集',newspaperShift:'勤務時間: 00:00 から 06:00。',newspaperDuty:'業務内容: 夜間のオフィス監視。',newspaperPay:'給与: 週 250 ドル。',nightSelectTitle:'夜の選択',night6:'第6夜',night:'第{night}夜',custom:'カスタム',startNight:'開始',customDifficulty:'(0–2) やさしい   (3–6) 普通   (7–12) 難しい   (13–20) 最高難度',back:'戻る',locked:'ロック中',aiLevel:'AI: {level}',payrollTitle:'給与支払通知書',bonusTitle:'追加手当支給通知書',dismissalTitle:'解雇通知書',company:'会社名：{office}',signature:'会社管理部  /  署名：__________',overtime:'時間外勤務',dismissed:'解雇'}
 };
 let gameLanguage='ru',currentNight=1,unlockedNight=Math.max(1,Math.min(7,Number(readSave('kokhinhin_unlocked'))||1));
 let sevenNightsComplete=readSave('kokhinhin_complete')==='1';
@@ -199,25 +200,37 @@ function showNightSelect(){
     button.type='button';button.className='secondary-action';
     button.disabled=night>unlockedNight||state.loaded!==names.length;
     button.textContent=t('night',{night})+(night>unlockedNight?' · '+t('locked'):'');
-    button.addEventListener('click',()=>{if(canStartNight(night)){closeNightMenus();start(night);}});
+    button.addEventListener('click',()=>{if(canStartNight(night))transitionToNight(night);});
     list.appendChild(button);
   }
   $('nightSelectScreen').classList.remove('hidden');
 }
+// Build portraits once per visit. Changing AI updates only the number and arrows.
 function renderCustomAI(){
   const grid=$('customAIGrid');grid.replaceChildren();
-  customAI.forEach((level,i)=>{
-    const row=document.createElement('div');row.className='custom-ai-row';
-    const name=document.createElement('strong');name.textContent='C'+(i+1);
-    const down=document.createElement('button');down.type='button';down.textContent='−';down.setAttribute('aria-label','C'+(i+1)+' −');
-    const value=document.createElement('span');value.textContent=t('aiLevel',{level});
-    const up=document.createElement('button');up.type='button';up.textContent='+';up.setAttribute('aria-label','C'+(i+1)+' +');
-    down.disabled=level===0;up.disabled=level===20;
+  customAI.forEach((initial,i)=>{
+    const cell=document.createElement('div');cell.className='custom-ai-row';
+    const picture=document.createElement('img');picture.className='custom-ai-portrait';
+    picture.src=getCachedAssetURL('assets/ui/custom/c'+(i+1)+'.png');picture.alt='';picture.draggable=false;
+    const label=document.createElement('span');label.className='custom-ai-label';label.textContent='A.I. Level';
+    const controls=document.createElement('div');controls.className='custom-ai-controls';
+    const down=document.createElement('button');down.type='button';down.textContent='◀';
+    down.setAttribute('aria-label','C'+(i+1)+' −');
+    const value=document.createElement('output');value.className='custom-ai-value';
+    value.setAttribute('aria-label','C'+(i+1)+' AI');
+    const up=document.createElement('button');up.type='button';up.textContent='▶';
+    up.setAttribute('aria-label','C'+(i+1)+' +');
+    const update=()=>{
+      value.textContent=String(customAI[i]);
+      down.disabled=customAI[i]===0;up.disabled=customAI[i]===20;
+    };
     for(const [button,delta] of [[down,-1],[up,1]])button.addEventListener('click',()=>{
       customAI[i]=clamp(customAI[i]+delta,0,20);
-      writeSave('kokhinhin_custom_ai',JSON.stringify(customAI));renderCustomAI();
+      writeSave('kokhinhin_custom_ai',JSON.stringify(customAI));
+      update();
     });
-    row.append(name,down,value,up);grid.appendChild(row);
+    update();controls.append(down,value,up);
+    cell.append(picture,label,controls);grid.appendChild(cell);
   });
 }
 function showCustomNight(debugPreview=false){
@@ -228,9 +241,76 @@ function showCustomNight(debugPreview=false){
 }
 $('nightSelectBack').addEventListener('click',closeNightMenus);
 $('customBack').addEventListener('click',closeNightMenus);
-$('customStart').addEventListener('click',()=>{if(canStartNight(7)){closeNightMenus();start(7);}});
-$('night6Btn').addEventListener('click',()=>{if(canStartNight(6))start(6);});
+$('customStart').addEventListener('click',()=>{if(canStartNight(7))transitionToNight(7);});
+$('night6Btn').addEventListener('click',()=>{if(canStartNight(6))transitionToNight(6);});
 $('customBtn').addEventListener('click',()=>showCustomNight());
+
+
+// A single guarded fade controller for all main scene changes.
+// Gameplay is prepared under full black and activated only after fade-in.
+const screenTransition=$('screenTransition');
+let transitionBusy=false;
+const prefersReducedTransitions=window.matchMedia('(prefers-reduced-motion: reduce)');
+function fadeScreen(toBlack,milliseconds){
+  return new Promise(resolve=>{
+    const duration=prefersReducedTransitions.matches?0:milliseconds;
+    let settled=false,timer=null;
+    const onEnd=event=>{
+      if(event.target===screenTransition&&event.propertyName==='opacity')finish();
+    };
+    const finish=()=>{
+      if(settled)return;
+      settled=true;
+      if(timer!==null)clearTimeout(timer);
+      screenTransition.removeEventListener('transitionend',onEnd);
+      resolve();
+    };
+    screenTransition.addEventListener('transitionend',onEnd);
+    screenTransition.style.transitionDuration=duration+'ms';
+    void screenTransition.offsetWidth;
+    screenTransition.style.opacity=toBlack?'1':'0';
+    if(duration===0){finish();return;}
+    // Fallback for hidden tabs, interrupted CSS transitions and browser quirks.
+    timer=setTimeout(finish,duration+120);
+  });
+}
+async function sceneTransition(swapScene,{activateNight=false}={}){
+  if(transitionBusy)return false;
+  transitionBusy=true;
+  const priorPause=state.paused,priorActive=state.active;
+  if(state.active){state.paused=true;clearHeldActions();}
+  screenTransition.classList.add('is-transitioning');
+  let successful=false;
+  try{
+    await fadeScreen(true,700);
+    const result=await swapScene();
+    if(result===false)throw new Error('Screen preparation was rejected');
+    await fadeScreen(false,800);
+    if(activateNight){
+      state.active=true;state.paused=false;state.last=performance.now();
+      startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);
+    }
+    successful=true;
+    return true;
+  }catch(error){
+    console.error('FNAR screen transition failed',error);
+    try{goMenuInstant();}catch(_){}
+    return false;
+  }finally{
+    if(!successful)await fadeScreen(false,800);
+    if(priorActive&&state.active&&!activateNight)state.paused=priorPause;
+    screenTransition.classList.remove('is-transitioning');
+    screenTransition.style.opacity='0';transitionBusy=false;
+  }
+}
+function transitionToNight(night,{intro=false,fromNewspaper=false}={}){
+  if(transitionBusy||state.loaded!==names.length||!canStartNight(Number(night)))return false;
+  return sceneTransition(()=>{
+    if(intro){showNewspaperIntro(night);return true;}
+    if(fromNewspaper)clearNewspaperIntro();
+    return start(night,{force:true,deferActive:true,suppressIntro:true});
+  },{activateNight:!intro});
+}
 
 const NEWSPAPER_SHOW_MS=5000,NEWSPAPER_FADE_MS=900;
 let newspaperStartTimer=null,newspaperHideTimer=null,newspaperWelcomeTimer=null;
@@ -285,9 +365,7 @@ function showNewspaperIntro(night){
   },NEWSPAPER_FADE_MS+80);
   newspaperStartTimer=setTimeout(()=>{
     newspaperStartTimer=null;
-    start(night,{suppressIntro:true});
-    requestAnimationFrame(()=>scr.classList.add('is-leaving'));
-    newspaperHideTimer=setTimeout(()=>{clearNewspaperIntro();},NEWSPAPER_FADE_MS);
+    transitionToNight(night,{fromNewspaper:true});
   },NEWSPAPER_SHOW_MS);
 }
 function applyTranslations(){
@@ -884,7 +962,8 @@ function showCompanyDocument(night){
     else p.textContent=line.text;
     body.appendChild(p);
   }
-  $('documentSignature').textContent=model.signature;
+  $('documentSigner').textContent=model.signer;
+  $('documentSignatureLabel').textContent=model.signatureLabel;
   const stamp=$('documentStamp');stamp.textContent=model.stamp;
   stamp.classList.toggle('hidden',!model.stamp);
   stamp.classList.toggle('dismissal-stamp',night===7);
@@ -1020,7 +1099,7 @@ function moveEnemies(dt){
 }
 cameraToggle.addEventListener('click',toggleCamera);
 cameraNodes.forEach(b=>b.addEventListener('click',()=>chooseCamera(Number(b.dataset.camera))));
-function goMenu(){
+function goMenuInstant(){
   clearVictorySequence();
   clearResignation();
   clearNewspaperIntro();
@@ -1034,12 +1113,13 @@ function goMenu(){
   $('welcome').classList.remove('hidden');updateContinueButton();syncMenuStatic();
   $('pauseBtn').classList.add('hidden');
 }
+function goMenu(){return sceneTransition(()=>{goMenuInstant();return true;});}
 $('restartBtn').addEventListener('click',()=>{
   if($('ending').dataset.success==='true'&&currentNight===7){goMenu();return;}
-  start($('ending').dataset.success==='true'?currentNight+1:currentNight);
+  transitionToNight($('ending').dataset.success==='true'?currentNight+1:currentNight);
 });
 $('endingMenuBtn').addEventListener('click',goMenu);
-$('victoryNextBtn').addEventListener('click',()=>{if(currentNight<=4)start(currentNight+1);else goMenu();});
+$('victoryNextBtn').addEventListener('click',()=>{if(currentNight<=4)transitionToNight(currentNight+1);else goMenu();});
 $('resignationMenuBtn').addEventListener('click',goMenu);
 const pausedAudio=new Set();
 function pauseGameAudio(){
@@ -1066,7 +1146,7 @@ function togglePause(force){
 }
 $('pauseBtn').addEventListener('click',()=>togglePause());
 $('pauseResume').addEventListener('click',()=>togglePause(false));
-$('pauseRestart').addEventListener('click',()=>{togglePause(false);start(currentNight,{force:true});});
+$('pauseRestart').addEventListener('click',()=>{transitionToNight(currentNight);});
 $('pauseMenu').addEventListener('click',goMenu);
 resetEnemies();chooseCamera(1);preloadFutureCameras();
 
@@ -1222,7 +1302,7 @@ function start(night=1,options={}){
   if(state.loaded!==names.length||!canStartNight(Number(night)))return;
   if(state.active&&!options.force)return;
   closeNightMenus();
-  if(options && options.intro){showNewspaperIntro(night);return;}
+  if(options && options.intro){return transitionToNight(night,{intro:true});}
   clearVictorySequence();
   clearResignation();
   currentNight=clamp(Number(night)||1,1,7);state.night=currentNight;
@@ -1231,8 +1311,8 @@ function start(night=1,options={}){
   state.paused=false;resumeGameAudio();$('pauseScreen').classList.add('hidden');$('pauseBtn').classList.remove('hidden');
   $('settings').classList.add('hidden');$('cameraNightLabel').textContent=t('titleNight',{night:currentNight});
   resetJumpscare();resetPowerFailure();resetPhone();stopAudioLoops();
-  state.started=state.active=true;state.gameOver=false;
-  startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);
+  state.started=true;state.active=!options.deferActive;state.gameOver=false;
+  if(state.active){startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);}
   $('welcome').classList.add('hidden');syncMenuStatic();$('hud').classList.remove('hidden');$('ending').classList.add('hidden');cameraToggle.classList.remove('hidden');
   state.target=state.yaw=0;POWER.resetNight(state);state.last=performance.now();
   state.leftDoor=state.rightDoor=state.leftLight=state.rightLight=false;
@@ -1240,6 +1320,7 @@ function start(night=1,options={}){
   resetEnemies();needsComposing=true;
   if(cameraOpen){cameraOpen=false;cameraScreen.classList.remove('is-open');cameraScreen.setAttribute('aria-hidden','true');cameraToggle.setAttribute('aria-expanded','false');}
   shownCameraFile='';chooseCamera(1);updateClock();updateStatus();
+  return true;
 }
 function setSliders(){
   for(const [key,property,scale] of [['turnAmount','angle',100],['fishAmount','fish',100],['smoothAmount','smooth',100]]){
@@ -1248,7 +1329,7 @@ function setSliders(){
 }
 function toggleSettings(){if(!state.active)return;if(cameraOpen)setCameraOpen(false);clearHeldActions();$('settings').classList.toggle('hidden');}
 async function toggleFullscreen(){try{if(!document.fullscreenElement){await stage.requestFullscreen();try{await screen.orientation?.lock?.('landscape')}catch(_) {}}else await document.exitFullscreen();}catch(e){showToast('Полный экран недоступен');}}
-$('startBtn').addEventListener('click',()=>start(1,{intro:true}));$('continueBtn').addEventListener('click',()=>{if(unlockedNight>1)showNightSelect();});$('officeInput').addEventListener('keydown',e=>{if(e.key==='Enter')start(1,{intro:true});});
+$('startBtn').addEventListener('click',()=>transitionToNight(1,{intro:true}));$('continueBtn').addEventListener('click',()=>{if(unlockedNight>1)showNightSelect();});$('officeInput').addEventListener('keydown',e=>{if(e.key==='Enter')transitionToNight(1,{intro:true});});
 $('settingsBtn').addEventListener('click',toggleSettings);
 $('closeSettings').addEventListener('click',toggleSettings);$('closeSettingsPrimary').addEventListener('click',toggleSettings);
 $('fullscreenBtn').addEventListener('click',toggleFullscreen);
