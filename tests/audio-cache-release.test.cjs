@@ -122,3 +122,10 @@ test('predecoded WebAudio effect follows only master volume, including mute/paus
   await fx.api.preload('beep');
   assert.equal(fx.metrics.decodeCalls,1);
 });
+
+test('flashlight loop is routed through a decoded WebAudio buffer when available',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
+  assert.match(app,/name==='light'&&window\.AudioManager\.hasBuffer\(name\)/);
+  assert.match(app,/window\.AudioManager\.play\(name,volume,\{loop:true,url:soundURL\(name\)\}\)/);
+  assert.match(app,/window\.AudioManager\.release\(a\);audioLoops\.delete\(name\)/);
+});
