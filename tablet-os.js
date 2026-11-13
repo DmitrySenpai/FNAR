@@ -364,7 +364,7 @@
     const body=addChicken('div','tablet-chicken-error-body',panel);
     body.textContent=choose([faultText().chickenSystemBody,...CHICKEN_ERRORS,
       faultText().chickenAlert,faultText().chickenEgg]);
-    if(game.getCompanyProfile()?.profileId==='chicken-exe'&&Math.random()<.20)
+    if(game.getCompanyProfile?.()?.profileId==='chicken-exe'&&Math.random()<.20)
       body.textContent='CHICKEN.EXE RECOGNIZED YOUR COMPANY';
     panel.style.left=random(7,42)+'%';panel.style.top=random(12,58)+'%';
     return panel;
@@ -582,7 +582,7 @@
     lastAdIndex=index;
     const [h,txt]=adTexts[index];
     popupHeading.textContent=tr().windowTitle;popupTitle.textContent=h;popupText.textContent=txt;
-    if(game.getCompanyProfile()?.profileId==='net-system'&&Math.random()<.20)
+    if(game.getCompanyProfile?.()?.profileId==='net-system'&&Math.random()<.20)
       popupText.textContent+='\nRegistered organization: Net System';
     adMoving=Math.random()<.5;
     popupDialog.classList.remove('is-floating','is-paused');
