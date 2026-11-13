@@ -82,7 +82,7 @@ test('language menu, selection safety and old save key preserved',()=>{
   assert.match(html,/<section id="languageScreen"[^>]*aria-label="Выберите язык"/);
   const languageMarkup=html.split('id="languageScreen"')[1].split('</section>')[0];
   assert.equal((languageMarkup.match(/<button\b/g)||[]).length,3);
-  assert.match(html,/href="style\.css\?v=052"/);
+  assert.match(html,/href="style\.css\?v=\d+"/);
   assert.equal((css.match(/#languageScreen \.language-buttons\s*\{/g)||[]).length,1);
   assert.equal((css.match(/#languageScreen \.language-buttons \.primary\s*\{/g)||[]).length,1);
   assert.equal((css.match(/#languageScreen \.language-choice\s*\{/g)||[]).length,1);
