@@ -526,25 +526,95 @@ html, body, #app, #stage, #stage *, button, input {
 }
 .phone-dialog-text { overflow-wrap:anywhere; }
 
-/* Audio settings: stay inside the pause panel, with keyboard and touch support. */
-#pauseScreen .pause-card{
-  max-height:92%;max-width:94%;overflow-y:auto;overscroll-behavior:contain;
+/* Compact single volume slider; no nested panels or scrolling on standard 16:9. */
+#pauseScreen .pause-card {
+  max-width:94%;
+  max-height:94%;
+  overflow:visible;
 }
-.audio-settings-panel{display:flex;flex-direction:column;gap:clamp(7px,.8cqw,12px);
-  border:1px solid #655640;padding:clamp(8px,1.15cqw,17px);background:#070807;}
-.audio-volume-row{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.5fr) auto;
-  align-items:center;gap:clamp(6px,.8cqw,14px);
-  font-size:clamp(10px,1.05cqw,16px);color:#eee0c8;}
-.audio-volume-row span{min-width:0;overflow-wrap:anywhere;}
-.audio-volume-row input{width:100%;min-width:0;accent-color:#dab17a;
-  cursor:pointer;touch-action:pan-x;}
-.audio-volume-row output{min-width:3.5ch;text-align:right;font-variant-numeric:tabular-nums;}
-#audioSettingsBack{width:100%;min-height:clamp(32px,3cqw,46px);}
-#pauseAudioSettings{width:100%;min-height:clamp(34px,3.25cqw,46px);}
-@media(max-width:660px){
-  #pauseScreen .pause-card{width:88%;min-width:0;padding:1.4cqw;gap:.5cqw;}
-  .audio-settings-panel{gap:5px;padding:6px;}
-  .audio-volume-row{font-size:clamp(9px,1.5cqw,14px);gap:5px;}
+.pause-volume {
+  display:flex;
+  flex-direction:column;
+  gap:clamp(4px,.6cqw,10px);
+  width:100%;
+  margin:.15cqw 0 0;
+}
+.pause-volume label {
+  display:block;
+  color:#e5d2b6;
+  font-size:clamp(11px,1.12cqw,17px);
+  font-weight:750;
+  letter-spacing:.075em;
+  text-align:left;
+}
+.pause-volume-controls {
+  display:flex;
+  align-items:center;
+  gap:clamp(8px,1cqw,15px);
+  width:100%;
+}
+.pause-volume input {
+  flex:1 1 auto;
+  min-width:0;
+  margin:0;
+  accent-color:#dab17a;
+  touch-action:pan-x;
+}
+.pause-volume output {
+  flex:0 0 auto;
+  min-width:42px;
+  color:#efe3d0;
+  font-size:clamp(11px,1.08cqw,16px);
+  font-variant-numeric:tabular-nums;
+  text-align:right;
+}
+/* On very small 16:9 stage sizes, reduce spacing rather than clipping or scrolling. */
+@container (max-width: 800px) {
+  #pauseScreen .pause-card {
+    width:min(84%,420px);
+    min-width:0;
+    max-height:96%;
+    padding:clamp(4px,.85cqw,10px);
+    gap:clamp(1px,.35cqw,4px);
+  }
+  #pauseScreen .pause-card .eyebrow {
+    font-size:clamp(8px,1cqw,11px);
+    line-height:1.1;
+    margin:0;
+  }
+  #pauseScreen .pause-card h2 {
+    font-size:clamp(16px,3cqw,24px);
+    line-height:1;
+    margin:0;
+  }
+  #pauseScreen .pause-card > .primary,
+  #pauseScreen .pause-card > .secondary-action {
+    min-height:clamp(20px,3.3cqw,28px);
+    padding:clamp(2px,.35cqw,4px) .6cqw;
+    font-size:clamp(9px,1.35cqw,14px);
+    line-height:1.1;
+  }
+  #pauseScreen .pause-volume {
+    gap:clamp(1px,.25cqw,3px);
+    margin:0;
+  }
+  #pauseScreen .pause-volume label,
+  #pauseScreen .pause-volume output {
+    font-size:clamp(9px,1.35cqw,12px);
+  }
+  #pauseScreen .pause-volume-controls {gap:6px;min-height:16px;}
+  #pauseScreen .pause-volume input {height:16px;}
+  #pauseScreen .pause-utilities {margin:0;gap:clamp(4px,1cqw,10px);}
+  #pauseScreen .pause-utilities .icon-button {
+    width:clamp(18px,3.4cqw,30px);
+    height:clamp(18px,3.4cqw,30px);
+    font-size:clamp(12px,2.3cqw,18px);
+  }
+  #pauseScreen .pause-card small {
+    font-size:clamp(8px,1.1cqw,11px);
+    line-height:1.1;
+    margin:0;
+  }
 }
 /* Harmless visual ambience: all events are rendered over, never into, the camera image. */
 .atmosphere-overlay{position:absolute;inset:0;opacity:0;pointer-events:none!important;

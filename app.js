@@ -113,7 +113,7 @@ function writeSave(key,value){
   safeStore(key,v);
 }
 const L10N={
-en:{audioSettingsTitle:'AUDIO SETTINGS',audioMaster:'Master Volume',audioEffects:'Sound Effects',audioAmbience:'Ambience',audioPhone:'Phone',audioTablet:'Door XP',holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point at the door controls',imageLoadError:'Could not load {name}. Check the assets/room folder.',
+en:{audioVolume:'VOLUME',holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point at the door controls',imageLoadError:'Could not load {name}. Check the assets/room folder.',
   chooseLanguage:'SELECT LANGUAGE',languagePrompt:'Game Language',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'WARNING',warningBody:'This game contains sudden loud noises, jumpscares, flashing images and intense scenes. Keep your volume at a moderate level.',warningAccept:'I UNDERSTAND · CONTINUE',
   preloadTitle:'PREPARING GAME',preloadStatus:'Loading assets: {n} / {total} ({percent}%)',preloadRetry:'RETRY LOADING',preloadError:'Some resources could not be loaded. Check your connection and try again.',
@@ -140,7 +140,7 @@ en:{audioSettingsTitle:'AUDIO SETTINGS',audioMaster:'Master Volume',audioEffects
   bonusTitle:'ADDITIONAL PAYMENT NOTICE',dismissalTitle:'NOTICE OF TERMINATION',
   company:'Company: {office}',signature:'Company Management / Signature: __________',overtime:'OVERTIME SHIFT',dismissed:'TERMINATED'
  },
- ru:{audioSettingsTitle:'НАСТРОЙКИ ЗВУКА',audioMaster:'Общая громкость',audioEffects:'Звуковые эффекты',audioAmbience:'Атмосфера',audioPhone:'Телефон',audioTablet:'Door XP',holdAction:'УДЕРЖИВАТЬ: {action}',pressAction:'НАЖАТЬ: {action}',hoverHint:'Наведите курсор на кнопки у дверей',imageLoadError:'Ошибка загрузки {name}. Проверьте папку assets/room.',chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langEn:'English',langJa:'日本語',
+ ru:{audioVolume:'ГРОМКОСТЬ',holdAction:'УДЕРЖИВАТЬ: {action}',pressAction:'НАЖАТЬ: {action}',hoverHint:'Наведите курсор на кнопки у дверей',imageLoadError:'Ошибка загрузки {name}. Проверьте папку assets/room.',chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'ПРЕДУПРЕЖДЕНИЕ',warningBody:'В игре присутствуют внезапные громкие звуки, скримеры, мигающие изображения и напряжённые сцены. Рекомендуется умеренная громкость.',warningAccept:'ПОНИМАЮ · ПРОДОЛЖИТЬ',preloadTitle:'ПОДГОТОВКА ИГРЫ',preloadStatus:'Загрузка ресурсов: {n} / {total} ({percent}%)',preloadRetry:'ПОВТОРИТЬ ЗАГРУЗКУ',preloadError:'Не удалось загрузить ресурсы. Проверьте интернет и повторите попытку.',skipPhone:'ПРОПУСТИТЬ ЗВОНОК',skipConversation:'ПРОПУСТИТЬ РАЗГОВОР',
   officeLabel:'НАЗВАНИЕ ОФИСА',officePlaceholder:'Мой офис',start:'НОВАЯ ИГРА · НОЧЬ 1',continue:'ПРОДОЛЖИТЬ · НОЧЬ {night}',loading:'Загрузка {n} / {total}',
   titleNight:'Ночь {night}',pause:'ПАУЗА',pauseTitle:'ПАУЗА',pauseResume:'ВЕРНУТЬСЯ В ИГРУ',pauseRestart:'ПЕРЕЗАПУСТИТЬ НОЧЬ',pauseMenu:'В ГЛАВНОЕ МЕНЮ',pauseHint:'Esc или P — продолжить',
@@ -157,7 +157,7 @@ en:{audioSettingsTitle:'AUDIO SETTINGS',audioMaster:'Master Volume',audioEffects
   leftLight:'Свет слева',rightLight:'Свет справа',leftDoorLabel:'Дверь слева',rightDoorLabel:'Дверь справа',phoneLabel:'Телефон на столе',
   openCamera:'Открыть камеры наблюдения',closeCamera:'Закрыть камеры наблюдения',
   mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.',nightSelectTitle:'ВЫБОР НОЧИ',night6:'6 НОЧЬ',night:'Ночь {night}',custom:'CUSTOM',startNight:'НАЧАТЬ',customDifficulty:'(0–2) EASY   (3–6) MED   (7–12) HARD   (13–20) EXTREME',back:'НАЗАД',locked:'ЗАБЛОКИРОВАНО',aiLevel:'AI: {level}',payrollTitle:'УВЕДОМЛЕНИЕ О ВЫПЛАТЕ ЗАРАБОТНОЙ ПЛАТЫ',bonusTitle:'УВЕДОМЛЕНИЕ О ДОПОЛНИТЕЛЬНОЙ ВЫПЛАТЕ',dismissalTitle:'УВЕДОМЛЕНИЕ ОБ УВОЛЬНЕНИИ',company:'Компания: {office}',signature:'Администрация компании  /  Подпись: __________',overtime:'СВЕРХУРОЧНАЯ СМЕНА',dismissed:'УВОЛЕН'},
- ja:{audioSettingsTitle:'サウンド設定',audioMaster:'マスター音量',audioEffects:'効果音',audioAmbience:'環境音',audioPhone:'電話',audioTablet:'Door XP',holdAction:'長押し：{action}',pressAction:'押す：{action}',hoverHint:'ドアのボタンにカーソルを合わせてください',imageLoadError:'{name} の読み込みに失敗しました。assets/room を確認してください。',chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langEn:'English',langJa:'日本語',
+ ja:{audioVolume:'音量',holdAction:'長押し：{action}',pressAction:'押す：{action}',hoverHint:'ドアのボタンにカーソルを合わせてください',imageLoadError:'{name} の読み込みに失敗しました。assets/room を確認してください。',chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',skipConversation:'通話をスキップ',
   officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
   titleNight:'第{night}夜',pause:'一時停止',pauseTitle:'一時停止',pauseResume:'ゲームを再開',pauseRestart:'この夜をやり直す',pauseMenu:'メインメニューへ',pauseHint:'Esc または P で再開',
@@ -464,36 +464,19 @@ function stopAudioLoop(name){const a=audioLoops.get(name);if(a){a.pause();a.curr
 function stopAudioLoops(){for(const name of audioLoops.keys())stopAudioLoop(name);}
 function toggleMute(){soundMuted=!soundMuted;safeStore('kons-muted',soundMuted?'1':'0');updateMuteUI();}
 $('muteBtn').addEventListener('click',toggleMute);updateMuteUI();
-// Five independently persistent volume sliders; changing a value updates live audio.
-const volumeControls=[
-  ['master','audioVolumeMaster'],['effects','audioVolumeEffects'],
-  ['ambience','audioVolumeAmbience'],['phone','audioVolumePhone'],
-  ['tablet','audioVolumeTablet']
-];
+// A single always-visible master control in the pause menu.
 function updateAudioSettingsUI(){
-  const settings=AUDIO_SETTINGS.get();
-  for(const [category,id] of volumeControls){
-    const slider=$(id),output=$(id+'Value');
-    if(!slider||!output)continue;
-    slider.value=String(settings[category]);
-    output.textContent=String(settings[category])+'%';
-    slider.setAttribute('aria-valuetext',String(settings[category])+'%');
-  }
+  const value=AUDIO_SETTINGS.get().master;
+  const slider=$('audioVolumeMaster');
+  slider.value=String(value);
+  $('audioVolumeMasterValue').textContent=value+'%';
+  slider.setAttribute('aria-valuetext',value+'%');
 }
-for(const [category,id] of volumeControls)
-  $(id).addEventListener('input',e=>AUDIO_SETTINGS.set(category,e.currentTarget.value));
+$('audioVolumeMaster').addEventListener('input',event=>{
+  AUDIO_SETTINGS.set('master',event.currentTarget.value);
+});
 AUDIO_SETTINGS.subscribe(updateAudioSettingsUI);
 updateAudioSettingsUI();
-function toggleAudioSettings(open){
-  if(!state.paused&&open)return false;
-  const panel=$('audioSettingsPanel'),visible=Boolean(open);
-  panel.classList.toggle('hidden',!visible);
-  $('pauseAudioSettings').setAttribute('aria-expanded',String(visible));
-  if(visible)updateAudioSettingsUI();
-  return true;
-}
-$('pauseAudioSettings').addEventListener('click',()=>toggleAudioSettings($('audioSettingsPanel').classList.contains('hidden')));
-$('audioSettingsBack').addEventListener('click',()=>toggleAudioSettings(false));
 const ATMOSPHERE=window.FNAR_ATMOSPHERE;
 if(!ATMOSPHERE)throw new Error('fnar-atmosphere.js must load before app.js');
 const atmosphereView=ATMOSPHERE.createRenderer({
@@ -1199,7 +1182,6 @@ cameraToggle.addEventListener('click',toggleCamera);
 cameraNodes.forEach(b=>b.addEventListener('click',()=>chooseCamera(Number(b.dataset.camera))));
 function goMenuInstant(){
   atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();AUDIO_SETTINGS.pauseAtmosphere(false);
-  toggleAudioSettings(false);
   clearVictorySequence();
   clearResignation();
   clearNewspaperIntro();
@@ -1240,7 +1222,7 @@ function togglePause(force){
   if(state.paused===next)return;
   state.paused=next;clearHeldActions();state.dragging=false;state.leftKey=false;state.rightKey=false;
   $('pauseScreen').classList.toggle('hidden',!next);
-  if(!next){$('settings').classList.add('hidden');toggleAudioSettings(false);}
+  if(!next)$('settings').classList.add('hidden');
   state.last=performance.now();
   AUDIO_SETTINGS.pauseAtmosphere(next||phoneState.status==='talking');
   if(next)pauseGameAudio();else resumeGameAudio();
@@ -1297,10 +1279,7 @@ canvas.addEventListener('pointercancel',()=>{clearHeldActions();state.dragging=f
 canvas.addEventListener('pointerleave',()=>{canvas.style.cursor='url("arrow.cur") 0 0, auto';if(!state.dragging&&state.pressAction?.startsWith('light-'))clearHeldActions();});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
-  if(e.target instanceof HTMLInputElement)return;
-  if(state.paused && !$('audioSettingsPanel').classList.contains('hidden') && e.key==='Escape'){
-    toggleAudioSettings(false);e.preventDefault();return;
-  }
+  if(e.target instanceof HTMLInputElement && !(e.target.type==='range'&&e.key.toLowerCase()==='m'))return;
   if(state.paused && !$('settings').classList.contains('hidden') && e.key==='Escape'){
     $('settings').classList.add('hidden');e.preventDefault();return;
   }
@@ -1411,7 +1390,7 @@ function start(night=1,options={}){
   clearVictorySequence();
   clearResignation();
   currentNight=clamp(Number(night)||1,1,7);state.night=currentNight;
-  atmosphere.reset(currentNight);AUDIO_SETTINGS.stopAtmosphere();AUDIO_SETTINGS.pauseAtmosphere(false);toggleAudioSettings(false);
+  atmosphere.reset(currentNight);AUDIO_SETTINGS.stopAtmosphere();AUDIO_SETTINGS.pauseAtmosphere(false);
   persistOfficeName();
   $('officeInput').blur();
   state.paused=false;resumeGameAudio();$('pauseScreen').classList.add('hidden');$('pauseBtn').classList.remove('hidden');
