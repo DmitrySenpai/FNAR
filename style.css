@@ -63,31 +63,103 @@ button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opac
 .cam-node{position:absolute;top:var(--my);left:var(--mx);transform:translate(-50%,-50%);width:3.55cqw;height:2.42cqw;background:#142024e6;border:.13cqw solid #dee9e9;color:#fcffff;line-height:1.02;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Consolas,monospace;font-weight:900;font-size:.88cqw;letter-spacing:.04em;text-shadow:0 1px 3px #000;box-shadow:0 1px 3px #000;cursor:pointer;touch-action:manipulation}
 .cam-node span{font-size:.49cqw;letter-spacing:.12em}.cam-node:hover,.cam-node:focus-visible{background:#354d4f;border-color:#fff}.cam-node.selected{border-color:#d6ff77;background:#6b9c27;color:#0c1c13;text-shadow:none;box-shadow:0 0 1cqw #c9fd68aa;animation:node-glow 1.7s ease-in-out infinite}
 .office-node{position:absolute;top:var(--my);left:var(--mx);transform:translate(-50%,-50%);background:#212924;border:.13cqw solid #aab8b5;color:#cadbd4;padding:.28cqw .52cqw;font-size:.69cqw;font-weight:900;letter-spacing:.08em}
-/* Composition-only signal: fades the picture change, never the map or controls. */
+/* Brief analog signal failure on rooster roster changes. Only the video feed
+   gets these layers; camera map, CAM controls and route lines stay untouched. */
 .camera-rooster-signal{
   position:absolute;inset:0;z-index:5;
-  pointer-events:none!important;opacity:0;
-  background:repeating-linear-gradient(to bottom,
-    transparent 0 5px,rgba(162,194,196,.27) 6px 7px,
-    rgba(10,26,31,.27) 8px 11px,transparent 12px 16px),
-    repeating-linear-gradient(95deg,
-    transparent 0 28px,rgba(160,190,195,.14) 31px 33px,
-    transparent 36px 64px);
-  mix-blend-mode:screen;
+  pointer-events:none!important;
+  opacity:0;mix-blend-mode:normal;
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(219,231,229,.91) 0 1px,
+      rgba(7,12,17,.96) 2px 4px,
+      rgba(123,156,162,.76) 5px 7px,
+      rgba(5,12,17,.95) 8px 12px,
+      rgba(190,206,207,.70) 13px 14px,
+      rgba(9,16,20,.96) 15px 19px),
+    repeating-linear-gradient(91deg,
+      rgba(210,221,221,.22) 0 3px,
+      rgba(8,12,18,.92) 4px 9px,
+      rgba(145,172,177,.24) 10px 17px),
+    linear-gradient(135deg,#0b141b,#333d43 49%,#080e13);
+}
+.camera-rooster-signal::before,.camera-rooster-signal::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+}
+.camera-rooster-signal::before{
+  opacity:.94;
+  background:
+    linear-gradient(0deg,transparent 8%,rgba(224,230,226,.84) 10% 13%,
+      rgba(4,12,18,.97) 14% 18%,transparent 19% 36%,
+      rgba(13,18,20,.98) 38% 43%,rgba(176,199,197,.9) 44% 46%,
+      transparent 48% 62%,rgba(221,228,220,.7) 63% 66%,
+      rgba(4,9,15,.98) 68% 75%,transparent 77%),
+    repeating-linear-gradient(0deg,rgba(200,217,219,.82) 0 2px,
+      rgba(4,7,13,.98) 3px 8px);
+  clip-path:polygon(0 9%,100% 9%,100% 20%,0 20%,
+    0 34%,100% 34%,100% 49%,0 49%,
+    0 60%,100% 60%,100% 78%,0 78%);
+}
+.camera-rooster-signal::after{
+  opacity:.78;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(205,218,217,.8) 0 2px,
+      rgba(15,20,23,.98) 3px 6px,
+      rgba(114,139,148,.64) 7px 12px,
+      rgba(4,11,17,.94) 13px 22px),
+    linear-gradient(0deg,rgba(216,220,209,.62),transparent 40%,rgba(0,0,0,.9));
+  clip-path:polygon(0 23%,100% 23%,100% 32%,0 32%,
+    0 50%,100% 50%,100% 58%,0 58%,
+    0 83%,100% 83%,100% 91%,0 91%);
 }
 .camera-rooster-signal.is-active{
-  animation:camera-rooster-signal 500ms linear both;
+  animation:camera-rooster-signal 500ms steps(1,end) both;
 }
-@media (prefers-reduced-motion:reduce){
-  .camera-rooster-signal.is-active{animation:none;opacity:.14}
+.camera-rooster-signal.is-active::before{
+  animation:camera-rooster-tear-a 500ms steps(1,end) both;
+}
+.camera-rooster-signal.is-active::after{
+  animation:camera-rooster-tear-b 500ms steps(1,end) both;
 }
 @keyframes camera-rooster-signal{
-  0%{opacity:0;background-position:0 0,0 0}
-  18%{opacity:.11;background-position:0 1px,4px 0}
-  40%{opacity:.22;background-position:0 -5px,-7px 0}
-  68%{opacity:.30;background-position:0 6px,8px 0}
-  84%{opacity:.28;background-position:0 -2px,-5px 0}
-  100%{opacity:0;background-position:0 0,0 0}
+  0%{opacity:0;filter:brightness(.95)}
+  10%{opacity:.45;filter:brightness(1.07)}
+  20%{opacity:.77;filter:brightness(.88)}
+  32%{opacity:.84;filter:brightness(1.15)}
+  49%{opacity:.82;filter:brightness(.94)}
+  50%{opacity:.84;filter:brightness(1.06)}
+  65%{opacity:.71;filter:brightness(.89)}
+  80%{opacity:.30;filter:brightness(1)}
+  92%{opacity:.12;filter:brightness(1)}
+  100%{opacity:0;filter:none}
+}
+@keyframes camera-rooster-tear-a{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-1.4%)}
+  32%{transform:translateX(2.1%)}
+  50%{transform:translateX(-1.7%)}
+  65%{transform:translateX(1.1%)}
+  80%{transform:translateX(0)}
+}
+@keyframes camera-rooster-tear-b{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(1.9%)}
+  32%{transform:translateX(-1.2%)}
+  50%{transform:translateX(2.5%)}
+  65%{transform:translateX(-.8%)}
+  80%{transform:translateX(0)}
+}
+@media (prefers-reduced-motion:reduce){
+  .camera-rooster-signal.is-active{
+    animation:none;
+    opacity:.38;
+    filter:none;
+  }
+  .camera-rooster-signal.is-active::before,
+  .camera-rooster-signal.is-active::after{
+    animation:none;transform:none;opacity:.25;
+  }
 }
 .camera-switch-flash{position:absolute;inset:0;z-index:9;pointer-events:none;opacity:0;background:repeating-linear-gradient(0deg,#fff8 0 1px,#070c12 3px 7px),#cde4e288;mix-blend-mode:screen}.camera-switch-flash.burst{animation:camera-burst .23s steps(2,end)}
 .camera-toggle{position:absolute;z-index:10;bottom:1.15%;left:50%;transform:translateX(-50%);width:49%;height:5.3%;min-height:20px;border:.18cqw solid #b7a4a6;background:linear-gradient(180deg,#161521ed,#24151bb8 48%,#0b0c14f2);border-radius:.38cqw .38cqw 0 0;box-shadow:0 -0.2cqw 1.3cqw #000,0 0 1.2cqw #aa5d6660,inset 0 .18cqw .45cqw #d6b2b03d;display:flex;justify-content:center;align-items:center;gap:1.2cqw;color:#f2ccdc;cursor:pointer;touch-action:manipulation;opacity:.84;transition:opacity .18s,background .18s,border-color .18s}
