@@ -464,6 +464,65 @@ function stopAudioLoop(name){const a=audioLoops.get(name);if(a){a.pause();a.curr
 function stopAudioLoops(){for(const name of audioLoops.keys())stopAudioLoop(name);}
 function toggleMute(){soundMuted=!soundMuted;safeStore('kons-muted',soundMuted?'1':'0');updateMuteUI();}
 $('muteBtn').addEventListener('click',toggleMute);updateMuteUI();
+// Five independently persistent volume sliders; changing a value updates live audio.
+const volumeControls=[
+  ['master','audioVolumeMaster'],['effects','audioVolumeEffects'],
+  ['ambience','audioVolumeAmbience'],['phone','audioVolumePhone'],
+  ['tablet','audioVolumeTablet']
+];
+function updateAudioSettingsUI(){
+  const settings=AUDIO_SETTINGS.get();
+  for(const [category,id] of volumeControls){
+    const slider=$(id),output=$(id+'Value');
+    if(!slider||!output)continue;
+    slider.value=String(settings[category]);
+    output.textContent=String(settings[category])+'%';
+    slider.setAttribute('aria-valuetext',String(settings[category])+'%');
+  }
+}
+for(const [category,id] of volumeControls)
+  $(id).addEventListener('input',e=>AUDIO_SETTINGS.set(category,e.currentTarget.value));
+AUDIO_SETTINGS.subscribe(updateAudioSettingsUI);
+updateAudioSettingsUI();
+function toggleAudioSettings(open){
+  if(!state.paused&&open)return false;
+  const panel=$('audioSettingsPanel'),visible=Boolean(open);
+  panel.classList.toggle('hidden',!visible);
+  $('pauseAudioSettings').setAttribute('aria-expanded',String(visible));
+  if(visible)updateAudioSettingsUI();
+  return true;
+}
+$('pauseAudioSettings').addEventListener('click',()=>toggleAudioSettings($('audioSettingsPanel').classList.contains('hidden')));
+$('audioSettingsBack').addEventListener('click',()=>toggleAudioSettings(false));
+const ATMOSPHERE=window.FNAR_ATMOSPHERE;
+if(!ATMOSPHERE)throw new Error('fnar-atmosphere.js must load before app.js');
+const atmosphereView=ATMOSPHERE.createRenderer({
+  office:$('atmosphereOffice'),camera:$('atmosphereCamera'),audio:AUDIO_SETTINGS,
+  reducedMotion:()=>window.matchMedia('(prefers-reduced-motion:reduce)').matches
+});
+const atmosphere=ATMOSPHERE.createSystem({
+  onStart:atmosphereView.onStart,onFrame:atmosphereView.onFrame,onEnd:atmosphereView.onEnd
+});
+function atmosphereContext(){
+  const tablet=window.FNARTabletDebug?.status;
+  return {
+    active:state.active,paused:state.paused,
+    phone:phoneState.status==='talking',
+    jumpscare:!$('jumpscare').classList.contains('hidden'),
+    victory:state.gameOver||!$('victoryScreen').classList.contains('hidden'),
+    blackout:powerFailure.active,
+    tabletBusy:Boolean(tablet&&(tablet.mode!=='idle'||tablet.adVisible)),
+    danger:ENEMIES.some(e=>e.phase===AI.PHASES.DOOR||e.phase===AI.PHASES.RUSH||
+      (e.phase===AI.PHASES.APPROACH&&e.step>=e.route.length-2)),
+    cameraOpen,camera:currentCamera
+  };
+}
+window.FNARAtmosphereDebug=Object.freeze({
+  status:()=>atmosphere.status(),
+  trigger:type=>atmosphere.trigger(type,atmosphereContext()),
+  clear:()=>atmosphere.clear()
+});
+
 // Transparent VP9 WebM is composited directly over the live office scene.
 const jumpOverlay=$('jumpscare'),jumpVideo=$('jumpscareVideo');
 let jumpTimer=0,jumpEpoch=0;
