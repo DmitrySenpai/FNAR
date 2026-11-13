@@ -123,7 +123,7 @@ function writeSave(key,value){
   safeStore(key,v);
 }
 const L10N={
-en:{audioVolume:'VOLUME',holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point at the door controls',imageLoadError:'Could not load {name}. Check the assets/room folder.',
+en:{audioVolume:'VOLUME',doorSideLeft:'Left',doorSideRight:'Right',doorClosing:'{side} door closing',doorOpening:'{side} door opening',fullscreenUnavailable:'Fullscreen unavailable',settingsButton:'View settings',fullscreenButton:'Toggle fullscreen',cameraTablet:'Surveillance tablet',cameraMap:'Camera map',languageScreenLabel:'Choose language',volumeValue:'{value} percent',holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point at the door controls',imageLoadError:'Could not load {name}. Check the assets/room folder.',
   chooseLanguage:'SELECT LANGUAGE',languagePrompt:'Game Language',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'WARNING',warningBody:'This game contains sudden loud noises, jumpscares, flashing images and intense scenes. Keep your volume at a moderate level.',warningAccept:'I UNDERSTAND · CONTINUE',
   preloadTitle:'PREPARING GAME',preloadStatus:'Loading assets: {n} / {total} ({percent}%)',preloadRetry:'RETRY LOADING',preloadError:'Some resources could not be loaded. Check your connection and try again.',
@@ -150,7 +150,7 @@ en:{audioVolume:'VOLUME',holdAction:'HOLD: {action}',pressAction:'PRESS: {action
   bonusTitle:'ADDITIONAL PAYMENT NOTICE',dismissalTitle:'NOTICE OF TERMINATION',
   company:'Company: {office}',signature:'Company Management / Signature: __________',overtime:'OVERTIME SHIFT',dismissed:'TERMINATED'
  },
- ru:{audioVolume:'ГРОМКОСТЬ',holdAction:'УДЕРЖИВАТЬ: {action}',pressAction:'НАЖАТЬ: {action}',hoverHint:'Наведите курсор на кнопки у дверей',imageLoadError:'Ошибка загрузки {name}. Проверьте папку assets/room.',chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langEn:'English',langJa:'日本語',
+ ru:{audioVolume:'ГРОМКОСТЬ',doorSideLeft:'Левая',doorSideRight:'Правая',doorClosing:'{side} дверь закрывается',doorOpening:'{side} дверь открывается',fullscreenUnavailable:'Полный экран недоступен',settingsButton:'Настройки обзора',fullscreenButton:'Полноэкранный режим',cameraTablet:'Планшет камер наблюдения',cameraMap:'Схема объекта',languageScreenLabel:'Выберите язык',volumeValue:'{value} процентов',holdAction:'УДЕРЖИВАТЬ: {action}',pressAction:'НАЖАТЬ: {action}',hoverHint:'Наведите курсор на кнопки у дверей',imageLoadError:'Ошибка загрузки {name}. Проверьте папку assets/room.',chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'ПРЕДУПРЕЖДЕНИЕ',warningBody:'В игре присутствуют внезапные громкие звуки, скримеры, мигающие изображения и напряжённые сцены. Рекомендуется умеренная громкость.',warningAccept:'ПОНИМАЮ · ПРОДОЛЖИТЬ',preloadTitle:'ПОДГОТОВКА ИГРЫ',preloadStatus:'Загрузка ресурсов: {n} / {total} ({percent}%)',preloadRetry:'ПОВТОРИТЬ ЗАГРУЗКУ',preloadError:'Не удалось загрузить ресурсы. Проверьте интернет и повторите попытку.',skipPhone:'ПРОПУСТИТЬ ЗВОНОК',skipConversation:'ПРОПУСТИТЬ РАЗГОВОР',
   officeLabel:'НАЗВАНИЕ ОФИСА',officePlaceholder:'Мой офис',start:'НОВАЯ ИГРА · НОЧЬ 1',continue:'ПРОДОЛЖИТЬ · НОЧЬ {night}',loading:'Загрузка {n} / {total}',
   titleNight:'Ночь {night}',pause:'ПАУЗА',pauseTitle:'ПАУЗА',pauseResume:'ВЕРНУТЬСЯ В ИГРУ',pauseRestart:'ПЕРЕЗАПУСТИТЬ НОЧЬ',pauseMenu:'В ГЛАВНОЕ МЕНЮ',pauseHint:'Esc или P — продолжить',
@@ -167,7 +167,7 @@ en:{audioVolume:'VOLUME',holdAction:'HOLD: {action}',pressAction:'PRESS: {action
   leftLight:'Свет слева',rightLight:'Свет справа',leftDoorLabel:'Дверь слева',rightDoorLabel:'Дверь справа',phoneLabel:'Телефон на столе',
   openCamera:'Открыть камеры наблюдения',closeCamera:'Закрыть камеры наблюдения',
   mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.',nightSelectTitle:'ВЫБОР НОЧИ',night6:'6 НОЧЬ',night:'Ночь {night}',custom:'CUSTOM',startNight:'НАЧАТЬ',customDifficulty:'(0–2) EASY   (3–6) MED   (7–12) HARD   (13–20) EXTREME',back:'НАЗАД',locked:'ЗАБЛОКИРОВАНО',aiLevel:'AI: {level}',payrollTitle:'УВЕДОМЛЕНИЕ О ВЫПЛАТЕ ЗАРАБОТНОЙ ПЛАТЫ',bonusTitle:'УВЕДОМЛЕНИЕ О ДОПОЛНИТЕЛЬНОЙ ВЫПЛАТЕ',dismissalTitle:'УВЕДОМЛЕНИЕ ОБ УВОЛЬНЕНИИ',company:'Компания: {office}',signature:'Администрация компании  /  Подпись: __________',overtime:'СВЕРХУРОЧНАЯ СМЕНА',dismissed:'УВОЛЕН'},
- ja:{audioVolume:'音量',holdAction:'長押し：{action}',pressAction:'押す：{action}',hoverHint:'ドアのボタンにカーソルを合わせてください',imageLoadError:'{name} の読み込みに失敗しました。assets/room を確認してください。',chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langEn:'English',langJa:'日本語',
+ ja:{audioVolume:'音量',doorSideLeft:'左',doorSideRight:'右',doorClosing:'{side}ドアを閉じています',doorOpening:'{side}ドアを開いています',fullscreenUnavailable:'全画面表示を利用できません',settingsButton:'視点設定',fullscreenButton:'全画面表示を切り替える',cameraTablet:'監視カメラのタブレット',cameraMap:'カメラマップ',languageScreenLabel:'言語を選択',volumeValue:'{value}パーセント',holdAction:'長押し：{action}',pressAction:'押す：{action}',hoverHint:'ドアのボタンにカーソルを合わせてください',imageLoadError:'{name} の読み込みに失敗しました。assets/room を確認してください。',chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',skipConversation:'通話をスキップ',
   officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
   titleNight:'第{night}夜',pause:'一時停止',pauseTitle:'一時停止',pauseResume:'ゲームを再開',pauseRestart:'この夜をやり直す',pauseMenu:'メインメニューへ',pauseHint:'Esc または P で再開',
@@ -422,6 +422,30 @@ function applyTranslations(){
   if(typeof updatePauseButton==='function')updatePauseButton();
   if(typeof updatePhoneUI==='function')updatePhoneUI();
   if(typeof updateAudioSettingsUI==='function')updateAudioSettingsUI();
+  updateAccessibility();
+}
+function updateAccessibility(){
+  const label=(id,key)=>{
+    const node=$(id);if(node)node.setAttribute('aria-label',t(key));
+  };
+  label('languageScreen','languageScreenLabel');
+  label('cameraScreen','cameraTablet');
+  label('settingsBtn','settingsButton');
+  label('fullscreenBtn','fullscreenButton');
+  label('audioVolumeMaster','audioVolume');
+  const settings=$('settingsBtn'),fullscreen=$('fullscreenBtn');
+  if(settings)settings.title=t('settingsButton')+' (H)';
+  if(fullscreen)fullscreen.title=t('fullscreenButton')+' (F)';
+  const map=$('cameraScreen').querySelector('.camera-map');
+  if(map)map.setAttribute('aria-label',t('cameraMap'));
+  const names=L10N[gameLanguage].camNames;
+  document.querySelectorAll('.cam-node').forEach(button=>{
+    const cam=Number(button.dataset.camera);
+    button.setAttribute('aria-label','CAM '+String(cam).padStart(2,'0')+' '+(names[cam-1]||''));
+  });
+  const cameraButton=$('cameraToggle');
+  cameraButton.setAttribute('aria-label',cameraOpen?t('closeCamera'):t('openCamera'));
+  cameraButton.title=cameraButton.getAttribute('aria-label')+' (C)';
 }
 function chooseLanguage(lang){
   gameLanguage=['ru','en','ja'].includes(lang)?lang:'ru';writeSave('kokhinhin_lang',gameLanguage);
@@ -488,7 +512,7 @@ function updateAudioSettingsUI(){
   const slider=$('audioVolumeMaster');
   slider.value=String(value);
   $('audioVolumeMasterValue').textContent=value+'%';
-  slider.setAttribute('aria-valuetext',value+'%');
+  slider.setAttribute('aria-valuetext',t('volumeValue',{value}));
 }
 $('audioVolumeMaster').addEventListener('input',event=>{
   AUDIO_SETTINGS.set('master',event.currentTarget.value);
@@ -736,7 +760,7 @@ function setLight(side,on){
 }
 function toggleDoor(side){
   if(!state.active || state.paused || phoneState.status==='talking' || state.power<=0 || powerFailure.active)return;
-  const prop=side+'Door';state[prop]=!state[prop];playSfx('door',.52);needsComposing=true;updateStatus();showToast(`${side==='left'?'Левая':'Правая'} дверь: ${state[prop]?'закрывается':'открывается'}`);
+  const prop=side+'Door';state[prop]=!state[prop];playSfx('door',.52);needsComposing=true;updateStatus();showToast(t(state[prop]?'doorClosing':'doorOpening',{side:t(side==='left'?'doorSideLeft':'doorSideRight')}));
 }
 function viewFromMouse(e){
   const r=canvas.getBoundingClientRect(),v=clamp(((e.clientX-r.left)/Math.max(1,r.width))*2-1,-1,1);
@@ -1236,6 +1260,7 @@ function resumeGameAudio(){
 }
 function updatePauseButton(){
   $('pauseBtn').textContent='Ⅱ';$('pauseBtn').title=t('pause')+' (Esc / P)';
+  $('pauseBtn').setAttribute('aria-label',$('pauseBtn').title);
 }
 function togglePause(force){
   if(!state.active)return;
@@ -1300,7 +1325,12 @@ canvas.addEventListener('pointercancel',()=>{clearHeldActions();state.dragging=f
 canvas.addEventListener('pointerleave',()=>{canvas.style.cursor='url("arrow.cur") 0 0, auto';if(!state.dragging&&state.pressAction?.startsWith('light-'))clearHeldActions();});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
-  if(e.target instanceof HTMLInputElement && !(e.target.type==='range'&&e.key.toLowerCase()==='m'))return;
+  // Text inputs keep normal editing. Range arrows stay native, while Esc/P/M
+  // remain available to the pause screen even with keyboard focus on the slider.
+  if(e.target instanceof HTMLInputElement){
+    if(e.target.type!=='range')return;
+    if(!['Escape','p','m'].includes(e.key.length===1?e.key.toLowerCase():e.key))return;
+  }
   if(state.paused && !$('settings').classList.contains('hidden') && e.key==='Escape'){
     $('settings').classList.add('hidden');e.preventDefault();return;
   }
@@ -1434,7 +1464,7 @@ function setSliders(){
   }
 }
 function toggleSettings(){if(!state.active)return;if(cameraOpen)setCameraOpen(false);clearHeldActions();$('settings').classList.toggle('hidden');}
-async function toggleFullscreen(){try{if(!document.fullscreenElement){await stage.requestFullscreen();try{await screen.orientation?.lock?.('landscape')}catch(_) {}}else await document.exitFullscreen();}catch(e){showToast('Полный экран недоступен');}}
+async function toggleFullscreen(){try{if(!document.fullscreenElement){await stage.requestFullscreen();try{await screen.orientation?.lock?.('landscape')}catch(_) {}}else await document.exitFullscreen();}catch(e){showToast(t('fullscreenUnavailable'));}}
 $('startBtn').addEventListener('click',()=>transitionToNight(1,{intro:true}));$('continueBtn').addEventListener('click',()=>{if(unlockedNight>1)showNightSelect();});$('officeInput').addEventListener('keydown',e=>{if(e.key==='Enter')transitionToNight(1,{intro:true});});
 $('settingsBtn').addEventListener('click',toggleSettings);
 $('closeSettings').addEventListener('click',toggleSettings);$('closeSettingsPrimary').addEventListener('click',toggleSettings);
