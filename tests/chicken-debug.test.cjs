@@ -147,7 +147,7 @@ test('Each Chicken effect and all is accessible independently, preserving a max 
 test('Paw marks are SVG, large, distinct and between 4 and 8 per wave',()=>{
   const v=fixture();
   v.debug.forceChickenEffect('paw');
-  const effect=v.chicken.children.find(x=>x.className==='tablet-chicken-effect');
+  const effect=v.chicken.querySelector('.tablet-chicken-effect');
   assert.ok(effect);
   const primary=effect.children.find(x=>x.className==='tablet-chicken-primary');
   const marks=primary.children.filter(x=>x.className==='tablet-chicken-print');
@@ -159,7 +159,7 @@ test('Glitch is a brief multi-segment visual burst and intensity increases densi
   const v=fixture();
   assert.equal(v.debug.setChickenIntensity(2),2);
   v.debug.forceChickenEffect('glitch');
-  const effect=v.chicken.children.find(x=>x.className==='tablet-chicken-effect');
+  const effect=v.chicken.querySelector('.tablet-chicken-effect');
   const primary=effect.children.find(x=>x.className==='tablet-chicken-primary');
   const field=primary.children.find(x=>x.className==='tablet-chicken-glitch-field');
   assert.ok(field,'missing layered RGB glitch');

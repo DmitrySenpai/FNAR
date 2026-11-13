@@ -477,7 +477,8 @@
     if(state.mode!=='usb')return;
     complete();audioSound('os_usb_connect',.40);
   }
-  function triggerFault(mode,duration,debug=false){
+  function triggerFault(mode,duration){
+    const debug=Boolean(arguments[2]); // preserve the legacy two-argument signature
     if(!game.state.active || (game.currentNight<4&&!debug&&!state.debugOverride) ||
        !FAULTS.validFault(mode) || state.mode!=='idle')return false;
     if(debug)state.debugOverride=true;
