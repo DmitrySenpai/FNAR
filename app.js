@@ -128,7 +128,7 @@ const L10N={
   camNames:['Северная','Коридор','Правый коридор','Ресепшен','Опен-спейс','Левый коридор','Левый выход','Кабинет директора','Правый выход'],
   leftLight:'Свет слева',rightLight:'Свет справа',leftDoorLabel:'Дверь слева',rightDoorLabel:'Дверь справа',phoneLabel:'Телефон на столе',
   openCamera:'Открыть камеры наблюдения',closeCamera:'Закрыть камеры наблюдения',
-  mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.',nightSelectTitle:'ВЫБОР НОЧИ',night6:'6 НОЧЬ',night:'Ночь {night}',custom:'CUSTOM',startNight:'НАЧАТЬ НОЧЬ',back:'НАЗАД',locked:'ЗАБЛОКИРОВАНО',aiLevel:'AI: {level}',payrollTitle:'УВЕДОМЛЕНИЕ О ВЫПЛАТЕ ЗАРАБОТНОЙ ПЛАТЫ',bonusTitle:'УВЕДОМЛЕНИЕ О ДОПОЛНИТЕЛЬНОЙ ВЫПЛАТЕ',dismissalTitle:'УВЕДОМЛЕНИЕ ОБ УВОЛЬНЕНИИ',company:'Компания: {office}',signature:'Администрация компании  /  Подпись: __________',overtime:'СВЕРХУРОЧНАЯ СМЕНА',dismissed:'УВОЛЕН'},
+  mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.',nightSelectTitle:'ВЫБОР НОЧИ',night6:'6 НОЧЬ',night:'Ночь {night}',custom:'CUSTOM',startNight:'НАЧАТЬ',customDifficulty:'(0–2) EASY   (3–6) MED   (7–12) HARD   (13–20) EXTREME',back:'НАЗАД',locked:'ЗАБЛОКИРОВАНО',aiLevel:'AI: {level}',payrollTitle:'УВЕДОМЛЕНИЕ О ВЫПЛАТЕ ЗАРАБОТНОЙ ПЛАТЫ',bonusTitle:'УВЕДОМЛЕНИЕ О ДОПОЛНИТЕЛЬНОЙ ВЫПЛАТЕ',dismissalTitle:'УВЕДОМЛЕНИЕ ОБ УВОЛЬНЕНИИ',company:'Компания: {office}',signature:'Администрация компании  /  Подпись: __________',overtime:'СВЕРХУРОЧНАЯ СМЕНА',dismissed:'УВОЛЕН'},
  ja:{chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langJa:'日本語',
   warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',skipConversation:'通話をスキップ',
   officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
@@ -145,7 +145,7 @@ const L10N={
   camNames:['北エリア','廊下','右の廊下','受付','オープンスペース','左の廊下','左の出口','社長室','右の出口'],
   leftLight:'左のライト',rightLight:'右のライト',leftDoorLabel:'左のドア',rightDoorLabel:'右のドア',phoneLabel:'机の電話',
   openCamera:'監視カメラを開く',closeCamera:'監視カメラを閉じる',
-  mute:'消音',unmute:'音声をオン',viewCenter:'正面',viewLeft:'左を見る',viewRight:'右を見る',newspaperHeadline:'{office} が夜勤警備員を緊急募集',newspaperShift:'勤務時間: 00:00 から 06:00。',newspaperDuty:'業務内容: 夜間のオフィス監視。',newspaperPay:'給与: 週 250 ドル。',nightSelectTitle:'夜の選択',night6:'第6夜',night:'第{night}夜',custom:'カスタム',startNight:'夜を開始',back:'戻る',locked:'ロック中',aiLevel:'AI: {level}',payrollTitle:'給与支払通知書',bonusTitle:'追加手当支給通知書',dismissalTitle:'解雇通知書',company:'会社名：{office}',signature:'会社管理部  /  署名：__________',overtime:'時間外勤務',dismissed:'解雇'}
+  mute:'消音',unmute:'音声をオン',viewCenter:'正面',viewLeft:'左を見る',viewRight:'右を見る',newspaperHeadline:'{office} が夜勤警備員を緊急募集',newspaperShift:'勤務時間: 00:00 から 06:00。',newspaperDuty:'業務内容: 夜間のオフィス監視。',newspaperPay:'給与: 週 250 ドル。',nightSelectTitle:'夜の選択',night6:'第6夜',night:'第{night}夜',custom:'カスタム',startNight:'開始',customDifficulty:'(0–2) やさしい   (3–6) 普通   (7–12) 難しい   (13–20) 最高難度',back:'戻る',locked:'ロック中',aiLevel:'AI: {level}',payrollTitle:'給与支払通知書',bonusTitle:'追加手当支給通知書',dismissalTitle:'解雇通知書',company:'会社名：{office}',signature:'会社管理部  /  署名：__________',overtime:'時間外勤務',dismissed:'解雇'}
 };
 let gameLanguage='ru',currentNight=1,unlockedNight=Math.max(1,Math.min(7,Number(readSave('kokhinhin_unlocked'))||1));
 let sevenNightsComplete=readSave('kokhinhin_complete')==='1';
@@ -204,20 +204,32 @@ function showNightSelect(){
   }
   $('nightSelectScreen').classList.remove('hidden');
 }
+// Build portraits once per visit. Changing AI updates only the number and arrows.
 function renderCustomAI(){
   const grid=$('customAIGrid');grid.replaceChildren();
-  customAI.forEach((level,i)=>{
-    const row=document.createElement('div');row.className='custom-ai-row';
-    const name=document.createElement('strong');name.textContent='C'+(i+1);
-    const down=document.createElement('button');down.type='button';down.textContent='−';down.setAttribute('aria-label','C'+(i+1)+' −');
-    const value=document.createElement('span');value.textContent=t('aiLevel',{level});
-    const up=document.createElement('button');up.type='button';up.textContent='+';up.setAttribute('aria-label','C'+(i+1)+' +');
-    down.disabled=level===0;up.disabled=level===20;
+  customAI.forEach((initial,i)=>{
+    const cell=document.createElement('div');cell.className='custom-ai-row';
+    const picture=document.createElement('img');picture.className='custom-ai-portrait';
+    picture.src='assets/ui/custom/c'+(i+1)+'.png';picture.alt='';picture.draggable=false;
+    const label=document.createElement('span');label.className='custom-ai-label';label.textContent='A.I. Level';
+    const controls=document.createElement('div');controls.className='custom-ai-controls';
+    const down=document.createElement('button');down.type='button';down.textContent='◀';
+    down.setAttribute('aria-label','C'+(i+1)+' −');
+    const value=document.createElement('output');value.className='custom-ai-value';
+    value.setAttribute('aria-label','C'+(i+1)+' AI');
+    const up=document.createElement('button');up.type='button';up.textContent='▶';
+    up.setAttribute('aria-label','C'+(i+1)+' +');
+    const update=()=>{
+      value.textContent=String(customAI[i]);
+      down.disabled=customAI[i]===0;up.disabled=customAI[i]===20;
+    };
     for(const [button,delta] of [[down,-1],[up,1]])button.addEventListener('click',()=>{
       customAI[i]=clamp(customAI[i]+delta,0,20);
-      writeSave('kokhinhin_custom_ai',JSON.stringify(customAI));renderCustomAI();
+      writeSave('kokhinhin_custom_ai',JSON.stringify(customAI));
+      update();
     });
-    row.append(name,down,value,up);grid.appendChild(row);
+    update();controls.append(down,value,up);
+    cell.append(picture,label,controls);grid.appendChild(cell);
   });
 }
 function showCustomNight(debugPreview=false){
@@ -884,7 +896,8 @@ function showCompanyDocument(night){
     else p.textContent=line.text;
     body.appendChild(p);
   }
-  $('documentSignature').textContent=model.signature;
+  $('documentSigner').textContent=model.signer;
+  $('documentSignatureLabel').textContent=model.signatureLabel;
   const stamp=$('documentStamp');stamp.textContent=model.stamp;
   stamp.classList.toggle('hidden',!model.stamp);
   stamp.classList.toggle('dismissal-stamp',night===7);
