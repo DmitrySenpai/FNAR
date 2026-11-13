@@ -159,7 +159,7 @@
   const faultSpinner=faultFrame.querySelector('.tablet-fault-spinner');
   // Desktop for a failed Net Video process (this is only a simulated webpage window).
   const crash=html('div','tablet-crash-screen hidden',tablet);
-  crash.innerHTML='<div class="tablet-crash-error"><div class="tablet-crash-title"></div><div class="tablet-crash-content"><span class="tablet-crash-symbol">×</span><div><p></p><small></small></div></div><button type="button" class="tablet-crash-dismiss"></button></div><button type="button" class="tablet-crash-hotspot hidden" aria-label="Net Video 3.0" title="Net Video 3.0"></button><div class="tablet-crash-launch hidden"></div>';
+  crash.innerHTML='<div class="tablet-crash-error"><div class="tablet-crash-title"></div><div class="tablet-crash-content"><span class="tablet-crash-symbol">×</span><div><p></p><small></small></div></div><button type="button" class="tablet-crash-dismiss"></button></div><button type="button" class="tablet-crash-hotspot hidden" aria-label="Net Video 3.0"></button><div class="tablet-crash-launch hidden"></div>';
   const errorTitle=crash.querySelector('.tablet-crash-title');
   const errorBody=crash.querySelector('.tablet-crash-content p');
   const errorCode=crash.querySelector('.tablet-crash-content small');
