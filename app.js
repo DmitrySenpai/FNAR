@@ -865,7 +865,7 @@ if(!CAMERA_TRANSITION)throw new Error('fnar-camera-transition.js must load befor
 const roosterSignal=$('cameraRoosterSignal');
 function cameraSignalAllowed(target){
   const tablet=window.FNARTabletDebug, fault=tablet?.status;
-  return Boolean(state.active&&!state.paused&&cameraOpen&&!powerFailure.active&&
+  return Boolean(state.active&&!state.paused&&phoneState.status!=='talking'&&cameraOpen&&!powerFailure.active&&
     $('settings').classList.contains('hidden')&&
     (!fault||(fault.mode==='idle'&&!fault.adVisible))&&
     (!tablet||tablet.canObserveCamera(currentCamera))&&
@@ -1054,6 +1054,7 @@ function answerPhone(){
   if(state.nightElapsed>=phoneState.ringEndsAt){missPhone();return;}
   stopRingtone();
   phoneState.status='talking';phoneState.subtitleIndex=-1;
+  cameraCompositionTransition.cancel();
   AUDIO_SETTINGS.pauseAtmosphere(true);
   state.last=performance.now(); // No catch-up of world time while dialogue audio is playing.
   phoneParagraphs=currentPhoneParagraphs();
