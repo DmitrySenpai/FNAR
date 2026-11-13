@@ -509,8 +509,6 @@ function alphaBounds(img){
   for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){if(data[(y*c.width+x)*4+3]>8){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;}}
   return maxX<0?null:{minX,minY,maxX,maxY,width:maxX-minX+1,height:maxY-minY+1};
 }
-const savedLanguage=readSave('kokhinhin_lang');
-if(['ru','en','ja'].includes(savedLanguage)){gameLanguage=savedLanguage;applyTranslations();}
 const lastName=readSave('kokhinhin_office')||safeRead('kons-new-office');if(lastName)$('officeInput').value=lastName;
 
 function loadImages(){
@@ -1410,5 +1408,8 @@ window.KokhinhinDebug={state,toggleDoor,setLight,findHit,imagePos,setView(v){sta
   get customAI(){return [...customAI];},get customCompleted(){return customCompleted;},
   get customMaxCompleted(){return customMaxCompleted;}};
 window.FNARDebug=window.KokhinhinDebug;
+const savedLanguage=readSave('kokhinhin_lang');
+gameLanguage=['ru','en','ja'].includes(savedLanguage)?savedLanguage:'ru';
+applyTranslations();
 initCanvas();setSliders();updateStatus();resize();requestAnimationFrame(loop);
 })();
