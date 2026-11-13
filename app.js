@@ -113,13 +113,40 @@ function writeSave(key,value){
   safeStore(key,v);
 }
 const L10N={
- ru:{chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langJa:'日本語',
+ en:{
+  chooseLanguage:'SELECT LANGUAGE',languagePrompt:'Game Language',langRu:'Русский',langEn:'English',langJa:'日本語',
+  warningHeading:'WARNING',warningBody:'This game contains sudden loud noises, jumpscares, flashing images and intense scenes. Keep your volume at a moderate level.',warningAccept:'I UNDERSTAND · CONTINUE',
+  preloadTitle:'PREPARING GAME',preloadStatus:'Loading assets: {n} / {total} ({percent}%)',preloadRetry:'RETRY LOADING',preloadError:'Some resources could not be loaded. Check your connection and try again.',
+  skipPhone:'SKIP CALL',skipConversation:'SKIP CONVERSATION',
+  officeLabel:'OFFICE NAME',officePlaceholder:'My Office',start:'NEW GAME · NIGHT 1',continue:'CONTINUE · NIGHT {night}',loading:'Loading {n} / {total}',
+  titleNight:'Night {night}',pause:'PAUSE',pauseTitle:'PAUSED',pauseResume:'RESUME GAME',pauseRestart:'RESTART NIGHT',pauseMenu:'MAIN MENU',pauseHint:'Press Esc or P to resume',
+  winTitle:'6:00 AM',winText:'You survived Night {night}! The roosters never made it into the security office before dawn.',
+  allNightsTitle:'ALL 7 NIGHTS COMPLETE',allNightsText:'You survived all seven night shifts. The office is still standing!',
+  loseTitle:'GAME OVER',startNextDay:'START NEXT DAY',nextNight:'NEXT NIGHT · {night}',retryNight:'RETRY',backMenu:'MAIN MENU',
+  doorDeath:'Rooster C{id} entered the security office through the {side} door.',leftDoor:'left',rightDoor:'right',
+  outageDeath:'After the power went out, rooster C{id} reached the security office.',testDeath:'Test jumpscare: rooster C{id}.',
+  ringing:'☎ INCOMING CALL / LINE OPEN',hangup:'HANG UP',
+  settingsTitle:'View Settings',settingsAngle:'Turn Range',settingsFish:'Fisheye Effect',settingsSmooth:'Smoothing',settingsResume:'CONTINUE',
+  settingsInstructions:'Look around: mouse, ← → or A / D. Doors: 1 / 2. Hold Q / E for lights. Cameras: C or the bottom button, then 1–9. Pause: Esc / P. Phone: click the lit handset when it rings.',
+  cameras:'CAMERAS',mapTitle:'FACILITY / CAMERAS',power:'Power:',usage:'Usage:',camLive:'● LIVE',cameraEmpty:'NO CAMERA FEED',cameraDev:'AREA GRAPHICS UNDER DEVELOPMENT',
+  camNames:['North Area','Corridor','Right Corridor','Reception','Open Space','Left Corridor','Left Exit',"Director's Office",'Right Exit'],
+  leftLight:'Left Light',rightLight:'Right Light',leftDoorLabel:'Left Door',rightDoorLabel:'Right Door',phoneLabel:'Desk Phone',
+  openCamera:'Open security cameras',closeCamera:'Close security cameras',
+  mute:'Mute sound',unmute:'Unmute sound',viewCenter:'LOOK STRAIGHT AHEAD',viewLeft:'LOOK LEFT',viewRight:'LOOK RIGHT',
+  newspaperHeadline:'{office} urgently seeks a night guard',newspaperShift:'Working hours: midnight to 6:00 AM.',newspaperDuty:'Duties: monitor the office during the night.',newspaperPay:'Pay: 250 dollars per week.',
+  nightSelectTitle:'NIGHT SELECTION',night6:'NIGHT 6',night:'Night {night}',custom:'CUSTOM NIGHT',startNight:'START',
+  customDifficulty:'(0–2) EASY   (3–6) MED   (7–12) HARD   (13–20) EXTREME',
+  back:'BACK',locked:'LOCKED',aiLevel:'AI: {level}',payrollTitle:'SALARY PAYMENT NOTICE',
+  bonusTitle:'ADDITIONAL PAYMENT NOTICE',dismissalTitle:'NOTICE OF TERMINATION',
+  company:'Company: {office}',signature:'Company Management / Signature: __________',overtime:'OVERTIME SHIFT',dismissed:'TERMINATED'
+ },
+ ru:{chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'ПРЕДУПРЕЖДЕНИЕ',warningBody:'В игре присутствуют внезапные громкие звуки, скримеры, мигающие изображения и напряжённые сцены. Рекомендуется умеренная громкость.',warningAccept:'ПОНИМАЮ · ПРОДОЛЖИТЬ',preloadTitle:'ПОДГОТОВКА ИГРЫ',preloadStatus:'Загрузка ресурсов: {n} / {total} ({percent}%)',preloadRetry:'ПОВТОРИТЬ ЗАГРУЗКУ',preloadError:'Не удалось загрузить ресурсы. Проверьте интернет и повторите попытку.',skipPhone:'ПРОПУСТИТЬ ЗВОНОК',skipConversation:'ПРОПУСТИТЬ РАЗГОВОР',
   officeLabel:'НАЗВАНИЕ ОФИСА',officePlaceholder:'Мой офис',start:'НОВАЯ ИГРА · НОЧЬ 1',continue:'ПРОДОЛЖИТЬ · НОЧЬ {night}',loading:'Загрузка {n} / {total}',
   titleNight:'Ночь {night}',pause:'ПАУЗА',pauseTitle:'ПАУЗА',pauseResume:'ВЕРНУТЬСЯ В ИГРУ',pauseRestart:'ПЕРЕЗАПУСТИТЬ НОЧЬ',pauseMenu:'В ГЛАВНОЕ МЕНЮ',pauseHint:'Esc или P — продолжить',
   winTitle:'6:00 AM',winText:'Вы пережили ночь {night}! До рассвета петухи не смогли попасть в комнату охраны.',
   allNightsTitle:'ВСЕ 7 НОЧЕЙ ПРОЙДЕНЫ',allNightsText:'Все семь ночных смен пройдены. Офис выжил!',
-  loseTitle:'НОЧЬ ОКОНЧЕНА',startNextDay:'НАЧАТЬ СЛЕДУЮЩИЙ ДЕНЬ',nextNight:'СЛЕДУЮЩАЯ НОЧЬ · {night}',retryNight:'ПОВТОРИТЬ НОЧЬ {night}',backMenu:'ГЛАВНОЕ МЕНЮ',
+  loseTitle:'НОЧЬ ОКОНЧЕНА',startNextDay:'НАЧАТЬ СЛЕДУЮЩИЙ ДЕНЬ',nextNight:'СЛЕДУЮЩАЯ НОЧЬ · {night}',retryNight:'ПОВТОРИТЬ',backMenu:'ГЛАВНОЕ МЕНЮ',
   doorDeath:'Петух C{id} проник в комнату охраны через {side} дверь.',leftDoor:'левую',rightDoor:'правую',
   outageDeath:'После отключения электричества петух C{id} добрался до комнаты охраны.',testDeath:'Тестовый скример петуха C{id}.',
   ringing:'☎ ВХОДЯЩИЙ ЗВОНОК / ЛИНИЯ ОТКРЫТА',hangup:'ПОЛОЖИТЬ ТРУБКУ',
@@ -136,7 +163,7 @@ const L10N={
   titleNight:'第{night}夜',pause:'一時停止',pauseTitle:'一時停止',pauseResume:'ゲームを再開',pauseRestart:'この夜をやり直す',pauseMenu:'メインメニューへ',pauseHint:'Esc または P で再開',
   winTitle:'午前6:00',winText:'第{night}夜を生き延びました！ 夜明けまでニワトリの侵入を阻止しました。',
   allNightsTitle:'全7夜クリア',allNightsText:'7夜すべての勤務を生き延びました。オフィスは無事です！',
-  loseTitle:'ゲームオーバー',startNextDay:'次の日を始める',nextNight:'次の夜 · 第{night}夜',retryNight:'第{night}夜をやり直す',backMenu:'メインメニューへ',
+  loseTitle:'ゲームオーバー',startNextDay:'次の日を始める',nextNight:'次の夜 · 第{night}夜',retryNight:'リトライ',backMenu:'メインメニューへ',
   doorDeath:'ニワトリC{id}が{side}ドアから警備室に侵入しました。',leftDoor:'左',rightDoor:'右',
   outageDeath:'停電後、ニワトリC{id}が警備室に到達しました。',testDeath:'ニワトリC{id}のジャンプスケアテスト。',
   ringing:'☎ 着信 / 通話中',hangup:'電話を切る',
@@ -160,7 +187,7 @@ function readCustomAI(){
 }
 let customAI=readCustomAI();
 function t(key,vars={}){
-  let val=L10N[gameLanguage][key]??L10N.ru[key]??key;
+  let val=L10N[gameLanguage]?.[key]??L10N.ru[key]??key;
   return String(val).replace(/\{(\w+)\}/g,(_,k)=>String(vars[k]??''));
 }
 function updateSaveProgress(){
@@ -174,7 +201,7 @@ function updateContinueButton(){
   const ready=state.loaded===names.length;
   const b=$('continueBtn');
   b.disabled=!ready||unlockedNight<=1;
-  b.textContent=t('continue').replace(/\s*[·・]\s*(?:НОЧЬ|第).*$/i,'').trim();
+  b.textContent=t('continue').replace(/\s*[·・]\s*(?:НОЧЬ|NIGHT|第).*$/i,'').trim();
   const night6=$('night6Btn'),custom=$('customBtn');
   night6.classList.toggle('hidden',unlockedNight<6);
   night6.disabled=!ready||unlockedNight<6;
@@ -315,7 +342,7 @@ function transitionToNight(night,{intro=false,fromNewspaper=false}={}){
 const NEWSPAPER_SHOW_MS=5000,NEWSPAPER_FADE_MS=900;
 let newspaperStartTimer=null,newspaperHideTimer=null,newspaperWelcomeTimer=null;
 function officeNameValue(){
-  return $('officeInput').value.trim().slice(0,44)||(gameLanguage==='ja'?'私のオフィス':'Мой офис');
+  return $('officeInput').value.trim().slice(0,44)||(gameLanguage==='ja'?'私のオフィス':gameLanguage==='en'?'My Office':'Мой офис');
 }
 function persistOfficeName(){
   const office=officeNameValue();
@@ -385,11 +412,12 @@ function applyTranslations(){
   if(typeof updatePhoneUI==='function')updatePhoneUI();
 }
 function chooseLanguage(lang){
-  gameLanguage=lang==='ja'?'ja':'ru';writeSave('kokhinhin_lang',gameLanguage);
+  gameLanguage=['ru','en','ja'].includes(lang)?lang:'ru';writeSave('kokhinhin_lang',gameLanguage);
   applyTranslations();$('languageScreen').classList.add('hidden');$('warningScreen').classList.remove('hidden');
 }
 $('languageRu').addEventListener('click',()=>chooseLanguage('ru'));
 $('languageJa').addEventListener('click',()=>chooseLanguage('ja'));
+$('languageEn').addEventListener('click',()=>chooseLanguage('en'));
 $('warningAccept').addEventListener('click',()=>{$('warningScreen').classList.add('hidden');$('preloadScreen').classList.remove('hidden');preloadAllGameAssets();});
 
 // Audio: original supplied MP3 effects, all optional if browser audio is blocked.
@@ -481,6 +509,8 @@ function alphaBounds(img){
   for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){if(data[(y*c.width+x)*4+3]>8){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;}}
   return maxX<0?null:{minX,minY,maxX,maxY,width:maxX-minX+1,height:maxY-minY+1};
 }
+const savedLanguage=readSave('kokhinhin_lang');
+if(['ru','en','ja'].includes(savedLanguage)){gameLanguage=savedLanguage;applyTranslations();}
 const lastName=readSave('kokhinhin_office')||safeRead('kons-new-office');if(lastName)$('officeInput').value=lastName;
 
 function loadImages(){
