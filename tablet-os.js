@@ -211,16 +211,23 @@
   const activeAudio=new Set();
   const audioSound=(name,volume=.65,loop=false)=>{
     if(safeRead('kons-muted')==='1')return;
-    const a=new Audio('assets/sound/'+name+'.mp3');
-    a.preload='auto';a.volume=Math.min(.65,Math.max(0,volume));a.loop=loop;activeAudio.add(a);
-    a.onended=()=>activeAudio.delete(a);a.onerror=()=>activeAudio.delete(a);
-    a.play().catch(()=>activeAudio.delete(a));return a;
+    const a=AudioManager.play(name,Math.min(.65,Math.max(0,volume)),{loop,url:window.KONS_EMBEDDED_SOUNDS?.[name]});
+    if(!a)return;
+    activeAudio.add(a);
+    const previous=a.onended;
+    a.onended=()=>{activeAudio.delete(a);if(typeof previous==='function')previous();};
+    return a;
   };
   function stopSound(){for(const a of activeAudio){a.pause();try{a.currentTime=0}catch(_){}}activeAudio.clear();}
   let pausedAudio=false;
   function freezeSound(freeze){
     if(freeze===pausedAudio)return;pausedAudio=freeze;
-    for(const a of activeAudio){if(freeze||safeRead('kons-muted')==='1')a.pause();else a.play().catch(()=>{});}
+    // Web Audio effects share the game's context; do not restart stopped sources.
+    if(freeze)AudioManager.setPaused(true);
+    else if(!game.state.paused)AudioManager.setPaused(false);
+    for(const a of activeAudio){if(!a.__webAudio){
+      if(freeze||safeRead('kons-muted')==='1')a.pause();else if(a.paused)a.play().catch(()=>{});
+    }}
   }
   const rebootStages=[
     {id:'shutdown',sec:4,sound:'os_shutdown'},
@@ -633,8 +640,7 @@
     previousElapsed=gs.nightElapsed;
     const frozen=gs.paused||game.phoneState?.status==='talking';
     freezeSound(frozen);
-    if(spamAudio && !frozen && safeRead('kons-muted')==='1')spamAudio.pause();
-    else if(spamAudio && !frozen && spamAudio.paused && safeRead('kons-muted')!=='1')spamAudio.play().catch(()=>{});
+    // Mute is managed by AudioManager for all playing sources.
     popupDialog.classList.toggle('is-paused',frozen);
     chickenLayer.classList.toggle('is-paused',frozen);
     if(!frozen && dt>0){
