@@ -884,13 +884,15 @@ function enemySound(e,kind,fast=false){
 }
 function moveEnemies(dt){
   if(!state.active||powerFailure.active)return;
-  // A disconnected or rebooting CCTV tablet cannot calm C2/C3 by merely
-  // leaving their camera number selected behind an obscuring system screen.
-  const tabletStatus=window.FNARTabletDebug?.status;
-  const actuallyWatching=cameraOpen && (!tabletStatus ||
-    (tabletStatus.mode==='idle' && !tabletStatus.adVisible));
+  // Only a genuinely live, unobscured frame counts as active watching.
+  // Forced CAM 08 faults temporarily protect C3 from accumulating unfair anger.
+  const tabletDebug=window.FNARTabletDebug;
+  const actuallyWatching=cameraOpen&&
+    (!tabletDebug || tabletDebug.canObserveCamera(currentCamera));
+  const c3Protected=Boolean(tabletDebug&&tabletDebug.c3Protected);
   const events=AI.tick(aiSession,dt,{
     cameraOpen:actuallyWatching,
+    c3Protected,
     camera:currentCamera,
     leftClosed:state.leftDoorPos>.88,
     rightClosed:state.rightDoorPos>.88
