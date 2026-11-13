@@ -150,6 +150,7 @@ const L10N={
 let gameLanguage='ru',currentNight=1,unlockedNight=Math.max(1,Math.min(7,Number(readSave('kokhinhin_unlocked'))||1));
 let sevenNightsComplete=readSave('kokhinhin_complete')==='1';
 let customCompleted=sevenNightsComplete||readSave('kokhinhin_custom_complete')==='1';
+if(customCompleted)unlockedNight=Math.max(7,unlockedNight);
 let customMaxCompleted=readSave('kokhinhin_custom_20202020')==='1';
 const EXTRA_SHIFT_PAY=50; // USD: adjust overtime pay here without changing the documents.
 function readCustomAI(){
@@ -219,17 +220,17 @@ function renderCustomAI(){
     row.append(name,down,value,up);grid.appendChild(row);
   });
 }
-function showCustomNight(){
+function showCustomNight(debugPreview=false){
   if(state.active)return;
   closeNightMenus();
-  if(unlockedNight<7)return;
+  if(unlockedNight<7&&!debugPreview)return;
   renderCustomAI();$('customScreen').classList.remove('hidden');
 }
 $('nightSelectBack').addEventListener('click',closeNightMenus);
 $('customBack').addEventListener('click',closeNightMenus);
 $('customStart').addEventListener('click',()=>{if(canStartNight(7)){closeNightMenus();start(7);}});
 $('night6Btn').addEventListener('click',()=>{if(canStartNight(6))start(6);});
-$('customBtn').addEventListener('click',showCustomNight);
+$('customBtn').addEventListener('click',()=>showCustomNight());
 
 const NEWSPAPER_SHOW_MS=5000,NEWSPAPER_FADE_MS=900;
 let newspaperStartTimer=null,newspaperHideTimer=null,newspaperWelcomeTimer=null;
@@ -816,12 +817,14 @@ function startPowerFailure(){
   powerFailure.active=true;powerFailure.phase='outage';
   powerFailure.phaseEndAt=state.nightElapsed+6;
   // Pick the nearest rooster from the actual current route position.
-  const closest=[...ENEMIES].sort((a,b)=>{
+  // A zero-level rooster must never become the scripted blackout attacker.
+  const attackers=ENEMIES.filter(e=>!aiSession.customAI||aiSession.customAI[e.id-1]>0);
+  const closest=attackers.sort((a,b)=>{
     const distanceA=Math.max(0,a.route.length-a.step);
     const distanceB=Math.max(0,b.route.length-b.step);
     return distanceA-distanceB || a.id-b.id;
   })[0];
-  powerFailure.attackerId=closest.id;
+  powerFailure.attackerId=closest?.id||0;
   powerFailure.randomDelay=BLACKOUT_WAIT[Math.floor(Math.random()*BLACKOUT_WAIT.length)];
   if(cameraOpen){cameraOpen=false;cameraScreen.classList.remove('is-open');cameraScreen.setAttribute('aria-hidden','true');cameraToggle.setAttribute('aria-expanded','false');}
   if(phoneState.status==='ringing')missPhone();
@@ -1292,7 +1295,7 @@ window.KokhinhinDebug={state,toggleDoor,setLight,findHit,imagePos,setView(v){sta
   get phoneVoice(){return phoneVoiceAudio;}, get phoneSubtitle(){return phoneSubtitle.textContent;},
   toggleMute,togglePause,get currentNight(){return currentNight;},get unlockedNight(){return unlockedNight;},
   setLanguage:chooseLanguage,goMenu,updateSaveProgress,
-  showNightSelect,showCustomNight,showEnding:showCompanyDocument,
+  showNightSelect,showCustomNight:()=>showCustomNight(true),showEnding:showCompanyDocument,
   get customAI(){return [...customAI];},get customCompleted(){return customCompleted;},
   get customMaxCompleted(){return customMaxCompleted;}};
 window.FNARDebug=window.KokhinhinDebug;
