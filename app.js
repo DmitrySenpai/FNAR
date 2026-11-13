@@ -292,7 +292,7 @@ async function showCustomNight(debugPreview=false){
     window.alert(t('preloadError'));
     return;
   }
-  if(state.active||!$('welcome').classList.contains('hidden'))return;
+  if(state.active||$('welcome').classList.contains('hidden'))return;
   renderCustomAI();$('customScreen').classList.remove('hidden');
 }
 $('nightSelectBack').addEventListener('click',closeNightMenus);
