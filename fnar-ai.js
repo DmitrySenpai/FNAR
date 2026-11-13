@@ -12,6 +12,7 @@
     RETREAT:'RETREAT',REST:'REST',WATCH:'WATCH',ANGRY:'ANGRY',RUSH:'RUSH'
   });
   const NIGHT_LENGTH=360;
+  const NEUTRAL_MODIFIERS=Object.freeze({active:false,target:null,movementFactor:1,backFactor:1,c2WatchFactor:1,c2HoldFactor:1,c3AngerFactor:1,c4BurstFactor:1});
   function nightConfig(movementScale,c3Threshold,attackWindow,closedWait,restMin,restMax,awake,c2WatchRatio,c2Hold,c4Burst,c4Hold,dangerCap){
     return Object.freeze({movementScale,c3Threshold,attackWindow,closedWait,restMin,restMax,
       awake:Object.freeze(awake),c2WatchRatio,c2Hold,c4Burst,c4Hold,dangerCap});
@@ -55,7 +56,7 @@
   function movementDelay(g,e){
     const level=g.customAI?.[e.id-1];
     const factor=level===undefined?1:Math.max(.52,1.80-level*.061);
-    return Math.max(2,rand(g,e.min,e.max)*g.config.movementScale*factor);
+    return Math.max(2,rand(g,e.min,e.max)*g.config.movementScale*factor*(e.id===1?g.companyModifiers.movementFactor:1));
   }
   function restDelay(g,e){
     if(!g.customAI)return rand(g,g.config.restMin,g.config.restMax);
@@ -67,16 +68,20 @@
       step:0,phase:PHASES.DORMANT,nextMove:0,attack:0,blocked:0,knocks:0,
       cycles:0,retreatTo:0,anger:0,watchTime:0,angerThreshold:Infinity,burst:0,holds:0};
   }
-  function createNight(night=1,rng=Math.random,customLevels=null){
+  function createNight(night=1,rng=Math.random,customLevels=null,companyProfile=null){
     const g={night:1,config:NIGHT_CONFIG[1],enemies:ENEMY_DEFS.map(makeEnemy),
       elapsed:0,rng,events:[]};
-    return resetNight(g,night,rng,customLevels);
+    return resetNight(g,night,rng,customLevels,companyProfile);
   }
-  function resetNight(g,night,rng,customLevels=null){
+  function resetNight(g,night,rng,customLevels=null,companyProfile=null){
     if(!Number.isInteger(night)||!NIGHT_CONFIG[night])throw new RangeError('Night must be 1–7');
     g.night=night;
     g.customAI=night===7?normalizeAILevels(customLevels||g.customAI||[10,10,10,10]):null;
     g.config=night===7?createCustomConfig(g.customAI):NIGHT_CONFIG[night];
+    // Company modifiers are snapshotted at reset; story presets stay frozen.
+    const company=(typeof globalThis!=='undefined'&&globalThis.FNAR_COMPANY)||
+      (typeof module==='object'&&module.exports?require('./fnar-company.js'):null);
+    g.companyModifiers=company?company.applyCompanyProfile(g.config,companyProfile,night):NEUTRAL_MODIFIERS;
     g.elapsed=0;
     if(typeof rng==='function')g.rng=rng;
     if(typeof g.rng!=='function')g.rng=Math.random;
@@ -134,7 +139,7 @@
     if(!Number.isFinite(g.config.c3Threshold))return; // Night one: visible, harmless.
     e.watchTime=observing?Math.min(10,e.watchTime+dt):0;
     // The 1.4s requirement is continuous; a quick camera tap gives no relief.
-    const delta=e.watchTime>=1.4?-dt*2.4:dt;
+    const delta=e.watchTime>=1.4?-dt*2.4:dt*g.companyModifiers.c3AngerFactor;
     e.anger=clamp(e.anger+delta/g.config.c3Threshold,0,1);
     if(e.anger>=1){
       e.anger=1;e.phase=PHASES.RUSH;e.watchTime=0;
@@ -216,7 +221,7 @@
       }
       const observed=Boolean(input.cameraOpen&&seeing===e.route[e.step]);
       // C2 is delayed, never permanently immobilized, by camera observation.
-      const watchRatio=e.id===2&&observed?g.config.c2WatchRatio:1;
+      const watchRatio=e.id===2&&observed?g.config.c2WatchRatio*g.companyModifiers.c2WatchFactor:1;
       e.nextMove=Math.max(0,e.nextMove-dt*watchRatio);
       if(e.nextMove>0)continue;
       if(e.phase===PHASES.RUSH){
@@ -224,7 +229,7 @@
           e.nextMove=rand(g,.8,1.4);
         continue;
       }
-      if(e.id===2 && observed && e.holds<2 && g.rng()<g.config.c2Hold){
+      if(e.id===2 && observed && e.holds<2 && g.rng()<g.config.c2Hold*g.companyModifiers.c2HoldFactor){
         e.holds++;e.nextMove=movementDelay(g,e)*.45;
         continue;
       }
@@ -234,7 +239,7 @@
       }
       const consecutive=e.burst>0;
       e.burst=0;e.holds=0;
-      const backChance=e.id===1?.11:e.id===2?.18:e.id===4?.20:0;
+      const backChance=e.id===1?.11*g.companyModifiers.backFactor:e.id===2?.18:e.id===4?.20:0;
       if(!consecutive && e.step>0 && e.step<e.route.length-2 && g.rng()<backChance){
         e.step--;e.phase=PHASES.PATROL;
         emit(events,'move',e,{back:true,fast:false});
@@ -243,7 +248,7 @@
       }
       const moved=attemptStep(g,e,events,consecutive);
       if(!moved||e.phase===PHASES.DOOR)continue;
-      if(e.id===4 && !consecutive && g.rng()<g.config.c4Burst){
+      if(e.id===4 && !consecutive && g.rng()<g.config.c4Burst*g.companyModifiers.c4BurstFactor){
         // Two actual single-node transitions, separated by a noticeable delay.
         e.burst=1;e.nextMove=rand(g,.62,1.08);
       }else{
