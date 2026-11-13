@@ -78,17 +78,40 @@
       ["警備員限定の抽選","景品は7日目の勤務後の休日です。応募しますか？"]
     ]
   };
+  const FAULTS=window.FNAR_TABLET_FAULTS;
+  if(!FAULTS)throw new Error('fnar-tablet-faults.js must load before tablet-os.js');
+  const uiText={
+    ru:{
+      frozen:'WARNING: VIDEO FEED FROZEN',stale:'PLAYBACK DELAY DETECTED',signal:'NO SIGNAL',
+      lag:'Видеосистема обрабатывает запрос…',
+      crashTitle:'Net Video 3.0 — Application Error',
+      crashBody:'Программа Net Video 3.0 обнаружила критическую ошибку и будет закрыта.',
+      crashCode:'Код ошибки: 0xC0000005',close:'Закрыть',launch:'Запустить Net Video 3.0',
+      audio:'NET SYSTEM — Воспроизведение рекламы',chickenTitle:'Chicken.exe — Установка завершена',
+      chickenBody:'Поздравляем! Ваш компьютер теперь находится под защитой куриных технологий!',
+      chickenWatch:'CHICKEN.EXE IS WATCHING YOU',chickenAlert:'Ваша куриная защита работает исправно!',
+      chickenEgg:'Система обнаружила 47 куриных следов.',chickenUpdate:'Chicken.exe обновляет клюв…'
+    },
+    ja:{
+      frozen:'WARNING: VIDEO FEED FROZEN',stale:'PLAYBACK DELAY DETECTED',signal:'NO SIGNAL',
+      lag:'映像システムが応答しています…',
+      crashTitle:'Net Video 3.0 — アプリケーション エラー',
+      crashBody:'Net Video 3.0で重大なエラーが発生したため終了します。',
+      crashCode:'エラーコード: 0xC0000005',close:'閉じる',launch:'Net Video 3.0 を起動',
+      audio:'NET SYSTEM — 広告を再生中',chickenTitle:'Chicken.exe — インストール完了',
+      chickenBody:'おめでとうございます！お使いのPCはニワトリ技術によって保護されています！',
+      chickenWatch:'CHICKEN.EXE IS WATCHING YOU',chickenAlert:'ニワトリの保護機能は正常に動作しています！',
+      chickenEgg:'47個のニワトリの足跡を検出しました。',chickenUpdate:'Chicken.exeがクチバシを更新中…'
+    }
+  };
+  const faultText=()=>uiText[lang()];
   const safeRead=key=>{try{return localStorage.getItem(key)}catch(_){return null}};
   const lang=()=>document.documentElement.lang==='ja'||safeRead('kokhinhin_lang')==='ja'?'ja':'ru';
   const tr=()=>lang()==='ja'?ja:ru;
   const random=(a,b)=>a+Math.random()*(b-a);
   const choose=(a)=>a[Math.floor(Math.random()*a.length)];
-  // Ads are frequent only while a camera tablet is open, from night 4 onward.
-  // Shorten the delay slightly on nights 5–7.
-  function nextAdDelay(extra=0){
-    const factor=Math.max(.7,1-Math.max(0,game.currentNight-4)*.085);
-    return random(10,18)*factor+extra;
-  }
+  // The ad countdown is consumed only while CCTV is open and fully operational.
+  function nextAdDelay(){return FAULTS.nextAdDelay(game.currentNight);}
   const media=name=>`assets/ui/tablet/${name}.webp${name==='boot'?'?v=049':''}`;
   const html=(tag,cls,where)=>{const e=document.createElement(tag);e.className=cls;where.appendChild(e);return e;};
   const os=html('div','tablet-os-layer hidden',tablet);
@@ -124,14 +147,35 @@
   }
   window.addEventListener('resize',()=>{if(state.adVisible)requestAnimationFrame(placeAdWindow)});
   if(window.ResizeObserver)new ResizeObserver(()=>{if(state.adVisible)requestAnimationFrame(placeAdWindow)}).observe(tablet);
+  // Independent camera-picture overlay: AI and real camera assets keep updating below it.
+  const faultFrame=html('div','tablet-fault-frame hidden',feed);
+  faultFrame.innerHTML='<span class="tablet-fault-label"></span><span class="tablet-fault-time"></span><span class="tablet-fault-spinner hidden">◌</span>';
+  const faultLabel=faultFrame.querySelector('.tablet-fault-label');
+  const faultTime=faultFrame.querySelector('.tablet-fault-time');
+  const faultSpinner=faultFrame.querySelector('.tablet-fault-spinner');
+  // Desktop for a failed Net Video process (this is only a simulated webpage window).
+  const crash=html('div','tablet-crash-screen hidden',tablet);
+  crash.innerHTML='<div class="tablet-crash-error"><div class="tablet-crash-title"></div><div class="tablet-crash-content"><span class="tablet-crash-symbol">×</span><div><p></p><small></small></div></div><button type="button" class="tablet-crash-dismiss"></button></div><button type="button" class="tablet-crash-shortcut hidden"><span>▣</span><strong>Net Video 3.0</strong></button><div class="tablet-crash-launch hidden"></div>';
+  const errorTitle=crash.querySelector('.tablet-crash-title');
+  const errorBody=crash.querySelector('.tablet-crash-content p');
+  const errorCode=crash.querySelector('.tablet-crash-content small');
+  const errorClose=crash.querySelector('.tablet-crash-dismiss');
+  const relaunch=crash.querySelector('.tablet-crash-shortcut');
+  const relaunchSplash=crash.querySelector('.tablet-crash-launch');
+  const chickenLayer=html('div','tablet-chicken-layer hidden',tablet);
+  chickenLayer.innerHTML='<div class="tablet-chicken-effect"></div><div class="tablet-chicken-cursor hidden">🐓</div>';
+  const chickenEffect=chickenLayer.querySelector('.tablet-chicken-effect');
+  const chickenCursor=chickenLayer.querySelector('.tablet-chicken-cursor');
+  const imageHistory=[];
+  let historyCurrent='',historyCamera=0,historyStart=0;
   const usb=html('div','tablet-usb-failure hidden',feed);
   usb.innerHTML=`<div class="tablet-usb-inner"><div class="tablet-usb-icon">▣</div><strong></strong><p></p></div>`;
   const usbHeading=usb.querySelector('strong'),usbBody=usb.querySelector('p');
   const activeAudio=new Set();
-  const audioSound=name=>{
+  const audioSound=(name,volume=.65,loop=false)=>{
     if(safeRead('kons-muted')==='1')return;
     const a=new Audio('assets/sound/'+name+'.mp3');
-    a.preload='auto';a.volume=.65;activeAudio.add(a);
+    a.preload='auto';a.volume=Math.min(.65,Math.max(0,volume));a.loop=loop;activeAudio.add(a);
     a.onended=()=>activeAudio.delete(a);a.onerror=()=>activeAudio.delete(a);
     a.play().catch(()=>activeAudio.delete(a));return a;
   };
@@ -150,14 +194,122 @@
     {id:'desktop',sec:1},
     {id:'netvideo',sec:2}
   ];
-  const state={night:null,mode:'idle',adVisible:false,adCountdown:0,stageIndex:-1,stageRemaining:0,usbRemaining:0,shown:0,accepted:0,declined:0};
+  const state={night:null,mode:'idle',adVisible:false,adCountdown:0,
+    stageIndex:-1,stageRemaining:0,usbRemaining:0,shown:0,accepted:0,declined:0,
+    faultRemaining:0,faultCamera:0,faultFrame:'',faultClock:0,
+    pendingCamera:0,pendingDelay:0,crashStep:'error',
+    chickenNext:0,chickenEffectSeconds:0,chickenType:'',c3GraceUntil:0,
+    cooldown:0,faultHistory:[]};
+  const faultSoundNames=['os_balloon','beep','blip','os_info'];
+  let spamAudio=null;
+  function captureCameraHistory(){
+    if(!game.cameraOpen)return;
+    const cam=game.currentCamera,img=document.getElementById('cameraPicture');
+    if(!img || img.classList.contains('hidden') || !img.complete || !img.naturalWidth)return;
+    const src=img.currentSrc||img.src;
+    if(!src)return;
+    if(src!==historyCurrent || cam!==historyCamera){
+      historyCurrent=src;historyCamera=cam;historyStart=game.state.nightElapsed;
+      imageHistory.push({camera:cam,src,time:historyStart});
+      if(imageHistory.length>75)imageHistory.splice(0,imageHistory.length-75);
+    }
+  }
+  function selectedImage(){
+    const img=document.getElementById('cameraPicture');
+    return img && !img.classList.contains('hidden') ? (img.currentSrc||img.src) : '';
+  }
+  function stamp(t){
+    return new Date(Math.max(0,t)*1000).toISOString().slice(14,19);
+  }
+  function setFrame(mode,src,camera){
+    state.faultCamera=camera;
+    state.faultFrame=src||'';
+    state.faultClock=game.state.nightElapsed;
+    faultFrame.className='tablet-fault-frame';
+    faultFrame.classList.add('is-'+mode);
+    faultFrame.style.backgroundImage=src?'url("'+src.replaceAll('"','%22')+'")':'none';
+    faultLabel.textContent=mode==='signal_lost'?faultText().signal:mode==='stale'?faultText().stale:faultText().frozen;
+    faultTime.textContent='CAM '+String(camera).padStart(2,'0')+'  '+stamp(state.faultClock);
+    faultSpinner.classList.add('hidden');
+  }
+  function clearChicken(){
+    chickenEffect.replaceChildren();chickenCursor.classList.add('hidden');chickenLayer.classList.add('hidden');
+    chickenLayer.classList.remove('is-cursor');
+    state.chickenType='';
+  }
+  function chickenVisual(){
+    clearChicken();
+    const types=['paw','cursor','shortcut','glitch','balloon','watched'];
+    const type=choose(types);state.chickenType=type;
+    state.chickenEffectSeconds=4;
+    chickenLayer.classList.remove('hidden');
+    const add=(tag,cls,text,parent=chickenEffect)=>{const e=html(tag,cls,parent);e.textContent=text;return e;};
+    if(type==='paw'){
+      for(let i=0;i<5;i++){
+        const p=add('span','tablet-chicken-print','♢');
+        p.style.left=random(15,84)+'%';p.style.top=random(10,82)+'%';
+        p.style.transform='rotate('+random(-55,55)+'deg)';
+      }
+    }else if(type==='cursor'){
+      chickenCursor.classList.remove('hidden');chickenLayer.classList.add('is-cursor');
+    }else if(type==='shortcut'){
+      add('div','tablet-chicken-shortcut','🐓  Chicken.exe');
+    }else if(type==='glitch'){
+      for(let i=0;i<4;i++){
+        const p=add('div','tablet-chicken-glitch','');
+        p.style.top=random(12,82)+'%';p.style.left=random(8,75)+'%';p.style.width=random(12,34)+'%';
+      }
+    }else if(type==='balloon'){
+      add('div','tablet-chicken-balloon',choose([faultText().chickenAlert,faultText().chickenEgg,faultText().chickenUpdate]));
+    }else{
+      add('div','tablet-chicken-watch',faultText().chickenWatch);
+    }
+  }
+  tablet.addEventListener('pointermove',e=>{
+    if(state.mode!=='chicken'||state.chickenType!=='cursor')return;
+    const r=tablet.getBoundingClientRect();
+    chickenCursor.style.left=(e.clientX-r.left)+'px';
+    chickenCursor.style.top=(e.clientY-r.top)+'px';
+  },{passive:true});
+  // Input lag applies ONLY to CCTV selectors, never doors, lights or pause.
+  tablet.addEventListener('click',e=>{
+    if(state.mode!=='input_lag'||!game.cameraOpen||game.state.paused)return;
+    const node=e.target.closest?.('.cam-node');
+    if(!node||!tablet.contains(node))return;
+    const number=Number(node.dataset.camera);
+    if(!Number.isInteger(number)||number<1||number>9)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    state.pendingCamera=number;
+    state.pendingDelay=random(.3,.6); // overwrite the earlier request, never queue clicks
+    faultSpinner.classList.remove('hidden');
+    faultFrame.classList.remove('hidden');
+  },true);
+  errorClose.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(game.state.paused||state.mode!=='crash'||state.crashStep!=='error')return;
+    state.crashStep='desktop';
+    errorClose.blur();ui();
+  });
+  relaunch.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(game.state.paused||state.mode!=='crash'||state.crashStep!=='desktop')return;
+    state.crashStep='launch';state.faultRemaining=random(2,3);ui();
+  });
   let previousElapsed=null,previousActive=false,wallTime=performance.now();
   function updateLocalization(){
     usbHeading.textContent=tr().usbHeader;usbBody.textContent=tr().usbBody;
   }
   function reset(){
-    state.mode='idle';state.adVisible=false;state.adCountdown=nextAdDelay();state.stageIndex=-1;state.stageRemaining=0;state.usbRemaining=0;
-    previousElapsed=null;ad.classList.add('hidden');popupDialog.classList.remove('is-floating','is-paused');adMoving=false;os.classList.add('hidden');usb.classList.add('hidden');stopSound();pausedAudio=false;
+    state.mode='idle';state.adVisible=false;state.adCountdown=nextAdDelay();state.stageIndex=-1;
+    state.stageRemaining=0;state.usbRemaining=0;state.faultRemaining=0;
+    state.faultCamera=0;state.faultFrame='';state.pendingCamera=0;state.pendingDelay=0;
+    state.c3GraceUntil=0;state.crashStep='error';state.chickenNext=0;state.chickenEffectSeconds=0;
+    state.cooldown=0;state.faultHistory=[];imageHistory.length=0;historyCurrent='';historyCamera=0;
+    previousElapsed=null;ad.classList.add('hidden');
+    popupDialog.classList.remove('is-floating','is-paused');adMoving=false;
+    os.classList.add('hidden');usb.classList.add('hidden');crash.classList.add('hidden');
+    faultFrame.classList.add('hidden');clearChicken();
+    stopSound();spamAudio=null;pausedAudio=false;
   }
   function displayStage(stage){
     os.dataset.phase=stage.id;
@@ -178,25 +330,77 @@
     state.stageRemaining=stage.sec;
     displayStage(stage);
   }
-  function complete(){state.mode='idle';state.stageIndex=-1;os.classList.add('hidden');usb.classList.add('hidden');state.adCountdown=nextAdDelay(3);}
-  function reboot(){
-    if(!game.state.active)return;
-    state.adVisible=false;ad.classList.add('hidden');state.mode='reboot';os.classList.remove('hidden');
-    startStage(0);
+  function complete(){
+    const previouslyBlocked=FAULTS.isCameraUnavailable(state.mode,8,state.faultCamera);
+    if(previouslyBlocked)state.c3GraceUntil=game.state.nightElapsed+3;
+    if(spamAudio){spamAudio.pause();spamAudio=null;}
+    state.mode='idle';state.stageIndex=-1;state.faultRemaining=0;state.usbRemaining=0;
+    state.pendingCamera=0;state.pendingDelay=0;state.crashStep='error';
+    state.faultCamera=0;state.faultFrame='';state.chickenNext=0;
+    state.adCountdown=nextAdDelay();state.cooldown=random(8,12);
+    os.classList.add('hidden');usb.classList.add('hidden');
+    crash.classList.add('hidden');faultFrame.classList.add('hidden');clearChicken();
+    stopSound();
   }
-  function disconnectUSB(duration){
-    if(!game.state.active)return;
-    state.adVisible=false;ad.classList.add('hidden');state.mode='usb';state.usbRemaining=duration??choose([3,5,2,7]);
-    updateLocalization();usb.classList.remove('hidden');audioSound('os_usb_remove');
-  }
+  function reboot(){return triggerFault('reboot');}
+  function disconnectUSB(duration){return triggerFault('usb',duration);}
   function finishUSB(){
-    state.mode='idle';state.usbRemaining=0;usb.classList.add('hidden');audioSound('os_usb_connect');state.adCountdown=nextAdDelay(3);
+    if(state.mode!=='usb')return;
+    complete();audioSound('os_usb_connect',.40);
+  }
+  function triggerFault(mode,duration){
+    if(!game.state.active || game.currentNight<4 || !FAULTS.validFault(mode) || state.mode!=='idle')return false;
+    // Clear the previous ad sound; there is only one active fault at a time.
+    state.adVisible=false;ad.classList.add('hidden');stopSound();
+    state.mode=mode;state.faultRemaining=duration??FAULTS.faultDuration(mode);
+    state.faultCamera=0;state.pendingCamera=0;state.pendingDelay=0;
+    state.faultHistory.push(mode);
+    if(mode==='reboot'){
+      clearChicken();os.classList.remove('hidden');startStage(0);
+    }else if(mode==='usb'){
+      state.usbRemaining=duration??choose([3,5,2,7]);
+      updateLocalization();usb.classList.remove('hidden');audioSound('os_usb_remove',.46);
+    }else if(mode==='frozen'||mode==='stale'){
+      const cam=game.currentCamera;
+      const current=selectedImage();
+      const old=imageHistory.filter(v=>v.camera===cam && v.time<=game.state.nightElapsed-1.4);
+      const previous=old.length?old[old.length-1].src:'';
+      // Fallback to a genuine frozen frame if there isn't a prior capture.
+      const stale=mode==='stale'&&previous&&previous!==current;
+      setFrame(stale?'stale':'frozen',stale?previous:current,cam);
+    }else if(mode==='signal_lost'){
+      const cam=1+Math.floor(Math.random()*9);
+      setFrame('signal_lost','',cam);
+    }else if(mode==='input_lag'){
+      faultFrame.className='tablet-fault-frame is-lag';
+      faultFrame.style.backgroundImage='none';
+      faultLabel.textContent=faultText().lag;faultTime.textContent='';
+      faultSpinner.classList.add('hidden');
+    }else if(mode==='crash'){
+      state.crashStep='error';
+    }else if(mode==='audio_spam'){
+      const sound=choose(faultSoundNames);
+      spamAudio=audioSound(sound,.23,true);
+    }else if(mode==='chicken'){
+      state.chickenNext=random(4,7);
+      chickenLayer.classList.remove('hidden');
+      chickenEffect.replaceChildren();
+      const welcome=html('div','tablet-chicken-balloon',chickenEffect);
+      welcome.textContent=faultText().chickenTitle+' — '+faultText().chickenBody;
+    }
+    ui();return true;
   }
   function dismiss(accepted){
     if(!state.adVisible)return;
-    state.adVisible=false;ad.classList.add('hidden');popupDialog.classList.remove('is-floating','is-paused');
-    if(accepted){state.accepted++;if(Math.random()<.5)reboot();else disconnectUSB();}
-    else {state.declined++;state.adCountdown=nextAdDelay();}
+    state.adVisible=false;ad.classList.add('hidden');
+    popupDialog.classList.remove('is-floating','is-paused');
+    if(accepted){
+      state.accepted++;
+      triggerFault(FAULTS.weightedFault());
+    }else{
+      state.declined++;
+      state.adCountdown=nextAdDelay();
+    }
   }
   function showAd(){
     if(!game.state.active||game.currentNight<4||state.mode!=='idle'||state.adVisible)return false;
@@ -225,30 +429,80 @@
     ad.classList.toggle('hidden',!canShow||!state.adVisible);
     os.classList.toggle('hidden',!canShow||state.mode!=='reboot');
     usb.classList.toggle('hidden',!canShow||state.mode!=='usb');
+    const view=canShow&&(state.mode==='frozen'||state.mode==='stale'||state.mode==='signal_lost')&&
+      game.currentCamera===state.faultCamera;
+    const lag=canShow&&state.mode==='input_lag'&&state.pendingCamera>0;
+    faultFrame.classList.toggle('hidden',!(view||lag));
+    crash.classList.toggle('hidden',!canShow||state.mode!=='crash');
+    if(canShow&&state.mode==='crash'){
+      errorTitle.textContent=faultText().crashTitle;
+      errorBody.textContent=faultText().crashBody;errorCode.textContent=faultText().crashCode;
+      errorClose.textContent=faultText().close;relaunch.querySelector('strong').textContent=faultText().launch;
+      crash.querySelector('.tablet-crash-error').classList.toggle('hidden',state.crashStep!=='error');
+      relaunch.classList.toggle('hidden',state.crashStep!=='desktop');
+      relaunchSplash.classList.toggle('hidden',state.crashStep!=='launch');
+    }
+    chickenLayer.classList.toggle('hidden',!canShow||state.mode!=='chicken');
   }
   function step(){
     const now=performance.now();wallTime=now;
     const gs=game.state;
     const active=gs.active&&game.currentNight>=4;
-    if(!active){if(previousActive||state.mode!=='idle'||state.adVisible)reset();previousActive=false;requestAnimationFrame(step);return;}
-    if(!previousActive || state.night!==game.currentNight || (previousElapsed!==null&&gs.nightElapsed+1<previousElapsed)){
+    if(!active){
+      if(previousActive||state.mode!=='idle'||state.adVisible)reset();
+      previousActive=false;requestAnimationFrame(step);return;
+    }
+    if(!previousActive||state.night!==game.currentNight||
+       (previousElapsed!==null&&gs.nightElapsed+1<previousElapsed)){
       reset();state.night=game.currentNight;previousElapsed=gs.nightElapsed;
     }
     previousActive=true;
-    const dt=Math.max(0,Math.min(15,gs.nightElapsed-(previousElapsed??gs.nightElapsed)));
+    // Derive fault timers from exactly the same game clock the AI and electricity use.
+    const dt=Math.max(0,gs.nightElapsed-(previousElapsed??gs.nightElapsed));
     previousElapsed=gs.nightElapsed;
     const frozen=gs.paused||game.phoneState?.status==='talking';
     freezeSound(frozen);
     popupDialog.classList.toggle('is-paused',frozen);
-    if(!frozen&&dt>0){
+    if(!frozen && dt>0){
+      captureCameraHistory();
       if(state.mode==='reboot'){
         state.stageRemaining-=dt;
-        while(state.mode==='reboot'&&state.stageRemaining<=0){const overdue=-state.stageRemaining;startStage(state.stageIndex+1);state.stageRemaining-=overdue;}
+        while(state.mode==='reboot'&&state.stageRemaining<=0){
+          const overdue=-state.stageRemaining;
+          startStage(state.stageIndex+1);
+          state.stageRemaining-=overdue;
+        }
       }else if(state.mode==='usb'){
-        state.usbRemaining-=dt;if(state.usbRemaining<=0)finishUSB();
-      }else if(!state.adVisible && game.cameraOpen){
-        state.adCountdown-=dt;
-        if(state.adCountdown<=0)showAd();
+        state.usbRemaining-=dt;
+        if(state.usbRemaining<=0)finishUSB();
+      }else if(state.mode==='crash'){
+        if(state.crashStep==='launch'){
+          state.faultRemaining-=dt;
+          if(state.faultRemaining<=0)complete();
+        }
+      }else if(state.mode!=='idle'){
+        state.faultRemaining-=dt;
+        if(state.mode==='input_lag'&&state.pendingCamera){
+          state.pendingDelay-=dt;
+          if(state.pendingDelay<=0){
+            const target=state.pendingCamera;
+            state.pendingCamera=0;state.pendingDelay=0;
+            if(game.cameraOpen)game.chooseCamera(target);
+          }
+        }
+        if(state.mode==='chicken'){
+          state.chickenNext-=dt;state.chickenEffectSeconds-=dt;
+          if(state.chickenNext<=0){
+            chickenVisual();state.chickenNext=random(4,7);
+          }
+        }
+        if(state.faultRemaining<=0)complete();
+      }else if(!state.adVisible){
+        state.cooldown=Math.max(0,state.cooldown-dt);
+        if(game.cameraOpen && state.cooldown<=0){
+          state.adCountdown-=dt;
+          if(state.adCountdown<=0)showAd();
+        }
       }
     }
     ui();requestAnimationFrame(step);
@@ -259,6 +513,20 @@
       if(e.key==='Escape'){dismiss(false);e.preventDefault();e.stopImmediatePropagation();}
     }
   },true);
-  window.FNARTabletDebug={get status(){return {...state}},showAd,reboot,disconnectUSB,reset};
+  window.FNARTabletDebug={
+    get status(){return {...state,camera08Unavailable:this.isCameraUnavailable(8)};},
+    get weights(){return FAULTS.CHANCES;},
+    showAd,reboot,disconnectUSB,triggerFault,reset,
+    isCameraUnavailable(camera){
+      return FAULTS.isCameraUnavailable(state.mode,camera,state.faultCamera);
+    },
+    canObserveCamera(camera){
+      return game.cameraOpen && FAULTS.safeObservation(state.mode,camera,state.faultCamera,state.adVisible);
+    },
+    get c3Protected(){
+      return this.isCameraUnavailable(8) || game.state.nightElapsed<state.c3GraceUntil;
+    },
+    get history(){return [...imageHistory];}
+  };
   updateLocalization();reset();requestAnimationFrame(step);
 })();
