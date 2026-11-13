@@ -8,13 +8,21 @@
   const DURATION_MS=500;
   const REVEAL_MS=250;
   const sameIds=(a,b)=>a.length===b.length&&a.every(id=>b.includes(id));
+  // The actual displayed filenames are authoritative when a previous visual
+  // roster snapshot is stale (for example when two AI moves occur in one frame).
+  // Works for CAM 01–09, including the final rooster leaving for an empty feed.
+  function roosterIdsInFile(file){
+    if(typeof file!=='string')return null;
+    const parsed=/^cam(?:0[1-9])((?:_c[1-4])*)\.webp$/.exec(file);
+    if(!parsed)return null;
+    return [...parsed[1].matchAll(/_c([1-4])/g)].map(match=>Number(match[1]));
+  }
   function cameraRosterChanged({previousCamera,currentCamera,previousIds,nextIds,previousFile,nextFile,eligible}){
-    return Boolean(eligible&&previousCamera===currentCamera&&
-      Array.isArray(previousIds)&&Array.isArray(nextIds)&&
-      !sameIds(previousIds,nextIds)&&
-      typeof previousFile==='string'&&previousFile.length>0&&
-      typeof nextFile==='string'&&nextFile.length>0&&
-      previousFile!==nextFile);
+    if(!eligible||previousCamera!==currentCamera||!Array.isArray(previousIds)||
+      !Array.isArray(nextIds)||!previousFile||!nextFile||previousFile===nextFile)return false;
+    const visualBefore=roosterIdsInFile(previousFile)||previousIds;
+    const visualAfter=roosterIdsInFile(nextFile)||nextIds;
+    return !sameIds(visualBefore,visualAfter);
   }
   function createController({
     warm,allowed,onStart,onReveal,onFinish,
@@ -106,5 +114,5 @@
     return Object.freeze({start,update,cancel,status,cameraRosterChanged,
       DURATION_MS,REVEAL_MS});
   }
-  return Object.freeze({DURATION_MS,REVEAL_MS,cameraRosterChanged,createController});
+  return Object.freeze({DURATION_MS,REVEAL_MS,cameraRosterChanged,roosterIdsInFile,createController});
 });
