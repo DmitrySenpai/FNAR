@@ -80,6 +80,17 @@ test('HTTP 200 with incorrect declared Content-Length must not be cached',async(
   await assert.rejects(()=>fx.api.getAsset('assets/sound/door.mp3'),/Incomplete HTTP 200/);
   assert.equal(fx.metrics.putStatuses.length,0);
 });
+test('compressed HTTP 200 uses decoded response bytes rather than compressed wire length',async()=>{
+  // Fetch presents decompressed bytes to JS but often leaves transfer length header.
+  const fx=sandboxWith(async()=>new Response('decoded svg body',{
+    status:200,headers:{'Content-Length':'5','Content-Encoding':'gzip','Content-Type':'image/svg+xml'}
+  }));
+  const blob=await fx.api.getAsset('assets/ui/director_signature.svg');
+  assert.equal(blob.size,16);
+  assert.deepEqual(fx.metrics.putStatuses,[200]);
+  const cached=await fx.cache.match('assets/ui/director_signature.svg');
+  assert.equal(cached.headers.get('Content-Encoding'),null,'synthetic 200 must not keep stale encoding');
+});
 test('CacheStorage quota refusal does not prevent complete audio from loading',async()=>{
   const fx=sandboxWith(async()=>new Response('complete sound',{status:200}),{quotaError:true});
   const blob=await fx.api.getAsset('assets/sound/beep.mp3');
