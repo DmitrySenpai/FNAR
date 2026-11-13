@@ -107,8 +107,11 @@
      <div class="night-menu-card custom-night-card">
        <h2 id="customTitle">CUSTOM NIGHT</h2>
        <div id="customAIGrid" class="custom-ai-grid"></div>
-       <button id="customStart" type="button" class="primary" data-i18n="startNight">НАЧАТЬ НОЧЬ</button>
-       <button id="customBack" type="button" class="secondary-action" data-i18n="back">НАЗАД</button>
+       <div class="custom-bottom-row">
+         <button id="customBack" type="button" class="secondary-action" data-i18n="back">НАЗАД</button>
+         <small id="customDifficultyHint" data-i18n="customDifficulty">(0–2) EASY　(3–6) MED　(7–12) HARD　(13–20) EXTREME</small>
+         <button id="customStart" type="button" class="primary" data-i18n="startNight">НАЧАТЬ</button>
+       </div>
      </div>
    </section>
    <section id="newspaperIntro" class="newspaper-screen hidden" role="dialog" aria-modal="true" aria-label="Газетное объявление">
@@ -167,7 +170,13 @@
          <h2 id="documentTitle"></h2>
          <p class="document-company" id="documentOffice"></p>
          <div id="documentBody" class="document-body"></div>
-         <p class="document-signature" id="documentSignature"></p>
+         <div class="document-signature" id="documentSignature">
+           <p id="documentSigner"></p>
+           <div class="director-signature-line">
+             <span id="documentSignatureLabel"></span>
+             <img id="directorSignatureImage" src="assets/ui/director_signature.svg" alt="" aria-hidden="true" draggable="false">
+           </div>
+         </div>
          <span id="documentStamp" class="document-stamp hidden"></span>
        </article>
      </div>
@@ -185,6 +194,7 @@
       <button type="button" class="primary" id="closeSettingsPrimary" data-i18n="settingsResume">ПРОДОЛЖИТЬ</button>
     </div>
   </section>
+  <div id="screenTransition" class="screen-transition" aria-hidden="true"></div>
 </main></div>
 <script src="phone-dialogues.js"></script>
 <script src="fnar-ai.js"></script>
