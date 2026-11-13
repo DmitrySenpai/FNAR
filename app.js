@@ -113,7 +113,7 @@ function writeSave(key,value){
   safeStore(key,v);
 }
 const L10N={
-en:{holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point at the door controls',imageLoadError:'Could not load {name}. Check the assets/room folder.',
+en:{audioSettingsTitle:'AUDIO SETTINGS',audioMaster:'Master Volume',audioEffects:'Sound Effects',audioAmbience:'Ambience',audioPhone:'Phone',audioTablet:'Door XP',holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point at the door controls',imageLoadError:'Could not load {name}. Check the assets/room folder.',
   chooseLanguage:'SELECT LANGUAGE',languagePrompt:'Game Language',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'WARNING',warningBody:'This game contains sudden loud noises, jumpscares, flashing images and intense scenes. Keep your volume at a moderate level.',warningAccept:'I UNDERSTAND · CONTINUE',
   preloadTitle:'PREPARING GAME',preloadStatus:'Loading assets: {n} / {total} ({percent}%)',preloadRetry:'RETRY LOADING',preloadError:'Some resources could not be loaded. Check your connection and try again.',
@@ -140,7 +140,7 @@ en:{holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point a
   bonusTitle:'ADDITIONAL PAYMENT NOTICE',dismissalTitle:'NOTICE OF TERMINATION',
   company:'Company: {office}',signature:'Company Management / Signature: __________',overtime:'OVERTIME SHIFT',dismissed:'TERMINATED'
  },
- ru:{holdAction:'УДЕРЖИВАТЬ: {action}',pressAction:'НАЖАТЬ: {action}',hoverHint:'Наведите курсор на кнопки у дверей',imageLoadError:'Ошибка загрузки {name}. Проверьте папку assets/room.',chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langEn:'English',langJa:'日本語',
+ ru:{audioSettingsTitle:'НАСТРОЙКИ ЗВУКА',audioMaster:'Общая громкость',audioEffects:'Звуковые эффекты',audioAmbience:'Атмосфера',audioPhone:'Телефон',audioTablet:'Door XP',holdAction:'УДЕРЖИВАТЬ: {action}',pressAction:'НАЖАТЬ: {action}',hoverHint:'Наведите курсор на кнопки у дверей',imageLoadError:'Ошибка загрузки {name}. Проверьте папку assets/room.',chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'ПРЕДУПРЕЖДЕНИЕ',warningBody:'В игре присутствуют внезапные громкие звуки, скримеры, мигающие изображения и напряжённые сцены. Рекомендуется умеренная громкость.',warningAccept:'ПОНИМАЮ · ПРОДОЛЖИТЬ',preloadTitle:'ПОДГОТОВКА ИГРЫ',preloadStatus:'Загрузка ресурсов: {n} / {total} ({percent}%)',preloadRetry:'ПОВТОРИТЬ ЗАГРУЗКУ',preloadError:'Не удалось загрузить ресурсы. Проверьте интернет и повторите попытку.',skipPhone:'ПРОПУСТИТЬ ЗВОНОК',skipConversation:'ПРОПУСТИТЬ РАЗГОВОР',
   officeLabel:'НАЗВАНИЕ ОФИСА',officePlaceholder:'Мой офис',start:'НОВАЯ ИГРА · НОЧЬ 1',continue:'ПРОДОЛЖИТЬ · НОЧЬ {night}',loading:'Загрузка {n} / {total}',
   titleNight:'Ночь {night}',pause:'ПАУЗА',pauseTitle:'ПАУЗА',pauseResume:'ВЕРНУТЬСЯ В ИГРУ',pauseRestart:'ПЕРЕЗАПУСТИТЬ НОЧЬ',pauseMenu:'В ГЛАВНОЕ МЕНЮ',pauseHint:'Esc или P — продолжить',
@@ -157,7 +157,7 @@ en:{holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point a
   leftLight:'Свет слева',rightLight:'Свет справа',leftDoorLabel:'Дверь слева',rightDoorLabel:'Дверь справа',phoneLabel:'Телефон на столе',
   openCamera:'Открыть камеры наблюдения',closeCamera:'Закрыть камеры наблюдения',
   mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.',nightSelectTitle:'ВЫБОР НОЧИ',night6:'6 НОЧЬ',night:'Ночь {night}',custom:'CUSTOM',startNight:'НАЧАТЬ',customDifficulty:'(0–2) EASY   (3–6) MED   (7–12) HARD   (13–20) EXTREME',back:'НАЗАД',locked:'ЗАБЛОКИРОВАНО',aiLevel:'AI: {level}',payrollTitle:'УВЕДОМЛЕНИЕ О ВЫПЛАТЕ ЗАРАБОТНОЙ ПЛАТЫ',bonusTitle:'УВЕДОМЛЕНИЕ О ДОПОЛНИТЕЛЬНОЙ ВЫПЛАТЕ',dismissalTitle:'УВЕДОМЛЕНИЕ ОБ УВОЛЬНЕНИИ',company:'Компания: {office}',signature:'Администрация компании  /  Подпись: __________',overtime:'СВЕРХУРОЧНАЯ СМЕНА',dismissed:'УВОЛЕН'},
- ja:{holdAction:'長押し：{action}',pressAction:'押す：{action}',hoverHint:'ドアのボタンにカーソルを合わせてください',imageLoadError:'{name} の読み込みに失敗しました。assets/room を確認してください。',chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langEn:'English',langJa:'日本語',
+ ja:{audioSettingsTitle:'サウンド設定',audioMaster:'マスター音量',audioEffects:'効果音',audioAmbience:'環境音',audioPhone:'電話',audioTablet:'Door XP',holdAction:'長押し：{action}',pressAction:'押す：{action}',hoverHint:'ドアのボタンにカーソルを合わせてください',imageLoadError:'{name} の読み込みに失敗しました。assets/room を確認してください。',chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',skipConversation:'通話をスキップ',
   officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
   titleNight:'第{night}夜',pause:'一時停止',pauseTitle:'一時停止',pauseResume:'ゲームを再開',pauseRestart:'この夜をやり直す',pauseMenu:'メインメニューへ',pauseHint:'Esc または P で再開',
@@ -410,6 +410,7 @@ function applyTranslations(){
   if(typeof chooseCamera==='function')chooseCamera(currentCamera);
   if(typeof updatePauseButton==='function')updatePauseButton();
   if(typeof updatePhoneUI==='function')updatePhoneUI();
+  if(typeof updateAudioSettingsUI==='function')updateAudioSettingsUI();
 }
 function chooseLanguage(lang){
   gameLanguage=['ru','en','ja'].includes(lang)?lang:'ru';writeSave('kokhinhin_lang',gameLanguage);
@@ -428,6 +429,9 @@ const soundURL=name=>window.KONS_EMBEDDED_SOUNDS?.[name] ||
     : getCachedAssetURL(SOUND_PATH+name+'.mp3'));
 const screamerURL=id=>window.KONS_EMBEDDED_SCREAMERS?.[id]||getCachedAssetURL('assets/screamers/rooster_'+id+'_scream.webm');
 const staticVideoURL=()=>window.KONS_EMBEDDED_STATIC_VIDEO||getCachedAssetURL('assets/sound/static-bm.webm');
+const AUDIO_SETTINGS=window.FNAR_AUDIO_SETTINGS;
+if(!AUDIO_SETTINGS)throw new Error('fnar-audio-settings.js must load before app.js');
+window.FNAR_SOUND_URL=soundURL; // Tablet reuses preloaded blob URLs; no duplicate MP3 fetch.
 const audioLoops=new Map();
 let soundMuted=safeRead('kons-muted')==='1';
 let phoneRingAudio=null,phoneVoiceAudio=null,deathStaticAudio=null;
@@ -441,18 +445,19 @@ function updateMuteUI(){
   if(phoneVoiceAudio)phoneVoiceAudio.muted=soundMuted;
   if(deathStaticAudio)deathStaticAudio.muted=soundMuted;
   for(const a of activeOneShots)a.muted=soundMuted;
+  AUDIO_SETTINGS.setMuted(soundMuted);
 }
 function playSfx(name,volume=.45){
   if(soundMuted)return;
-  try{const a=new Audio(soundURL(name));a.preload='auto';a.volume=clamp(volume,0,1);a.muted=soundMuted;activeOneShots.add(a);
-    a.onended=()=>activeOneShots.delete(a);a.onerror=()=>activeOneShots.delete(a);
+  try{const a=new Audio(soundURL(name));a.preload='auto';AUDIO_SETTINGS.register(a,'effects',volume);activeOneShots.add(a);
+    a.onended=()=>{activeOneShots.delete(a);AUDIO_SETTINGS.forget(a);};a.onerror=()=>{activeOneShots.delete(a);AUDIO_SETTINGS.forget(a);};
     a.play().catch(()=>activeOneShots.delete(a));return a;}
   catch(ex){console.warn('SFX error',name,ex);}
 }
 function startAudioLoop(name,volume=.15){
   let a=audioLoops.get(name);
   if(!a){a=new Audio(soundURL(name));a.loop=true;a.preload='auto';audioLoops.set(name,a);}
-  a.volume=clamp(volume,0,1);a.muted=soundMuted;
+  AUDIO_SETTINGS.register(a,['ambience','ambient_room','light'].includes(name)?'ambience':'effects',volume);
   a.play().catch(()=>{});
 }
 function stopAudioLoop(name){const a=audioLoops.get(name);if(a){a.pause();a.currentTime=0;}}
@@ -813,13 +818,14 @@ function updatePhoneUI(){
 }
 function stopRingtone(){
   if(phoneRingAudio){phoneRingAudio.pause();phoneRingAudio.currentTime=0;
-    phoneRingAudio.onended=null;phoneRingAudio.onerror=null;phoneRingAudio=null;}
+    phoneRingAudio.onended=null;phoneRingAudio.onerror=null;AUDIO_SETTINGS.forget(phoneRingAudio);phoneRingAudio=null;}
 }
 function stopPhoneVoice(){
   if(!phoneVoiceAudio)return;
   phoneVoiceAudio.onended=null;phoneVoiceAudio.onerror=null;
   phoneVoiceAudio.pause();try{phoneVoiceAudio.currentTime=0;}catch(_){ }
   pausedAudio.delete(phoneVoiceAudio);
+  AUDIO_SETTINGS.forget(phoneVoiceAudio);
   phoneVoiceAudio=null;
 }
 function resetPhone(){
@@ -839,7 +845,7 @@ function startRinging(){
   const epoch=phoneEpoch;
   phoneState.status='ringing';phoneState.ringEndsAt=state.nightElapsed+PHONE_RING_SECONDS;
   updatePhoneUI();
-  const audio=new Audio(soundURL('phone'));audio.volume=.52;audio.muted=soundMuted;
+  const audio=new Audio(soundURL('phone'));AUDIO_SETTINGS.register(audio,'phone',.52);
   audio.preload='auto';audio.loop=false;phoneRingAudio=audio;
   audio.onended=()=>{if(epoch===phoneEpoch)missPhone();};
   audio.play().catch(()=>{});
@@ -884,7 +890,7 @@ function answerPhone(){
   }
   const epoch=phoneEpoch;
   const voice=new Audio(soundURL('phone_'+String(currentNight).padStart(2,'0')));
-  phoneVoiceAudio=voice;voice.preload='auto';voice.loop=false;voice.volume=.88;voice.muted=soundMuted;
+  phoneVoiceAudio=voice;voice.preload='auto';voice.loop=false;AUDIO_SETTINGS.register(voice,'phone',.88);
   voice.onended=()=>{if(phoneEpoch===epoch && phoneVoiceAudio===voice)hangUpPhone();};
   voice.onerror=()=>{if(phoneEpoch===epoch && phoneVoiceAudio===voice){
     console.warn('Phone audio unavailable:',voice.src);hangUpPhone();
