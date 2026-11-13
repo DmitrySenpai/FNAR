@@ -37,7 +37,7 @@ function sandboxWith(fetchImpl,{cacheAvailable=true,quotaError=false,decoded=fal
     URL:{createObjectURL:()=> 'blob:mock'}};
   if(cacheAvailable)global.caches=caches;
   const fakeRequest=function(url,options={}){return {url:String(url),headers:new Headers(options.headers),cache:options.cache};};
-  const ctx={window:global,fetch:async(req,options)=>{
+  const ctx={window:global,caches:global.caches,fetch:async(req,options)=>{
     const out=await fetchImpl(req,options);metrics.network.push({request:req,options,status:out.status});return out;
   },Request:fakeRequest,Response,Headers,URL:global.URL,Blob,console,
     module:{exports:{}},Uint8Array,ArrayBuffer,Math,Promise};
