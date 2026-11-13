@@ -33,27 +33,59 @@
   ]);
   const clamp=(x,min,max)=>Math.max(min,Math.min(max,x));
   function rand(g,min,max){return min+(max-min)*clamp(g.rng(),0,0.999999999999);}
-  function movementDelay(g,e){return rand(g,e.min,e.max)*g.config.movementScale;}
+  // Independent custom levels; story-night presets remain frozen and unchanged.
+  function normalizeAILevels(levels){
+    return Array.from({length:4},(_,i)=>{
+      const value=Array.isArray(levels)?Number(levels[i]):10;
+      return Number.isFinite(value)?Math.round(clamp(value,0,20)):10;
+    });
+  }
+  function createCustomConfig(levels){
+    const ai=normalizeAILevels(levels),c3=ai[2];
+    return Object.freeze({...NIGHT_CONFIG[7],
+      movementScale:.80,
+      c3Threshold:c3===0?Infinity:Math.max(18,80-3.1*c3),
+      awake:Object.freeze({1:Math.max(3,35-1.6*ai[0]),2:Math.max(6,74-3.2*ai[1]),
+        3:0,4:Math.max(5,70-3*ai[3])}),
+      c2WatchRatio:.46+ai[1]*.021,c2Hold:Math.max(.07,.65-ai[1]*.028),
+      c4Burst:Math.min(.65,Math.max(0,(ai[3]-2)*.035)),
+      c4Hold:Math.max(.06,.50-ai[3]*.022),
+      attackWindow:3.6,closedWait:4.5,restMin:15,restMax:22,dangerCap:2});
+  }
+  function movementDelay(g,e){
+    const level=g.customAI?.[e.id-1];
+    const factor=level===undefined?1:Math.max(.52,1.80-level*.061);
+    return Math.max(2,rand(g,e.min,e.max)*g.config.movementScale*factor);
+  }
+  function restDelay(g,e){
+    if(!g.customAI)return rand(g,g.config.restMin,g.config.restMax);
+    const level=g.customAI[e.id-1];
+    return rand(g,Math.max(7,29-level*.95),Math.max(11,36-level*1.0));
+  }
   function makeEnemy(def){
     return {id:def.id,side:def.side,route:[...def.route],min:def.min,max:def.max,
       step:0,phase:PHASES.DORMANT,nextMove:0,attack:0,blocked:0,knocks:0,
       cycles:0,retreatTo:0,anger:0,watchTime:0,angerThreshold:Infinity,burst:0,holds:0};
   }
-  function createNight(night=1,rng=Math.random){
+  function createNight(night=1,rng=Math.random,customLevels=null){
     const g={night:1,config:NIGHT_CONFIG[1],enemies:ENEMY_DEFS.map(makeEnemy),
       elapsed:0,rng,events:[]};
-    return resetNight(g,night,rng);
+    return resetNight(g,night,rng,customLevels);
   }
-  function resetNight(g,night,rng){
+  function resetNight(g,night,rng,customLevels=null){
     if(!Number.isInteger(night)||!NIGHT_CONFIG[night])throw new RangeError('Night must be 1–7');
-    g.night=night;g.config=NIGHT_CONFIG[night];g.elapsed=0;
+    g.night=night;
+    g.customAI=night===7?normalizeAILevels(customLevels||g.customAI||[10,10,10,10]):null;
+    g.config=night===7?createCustomConfig(g.customAI):NIGHT_CONFIG[night];
+    g.elapsed=0;
     if(typeof rng==='function')g.rng=rng;
     if(typeof g.rng!=='function')g.rng=Math.random;
     if(!Array.isArray(g.enemies))g.enemies=[];
     g.enemies.splice(0,g.enemies.length,...ENEMY_DEFS.map(def=>{
       const e=makeEnemy(def);
-      e.phase=e.id===3?PHASES.WATCH:PHASES.DORMANT;
-      e.nextMove=e.id===3?0:g.config.awake[e.id];
+      const disabled=g.customAI && g.customAI[e.id-1]===0;
+      e.phase=disabled?PHASES.DORMANT:(e.id===3?PHASES.WATCH:PHASES.DORMANT);
+      e.nextMove=disabled?Infinity:(e.id===3?0:g.config.awake[e.id]);
       e.angerThreshold=g.config.c3Threshold;
       return e;
     }));
@@ -164,7 +196,7 @@
         e.step=Math.max(0,e.step-1);
         if(e.step!==prev)emit(events,'move',e,{back:true,fast:e.id===3||e.id===4});
         if(e.step===0){
-          e.phase=PHASES.REST;e.nextMove=rand(g,g.config.restMin,g.config.restMax);
+          e.phase=PHASES.REST;e.nextMove=restDelay(g,e);
           if(e.id===4)e.nextMove*=.78;
           if(e.id===3){e.anger=0;e.watchTime=0;}
           emit(events,'rest',e);
@@ -226,5 +258,5 @@
       .map(e=>e.id).sort((a,b)=>a-b);
   }
   return Object.freeze({PHASES,NIGHT_LENGTH,NIGHT_CONFIG,ENEMY_DEFS,
-    createNight,resetNight,tick,visibleIds,isDanger,canAdvance});
+    createNight,resetNight,tick,visibleIds,isDanger,canAdvance,normalizeAILevels,createCustomConfig});
 });
