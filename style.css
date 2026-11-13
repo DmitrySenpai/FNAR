@@ -403,3 +403,72 @@ html, body, #app, #stage, #stage *, button, input {
   #resignationScreen .resignation-menu{width:64%;bottom:auto}
   #welcome .welcome-card #night6Btn,#welcome .welcome-card #customBtn{width:82%}
 }
+
+/* v0.5 — Custom Night is a classic flat FNaF-style difficulty screen. */
+#nightSelectScreen:not(.hidden),#customScreen:not(.hidden){animation:fnar-modal-enter .32s ease-out both}
+@keyframes fnar-modal-enter{from{opacity:0}to{opacity:1}}
+#customScreen{background:#000;backdrop-filter:none;padding:1.5cqw;color:#fff}
+#customScreen .custom-night-card{background:transparent;border:0;box-shadow:none;
+  width:100%;height:100%;max-height:none;max-width:none;padding:0;
+  overflow:hidden;display:grid;grid-template-rows:15% minmax(0,1fr) 16%;
+  align-items:stretch;gap:0;font-family:Consolas,'Courier New',monospace;color:#fff}
+#customScreen #customTitle{font:normal clamp(11px,3.1cqw,48px) Consolas,'Courier New',monospace;
+  align-self:center;justify-self:center;text-align:center;letter-spacing:.02em;
+  color:#fff;margin:0;text-shadow:0 0 3px #888}
+#customScreen .custom-ai-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  justify-content:space-evenly;align-items:start;justify-items:center;
+  gap:clamp(3px,1cqw,18px);padding:0 3cqw}
+#customScreen .custom-ai-row{display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;gap:1cqw;width:100%;min-width:0;
+  margin:0;padding:0;border:0;background:transparent}
+#customScreen .custom-ai-portrait{display:block;aspect-ratio:1;width:min(16cqw,95%);
+  max-width:100%;object-fit:cover;object-position:50% 33%;
+  border:0;border-radius:0;background:#000;filter:contrast(1.06);user-select:none}
+#customScreen .custom-ai-label{font:normal clamp(9px,1.95cqw,31px) Consolas,'Courier New',monospace;
+  color:#fff;white-space:nowrap;margin:.3cqw 0 0;text-align:center}
+#customScreen .custom-ai-controls{display:grid;grid-template-columns:auto minmax(2.5cqw,1fr) auto;
+  align-items:center;justify-content:center;column-gap:.5cqw;width:min(16cqw,95%)}
+#customScreen .custom-ai-controls button{display:grid;place-items:center;
+  width:clamp(14px,2.8cqw,45px);height:clamp(14px,3cqw,50px);padding:0;
+  border:0;border-radius:0;background:#4d4d4d;color:#fff;
+  font:normal clamp(9px,1.7cqw,28px) monospace;line-height:1}
+#customScreen .custom-ai-controls button:hover:not(:disabled){background:#888}
+#customScreen .custom-ai-controls button:disabled{background:#272727;color:#888;opacity:1;cursor:not-allowed}
+#customScreen .custom-ai-value{display:block;text-align:center;color:#fff;
+  font:bold clamp(13px,3.6cqw,56px) Consolas,monospace;line-height:1.15;
+  font-variant-numeric:tabular-nums}
+#customScreen .custom-bottom-row{display:grid;grid-template-columns:1fr 3fr 1fr;
+  gap:1cqw;align-items:end;width:100%;padding:0 3cqw 1.5cqw}
+#customScreen #customBack,#customScreen #customStart{min-height:0;width:auto;min-width:0;
+  padding:.3cqw .7cqw;background:#4c4c4c;color:#fff;border:0;border-radius:0;
+  font:normal clamp(10px,2.6cqw,39px) Consolas,monospace;white-space:nowrap;letter-spacing:0}
+#customScreen #customBack{justify-self:start}
+#customScreen #customStart{justify-self:end}
+#customScreen #customBack:hover,#customScreen #customStart:hover{background:#777}
+#customScreen #customDifficultyHint{font:normal clamp(7px,1.35cqw,20px) Consolas,'Courier New',monospace;
+  align-self:end;justify-self:center;color:#fff;letter-spacing:0;
+  white-space:normal;text-align:center;line-height:1.5;padding:0 1cqw}
+#resignationScreen .document-signature{border-top:1px solid #a9a197;
+  margin-top:1.8em;padding-top:1em;text-align:right}
+#resignationScreen .document-signature p{margin:0 0 .5em;font-weight:600}
+#resignationScreen .director-signature-line{display:flex;align-items:end;justify-content:flex-end;
+  gap:.5em;position:relative;min-height:4em}
+#resignationScreen .director-signature-line span{font-size:.9em;white-space:nowrap}
+#resignationScreen #directorSignatureImage{display:block;width:55%;max-width:230px;height:auto;
+  min-height:2em;object-fit:contain;object-position:center bottom;border-bottom:1px solid #302c26;
+  transform:translateY(-.35em);pointer-events:none}
+.screen-transition{position:absolute;inset:0;z-index:999;background:#000;
+  opacity:0;pointer-events:none;transition-property:opacity;transition-timing-function:ease-in-out;
+  transition-duration:.7s}
+.screen-transition.is-transitioning{pointer-events:all}
+@container (max-width:520px){
+  #customScreen .custom-night-card{grid-template-rows:12% 70% 18%}
+  #customScreen .custom-ai-grid{padding:0 2cqw}
+  #customScreen .custom-ai-row{gap:.6cqw}
+  #customScreen .custom-ai-portrait{width:min(16cqw,95%)}
+  #customScreen .custom-bottom-row{padding:0 1cqw 1.5cqw}
+}
+@media (prefers-reduced-motion:reduce){
+  #nightSelectScreen:not(.hidden),#customScreen:not(.hidden){animation:none}
+  .screen-transition{transition-duration:0ms!important}
+}
