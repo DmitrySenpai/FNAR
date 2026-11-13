@@ -8,13 +8,14 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=0504">
 
   <title>Five Nights at Rooster's</title>
-  <link rel="stylesheet" href="style.css?v=052">
+  <link rel="stylesheet" href="style.css?v=053">
   <link rel="stylesheet" href="tablet-os.css">
 </head>
 <body>
 <div id="app"><main id="stage" aria-label="Five Nights at Rooster's — комната охраны">
   <canvas id="scene" aria-label="Осмотр комнаты. Наведите мышь в сторону или проведите пальцем"></canvas>
   <div id="grain" aria-hidden="true"></div>
+  <div id="atmosphereOffice" class="atmosphere-overlay" aria-hidden="true"></div>
   <div id="vignette" aria-hidden="true"></div>
   <section id="hud" class="hidden" aria-label="Игровой интерфейс">
     <div class="bottom">
@@ -34,6 +35,7 @@
         <div class="no-feed"><span class="no-feed-symbol">▣</span><strong data-i18n="cameraEmpty">ИЗОБРАЖЕНИЕ НЕ ПОДКЛЮЧЕНО</strong><small data-i18n="cameraDev">ГРАФИКА ПОМЕЩЕНИЯ В РАЗРАБОТКЕ</small></div>
       </div>
       <div class="cctv-darkening" aria-hidden="true"></div>
+      <div id="atmosphereCamera" class="atmosphere-overlay" aria-hidden="true"></div>
     </div>
     <div class="cctv-noise" aria-hidden="true"></div>
     <div class="cctv-interlace" aria-hidden="true"></div>
@@ -132,6 +134,15 @@
       <button type="button" id="pauseResume" class="primary" data-i18n="pauseResume">ВЕРНУТЬСЯ В ИГРУ</button>
       <button type="button" id="pauseRestart" class="secondary-action" data-i18n="pauseRestart">ПЕРЕЗАПУСТИТЬ НОЧЬ</button>
       <button type="button" id="pauseMenu" class="secondary-action" data-i18n="pauseMenu">В ГЛАВНОЕ МЕНЮ</button>
+      <button type="button" id="pauseAudioSettings" class="secondary-action" data-i18n="audioSettingsTitle" aria-controls="audioSettingsPanel" aria-expanded="false">НАСТРОЙКИ ЗВУКА</button>
+      <div id="audioSettingsPanel" class="audio-settings-panel hidden" role="group" aria-label="Настройки звука">
+        <label class="audio-volume-row"><span data-i18n="audioMaster">Общая громкость</span><input id="audioVolumeMaster" type="range" min="0" max="100" step="1" value="100"><output id="audioVolumeMasterValue" for="audioVolumeMaster">100%</output></label>
+        <label class="audio-volume-row"><span data-i18n="audioEffects">Звуковые эффекты</span><input id="audioVolumeEffects" type="range" min="0" max="100" step="1" value="100"><output id="audioVolumeEffectsValue" for="audioVolumeEffects">100%</output></label>
+        <label class="audio-volume-row"><span data-i18n="audioAmbience">Атмосфера</span><input id="audioVolumeAmbience" type="range" min="0" max="100" step="1" value="100"><output id="audioVolumeAmbienceValue" for="audioVolumeAmbience">100%</output></label>
+        <label class="audio-volume-row"><span data-i18n="audioPhone">Телефон</span><input id="audioVolumePhone" type="range" min="0" max="100" step="1" value="100"><output id="audioVolumePhoneValue" for="audioVolumePhone">100%</output></label>
+        <label class="audio-volume-row"><span data-i18n="audioTablet">Door XP</span><input id="audioVolumeTablet" type="range" min="0" max="100" step="1" value="100"><output id="audioVolumeTabletValue" for="audioVolumeTablet">100%</output></label>
+        <button type="button" id="audioSettingsBack" class="secondary-action" data-i18n="back">НАЗАД</button>
+      </div>
       <div class="pause-utilities" role="group" aria-label="Дополнительные настройки">
         <button type="button" id="muteBtn" class="icon-button" title="Звук (M)" aria-label="Звук">🔊</button>
         <button type="button" id="settingsBtn" class="icon-button" title="Настройки (H)" aria-label="Настройки">⚙</button>
@@ -200,6 +211,8 @@
 <script src="fnar-ai.js"></script>
 <script src="fnar-power.js"></script>
 <script src="fnar-endings.js"></script>
+<script src="fnar-audio-settings.js"></script>
+<script src="fnar-atmosphere.js"></script>
 <script src="app.js"></script>
 <script src="fnar-tablet-faults.js"></script>
 <script src="tablet-os.js"></script>
