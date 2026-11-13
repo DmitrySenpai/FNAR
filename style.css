@@ -345,3 +345,61 @@ html, body, #app, #stage, #stage *, button, input {
   text-align:left;
   color:#1e1e1e;
 }
+
+/* Night selection and configurable C1–C4 challenge, responsive to the 16:9 stage. */
+#welcome .welcome-card #night6Btn,#welcome .welcome-card #customBtn{width:70%}
+.night-menu-screen{position:absolute;inset:0;z-index:22;display:grid;place-items:center;
+  padding:2.5%;background:rgba(0,0,0,.90);backdrop-filter:blur(7px);pointer-events:auto}
+.night-menu-card{width:min(54%,610px);max-height:94%;overflow-y:auto;display:flex;
+  flex-direction:column;gap:clamp(7px,.85cqw,14px);padding:clamp(12px,2cqw,28px);
+  background:#0a0c0bf7;border:1px solid #a28865;box-shadow:0 0 5cqw #000}
+.night-menu-card h2{font-size:clamp(18px,3cqw,42px);letter-spacing:.12em;margin:0 auto 1cqw;text-align:center}
+.night-select-list{display:flex;flex-direction:column;gap:clamp(5px,.75cqw,11px)}
+.night-menu-card .secondary-action,.night-menu-card .primary{width:100%;
+  min-height:clamp(26px,3.2cqw,52px);padding:.6cqw 1cqw;font-size:clamp(11px,1.3cqw,21px)}
+.night-menu-card button:disabled{cursor:not-allowed;opacity:.42}
+.custom-night-card{width:min(65%,720px)}
+.custom-ai-grid{display:grid;grid-template-columns:1fr;gap:clamp(5px,.75cqw,12px)}
+.custom-ai-row{display:grid;grid-template-columns:minmax(2em,1fr) auto minmax(5em,1.6fr) auto;
+  gap:clamp(6px,1.2cqw,20px);align-items:center;padding:clamp(4px,.7cqw,12px);
+  border:1px solid #5c5244;background:#111716}
+.custom-ai-row strong{font-size:clamp(14px,1.8cqw,28px)}
+.custom-ai-row span{font-size:clamp(12px,1.55cqw,24px);font-family:Consolas,monospace;
+  white-space:nowrap;text-align:center}
+.custom-ai-row button{width:clamp(28px,3.2cqw,54px);height:clamp(28px,3.2cqw,54px);
+  font-size:clamp(18px,2cqw,34px);line-height:1;background:#292119;
+  border:1px solid #c4a87f;color:#fff;cursor:pointer}
+.custom-ai-row button:disabled{opacity:.28;cursor:not-allowed}
+/* One clean A4 page for all three endings; never reuse the old preprinted resignation art. */
+#resignationScreen{background:#060606ed;gap:1.2%}
+#resignationPaper{position:relative;flex:none;width:auto;height:78%;max-width:94%;
+  max-height:78%;aspect-ratio:210/297;transform:none;overflow-y:auto;
+  background:#f1ede2!important;color:#181512;
+  box-shadow:0 0 0 1px #706857,0 14px 45px #000d}
+#resignationPaper .resignation-content{position:relative;inset:auto;top:auto;right:auto;left:auto;
+  padding:9% 9% 12%;color:#1a1713;text-align:left;font-family:Georgia,'Times New Roman',serif;
+  font-size:clamp(10px,1.13cqw,18px);line-height:1.45}
+.document-kicker{font:bold .76em Consolas,monospace;letter-spacing:.11em;
+  text-align:center;border-bottom:1px solid #777;padding-bottom:1em;margin-bottom:1.5em}
+#documentTitle{font-size:1.33em;line-height:1.16;text-align:center;letter-spacing:.02em;
+  margin:0 0 1.4em;overflow-wrap:anywhere;color:#191714}
+.document-company{font-weight:700;border-bottom:1px solid #bbb;padding-bottom:.7em;
+  overflow-wrap:anywhere}
+.document-body{margin-top:1.3em}
+.document-body p{margin:.7em 0;white-space:normal}
+.document-body strong{font-weight:800}
+.document-signature{border-top:1px solid #a9a197;margin-top:2em;padding-top:1em;text-align:right}
+.document-stamp{display:inline-block;margin:.5em 0;border:3px double #785b47;
+  padding:.2em .75em;color:#705340;font:bold 1.4em Consolas,monospace;
+  letter-spacing:.09em;transform:rotate(-8deg)}
+.document-stamp.dismissal-stamp{color:#a62421;border-color:#a62421}
+#resignationScreen .resignation-menu{position:relative;bottom:auto;left:auto;transform:none;
+  width:min(45%,520px);min-height:clamp(28px,3.5cqw,60px);font-size:clamp(11px,1.4cqw,22px)}
+@media(max-width:660px){
+  .night-menu-card{width:76%;padding:10px}
+  .custom-night-card{width:88%}
+  #resignationPaper{height:79%;max-height:79%}
+  #resignationPaper .resignation-content{font-size:clamp(9px,1.6cqw,13px)}
+  #resignationScreen .resignation-menu{width:64%;bottom:auto}
+  #welcome .welcome-card #night6Btn,#welcome .welcome-card #customBtn{width:82%}
+}
