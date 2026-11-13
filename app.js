@@ -199,7 +199,7 @@ function showNightSelect(){
     button.type='button';button.className='secondary-action';
     button.disabled=night>unlockedNight||state.loaded!==names.length;
     button.textContent=t('night',{night})+(night>unlockedNight?' · '+t('locked'):'');
-    button.addEventListener('click',()=>{if(canStartNight(night)){closeNightMenus();start(night);}});
+    button.addEventListener('click',()=>{if(canStartNight(night))transitionToNight(night);});
     list.appendChild(button);
   }
   $('nightSelectScreen').classList.remove('hidden');
@@ -240,9 +240,76 @@ function showCustomNight(debugPreview=false){
 }
 $('nightSelectBack').addEventListener('click',closeNightMenus);
 $('customBack').addEventListener('click',closeNightMenus);
-$('customStart').addEventListener('click',()=>{if(canStartNight(7)){closeNightMenus();start(7);}});
-$('night6Btn').addEventListener('click',()=>{if(canStartNight(6))start(6);});
+$('customStart').addEventListener('click',()=>{if(canStartNight(7))transitionToNight(7);});
+$('night6Btn').addEventListener('click',()=>{if(canStartNight(6))transitionToNight(6);});
 $('customBtn').addEventListener('click',()=>showCustomNight());
+
+
+// A single guarded fade controller for all main scene changes.
+// Gameplay is prepared under full black and activated only after fade-in.
+const screenTransition=$('screenTransition');
+let transitionBusy=false;
+const prefersReducedTransitions=window.matchMedia('(prefers-reduced-motion: reduce)');
+function fadeScreen(toBlack,milliseconds){
+  return new Promise(resolve=>{
+    const duration=prefersReducedTransitions.matches?0:milliseconds;
+    let settled=false,timer=null;
+    const onEnd=event=>{
+      if(event.target===screenTransition&&event.propertyName==='opacity')finish();
+    };
+    const finish=()=>{
+      if(settled)return;
+      settled=true;
+      if(timer!==null)clearTimeout(timer);
+      screenTransition.removeEventListener('transitionend',onEnd);
+      resolve();
+    };
+    screenTransition.addEventListener('transitionend',onEnd);
+    screenTransition.style.transitionDuration=duration+'ms';
+    void screenTransition.offsetWidth;
+    screenTransition.style.opacity=toBlack?'1':'0';
+    if(duration===0){finish();return;}
+    // Fallback for hidden tabs, interrupted CSS transitions and browser quirks.
+    timer=setTimeout(finish,duration+120);
+  });
+}
+async function sceneTransition(swapScene,{activateNight=false}={}){
+  if(transitionBusy)return false;
+  transitionBusy=true;
+  const priorPause=state.paused,priorActive=state.active;
+  if(state.active){state.paused=true;clearHeldActions();}
+  screenTransition.classList.add('is-transitioning');
+  let successful=false;
+  try{
+    await fadeScreen(true,700);
+    const result=await swapScene();
+    if(result===false)throw new Error('Screen preparation was rejected');
+    await fadeScreen(false,800);
+    if(activateNight){
+      state.active=true;state.paused=false;state.last=performance.now();
+      startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);
+    }
+    successful=true;
+    return true;
+  }catch(error){
+    console.error('FNAR screen transition failed',error);
+    try{goMenuInstant();}catch(_){}
+    return false;
+  }finally{
+    if(!successful)await fadeScreen(false,800);
+    if(priorActive&&state.active&&!activateNight)state.paused=priorPause;
+    screenTransition.classList.remove('is-transitioning');
+    screenTransition.style.opacity='0';transitionBusy=false;
+  }
+}
+function transitionToNight(night,{intro=false,fromNewspaper=false}={}){
+  if(transitionBusy||state.loaded!==names.length||!canStartNight(Number(night)))return false;
+  return sceneTransition(()=>{
+    if(intro){showNewspaperIntro(night);return true;}
+    if(fromNewspaper)clearNewspaperIntro();
+    return start(night,{force:true,deferActive:true,suppressIntro:true});
+  },{activateNight:!intro});
+}
 
 const NEWSPAPER_SHOW_MS=5000,NEWSPAPER_FADE_MS=900;
 let newspaperStartTimer=null,newspaperHideTimer=null,newspaperWelcomeTimer=null;
@@ -297,9 +364,7 @@ function showNewspaperIntro(night){
   },NEWSPAPER_FADE_MS+80);
   newspaperStartTimer=setTimeout(()=>{
     newspaperStartTimer=null;
-    start(night,{suppressIntro:true});
-    requestAnimationFrame(()=>scr.classList.add('is-leaving'));
-    newspaperHideTimer=setTimeout(()=>{clearNewspaperIntro();},NEWSPAPER_FADE_MS);
+    transitionToNight(night,{fromNewspaper:true});
   },NEWSPAPER_SHOW_MS);
 }
 function applyTranslations(){
@@ -1033,7 +1098,7 @@ function moveEnemies(dt){
 }
 cameraToggle.addEventListener('click',toggleCamera);
 cameraNodes.forEach(b=>b.addEventListener('click',()=>chooseCamera(Number(b.dataset.camera))));
-function goMenu(){
+function goMenuInstant(){
   clearVictorySequence();
   clearResignation();
   clearNewspaperIntro();
@@ -1047,12 +1112,13 @@ function goMenu(){
   $('welcome').classList.remove('hidden');updateContinueButton();syncMenuStatic();
   $('pauseBtn').classList.add('hidden');
 }
+function goMenu(){return sceneTransition(()=>{goMenuInstant();return true;});}
 $('restartBtn').addEventListener('click',()=>{
   if($('ending').dataset.success==='true'&&currentNight===7){goMenu();return;}
-  start($('ending').dataset.success==='true'?currentNight+1:currentNight);
+  transitionToNight($('ending').dataset.success==='true'?currentNight+1:currentNight);
 });
 $('endingMenuBtn').addEventListener('click',goMenu);
-$('victoryNextBtn').addEventListener('click',()=>{if(currentNight<=4)start(currentNight+1);else goMenu();});
+$('victoryNextBtn').addEventListener('click',()=>{if(currentNight<=4)transitionToNight(currentNight+1);else goMenu();});
 $('resignationMenuBtn').addEventListener('click',goMenu);
 const pausedAudio=new Set();
 function pauseGameAudio(){
@@ -1079,7 +1145,7 @@ function togglePause(force){
 }
 $('pauseBtn').addEventListener('click',()=>togglePause());
 $('pauseResume').addEventListener('click',()=>togglePause(false));
-$('pauseRestart').addEventListener('click',()=>{togglePause(false);start(currentNight,{force:true});});
+$('pauseRestart').addEventListener('click',()=>{transitionToNight(currentNight);});
 $('pauseMenu').addEventListener('click',goMenu);
 resetEnemies();chooseCamera(1);preloadFutureCameras();
 
@@ -1235,7 +1301,7 @@ function start(night=1,options={}){
   if(state.loaded!==names.length||!canStartNight(Number(night)))return;
   if(state.active&&!options.force)return;
   closeNightMenus();
-  if(options && options.intro){showNewspaperIntro(night);return;}
+  if(options && options.intro){return transitionToNight(night,{intro:true});}
   clearVictorySequence();
   clearResignation();
   currentNight=clamp(Number(night)||1,1,7);state.night=currentNight;
@@ -1244,8 +1310,8 @@ function start(night=1,options={}){
   state.paused=false;resumeGameAudio();$('pauseScreen').classList.add('hidden');$('pauseBtn').classList.remove('hidden');
   $('settings').classList.add('hidden');$('cameraNightLabel').textContent=t('titleNight',{night:currentNight});
   resetJumpscare();resetPowerFailure();resetPhone();stopAudioLoops();
-  state.started=state.active=true;state.gameOver=false;
-  startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);
+  state.started=true;state.active=!options.deferActive;state.gameOver=false;
+  if(state.active){startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);}
   $('welcome').classList.add('hidden');syncMenuStatic();$('hud').classList.remove('hidden');$('ending').classList.add('hidden');cameraToggle.classList.remove('hidden');
   state.target=state.yaw=0;POWER.resetNight(state);state.last=performance.now();
   state.leftDoor=state.rightDoor=state.leftLight=state.rightLight=false;
@@ -1253,6 +1319,7 @@ function start(night=1,options={}){
   resetEnemies();needsComposing=true;
   if(cameraOpen){cameraOpen=false;cameraScreen.classList.remove('is-open');cameraScreen.setAttribute('aria-hidden','true');cameraToggle.setAttribute('aria-expanded','false');}
   shownCameraFile='';chooseCamera(1);updateClock();updateStatus();
+  return true;
 }
 function setSliders(){
   for(const [key,property,scale] of [['turnAmount','angle',100],['fishAmount','fish',100],['smoothAmount','smooth',100]]){
@@ -1261,7 +1328,7 @@ function setSliders(){
 }
 function toggleSettings(){if(!state.active)return;if(cameraOpen)setCameraOpen(false);clearHeldActions();$('settings').classList.toggle('hidden');}
 async function toggleFullscreen(){try{if(!document.fullscreenElement){await stage.requestFullscreen();try{await screen.orientation?.lock?.('landscape')}catch(_) {}}else await document.exitFullscreen();}catch(e){showToast('Полный экран недоступен');}}
-$('startBtn').addEventListener('click',()=>start(1,{intro:true}));$('continueBtn').addEventListener('click',()=>{if(unlockedNight>1)showNightSelect();});$('officeInput').addEventListener('keydown',e=>{if(e.key==='Enter')start(1,{intro:true});});
+$('startBtn').addEventListener('click',()=>transitionToNight(1,{intro:true}));$('continueBtn').addEventListener('click',()=>{if(unlockedNight>1)showNightSelect();});$('officeInput').addEventListener('keydown',e=>{if(e.key==='Enter')transitionToNight(1,{intro:true});});
 $('settingsBtn').addEventListener('click',toggleSettings);
 $('closeSettings').addEventListener('click',toggleSettings);$('closeSettingsPrimary').addEventListener('click',toggleSettings);
 $('fullscreenBtn').addEventListener('click',toggleFullscreen);
