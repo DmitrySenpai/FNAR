@@ -10,7 +10,7 @@ const names = [
 ];
 const src = f => window.KONS_EMBEDDED_ASSETS?.[f] || getCachedAssetURL('assets/room/'+f);
 // Preload before the first night so all effects and camera frames are local when played.
-const PRELOAD_CACHE_NAME='fnar-game-assets-v050';
+const PRELOAD_CACHE_NAME=window.AudioManager.cacheName;
 const cachedAssetURLs=new Map();
 function getCachedAssetURL(path){return cachedAssetURLs.get(path)||path;}
 const PRELOAD_SOUND_NAMES=["ambience","ambient_room","beep","blip","chimes","door","hang-up","knock-2","knock-3","knock","light","open-camera","os_balloon","os_info","os_shutdown","os_startup","os_usb_connect","os_usb_remove","phone-line","phone","phone_01","phone_02","phone_03","phone_04","phone_05","power-outage","running-fast","running","scream","static-bm"];
@@ -38,24 +38,24 @@ async function preloadAllGameAssets(){
   if(location.protocol==='file:'){
     staticVideo.src=staticVideoURL();setMenuBackdrop();setDocumentBackdrop();loadImages();preloadBusy=false;return;
   }
-  let cache=null;
-  try{if('caches' in window)cache=await caches.open(PRELOAD_CACHE_NAME);}catch(e){console.warn('Persistent cache unavailable',e);}
   let next=0;const failed=[];
   async function worker(){
     while(next<paths.length){
       const path=paths[next++];
       try{
         if(!cachedAssetURLs.has(path)){
-          let response=cache?await cache.match(path):null;
-          if(!response){
-            response=await fetch(path,{cache:'no-cache'});
-            if(!response.ok)throw Error('HTTP '+response.status+' '+path);
-            if(cache)try{await cache.put(path,response.clone());}catch(e){console.warn('Unable to persist cache entry',path,e);}
-          }
-          const blob=await response.blob();
+          const blob=await AudioManager.getAsset(path);
           cachedAssetURLs.set(path,URL.createObjectURL(blob));
+          if(path.startsWith('assets/sound/') && path.endsWith('.mp3')){
+            const name=path.slice('assets/sound/'.length,-4);
+            if(AudioManager.isShort(name)) await AudioManager.preload(name);
+          }
         }
-      }catch(e){failed.push(path);console.warn('Asset preload failed',path,e);}
+      }catch(error){
+        // Optional sounds may play through their original URL if cache is unavailable.
+        if(path.startsWith('assets/sound/'))console.warn('[FNAR preload] optional audio fallback:',path,error);
+        else failed.push(path);
+      }
       done++;preloadProgress(done,paths.length);
     }
   }
@@ -304,6 +304,7 @@ async function sceneTransition(swapScene,{activateNight=false}={}){
   }
 }
 function transitionToNight(night,{intro=false,fromNewspaper=false}={}){
+  AudioManager.unlock(); // User activation: permit predecoded effects on mobile browsers.
   if(transitionBusy||state.loaded!==names.length||!canStartNight(Number(night)))return false;
   return sceneTransition(()=>{
     if(intro){showNewspaperIntro(night);return true;}
@@ -413,13 +414,16 @@ function updateMuteUI(){
   if(phoneVoiceAudio)phoneVoiceAudio.muted=soundMuted;
   if(deathStaticAudio)deathStaticAudio.muted=soundMuted;
   for(const a of activeOneShots)a.muted=soundMuted;
+  AudioManager.setMuted(soundMuted);
 }
 function playSfx(name,volume=.45){
-  if(soundMuted)return;
-  try{const a=new Audio(soundURL(name));a.preload='auto';a.volume=clamp(volume,0,1);a.muted=soundMuted;activeOneShots.add(a);
-    a.onended=()=>activeOneShots.delete(a);a.onerror=()=>activeOneShots.delete(a);
-    a.play().catch(()=>activeOneShots.delete(a));return a;}
-  catch(ex){console.warn('SFX error',name,ex);}
+  if(soundMuted)return null;
+  const a=AudioManager.play(name,clamp(volume,0,1));
+  if(a){activeOneShots.add(a);
+    const previous=a.onended;
+    a.onended=()=>{activeOneShots.delete(a);if(typeof previous==='function')previous();};
+  }
+  return a;
 }
 function startAudioLoop(name,volume=.15){
   let a=audioLoops.get(name);
@@ -440,7 +444,7 @@ function clearDeathStaticAudio(){
   if(deathStaticAudio){deathStaticAudio.pause();deathStaticAudio.currentTime=0;deathStaticAudio=null;}
 }
 function resetJumpscare(){
-  ++jumpEpoch;clearTimeout(jumpTimer);clearDeathStaticAudio();
+  ++jumpEpoch;clearTimeout(jumpTimer);clearDeathStaticAudio();AudioManager.stop('scream');
   jumpVideo.pause();jumpVideo.onended=null;jumpVideo.onerror=null;
   jumpVideo.removeAttribute('src');jumpVideo.load();
   jumpOverlay.classList.add('hidden');jumpOverlay.setAttribute('aria-hidden','true');
@@ -1105,6 +1109,7 @@ function goMenuInstant(){
   clearNewspaperIntro();
   closeNightMenus();
   if(state.active){state.active=false;clearHeldActions();stopAudioLoops();stopRingtone();stopPowerFailureAudio();}
+  AudioManager.stopAll();
   for(const a of activeOneShots){a.pause();try{a.currentTime=0;}catch(_){}}activeOneShots.clear();
   state.paused=false;pausedAudio.clear();resetJumpscare();resetPowerFailure();resetPhone();
   $('pauseScreen').classList.add('hidden');$('ending').classList.add('hidden');
@@ -1123,11 +1128,13 @@ $('victoryNextBtn').addEventListener('click',()=>{if(currentNight<=4)transitionT
 $('resignationMenuBtn').addEventListener('click',goMenu);
 const pausedAudio=new Set();
 function pauseGameAudio(){
+  AudioManager.setPaused(true);
   for(const a of [...audioLoops.values(),...activeOneShots,phoneRingAudio,phoneVoiceAudio,powerFailure.audio].filter(Boolean)){
     if(!a.paused){pausedAudio.add(a);a.pause();}
   }
 }
 function resumeGameAudio(){
+  AudioManager.setPaused(false);
   for(const a of pausedAudio){if(a && state.active)a.play().catch(()=>{});}
   pausedAudio.clear();
 }
@@ -1299,6 +1306,7 @@ function loop(timestamp){
   draw();requestAnimationFrame(loop);
 }
 function start(night=1,options={}){
+  AudioManager.unlock();
   if(state.loaded!==names.length||!canStartNight(Number(night)))return;
   if(state.active&&!options.force)return;
   closeNightMenus();
@@ -1310,7 +1318,7 @@ function start(night=1,options={}){
   $('officeInput').blur();
   state.paused=false;resumeGameAudio();$('pauseScreen').classList.add('hidden');$('pauseBtn').classList.remove('hidden');
   $('settings').classList.add('hidden');$('cameraNightLabel').textContent=t('titleNight',{night:currentNight});
-  resetJumpscare();resetPowerFailure();resetPhone();stopAudioLoops();
+  resetJumpscare();resetPowerFailure();resetPhone();stopAudioLoops();AudioManager.stopAll();
   state.started=true;state.active=!options.deferActive;state.gameOver=false;
   if(state.active){startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);}
   $('welcome').classList.add('hidden');syncMenuStatic();$('hud').classList.remove('hidden');$('ending').classList.add('hidden');cameraToggle.classList.remove('hidden');
