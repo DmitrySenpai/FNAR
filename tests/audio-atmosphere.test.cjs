@@ -191,7 +191,8 @@ test('compact pause menu has only one master volume control and no nested panel'
   assert.ok(app.includes("AUDIO_SETTINGS.set('master',event.currentTarget.value)"));
   assert.ok(app.includes("AUDIO_SETTINGS.register(voice,'phone',.88)"));
   assert.ok(app.includes("atmosphere.tick(passed,atmosphereContext())"));
-  assert.ok(tablet.includes("mixer.register(a,'tablet'"));
+  assert.ok(tablet.includes('window.AudioManager?.play('));
+  assert.ok(read('fnar-audio.js').includes('mixer?.register(handle'));
   assert.ok(tablet.includes('FNAR_SOUND_URL'));
   for(const id of ['atmosphereOffice','atmosphereCamera'])
     assert.ok(html.includes('id="'+id+'"'));
