@@ -31,7 +31,7 @@ async function preloadAllGameAssets(){
     ...PRELOAD_CAMERA_NAMES.map(n=>'assets/cameras/'+n),
     ...PRELOAD_SOUND_NAMES.map(n=>'assets/sound/'+n+'.mp3'),
     ...[1,2,3,4].map(n=>'assets/screamers/rooster_'+n+'_scream.webm'),
-    'assets/sound/static-bm.webm', 'assets/menu/rooster_menu.webp', 'assets/ui/today_news.webp', 'assets/ui/resignation_letter.webp', 'assets/ui/tablet/shutdown.webp', 'assets/ui/tablet/desktop.webp', 'assets/ui/tablet/netvideo.webp', 'assets/ui/tablet/boot.webp'];
+    'assets/sound/static-bm.webm', 'assets/menu/rooster_menu.webp', 'assets/ui/today_news.webp', 'assets/ui/tablet/shutdown.webp', 'assets/ui/tablet/desktop.webp', 'assets/ui/tablet/netvideo.webp', 'assets/ui/tablet/boot.webp'];
   let done=0;preloadProgress(done,paths.length);
   // file:// cannot use CacheStorage/fetch; standalone files embed their game art and audio.
   if(location.protocol==='file:'){
@@ -76,7 +76,6 @@ function setMenuBackdrop(){
 }
 function setDocumentBackdrop(){
   $('newspaperPaper').style.backgroundImage='url("'+getCachedAssetURL('assets/ui/today_news.webp')+'")';
-  $('resignationPaper').style.backgroundImage='url("'+getCachedAssetURL('assets/ui/resignation_letter.webp')+'")';
 }
 function syncMenuStatic(){
   const el=$('menuStaticVideo');
@@ -869,10 +868,24 @@ function clearResignation(){
   const screen=$('resignationScreen');
   screen.classList.add('hidden');screen.classList.remove('is-visible');
 }
-function showResignation(){
+function showCompanyDocument(night){
+  const model=window.FNAR_ENDINGS?.getDocument(night,gameLanguage,officeNameValue(),EXTRA_SHIFT_PAY);
+  if(!model)return false;
+  clearResignation();
+  $('documentTitle').textContent=model.title;
+  $('documentOffice').textContent=model.company;
+  const body=$('documentBody');body.replaceChildren();
+  for(const line of model.lines){
+    const p=document.createElement('p');
+    if(line.strong){const strong=document.createElement('strong');strong.textContent=line.text;p.appendChild(strong);}
+    else p.textContent=line.text;
+    body.appendChild(p);
+  }
+  $('documentSignature').textContent=model.signature;
+  const stamp=$('documentStamp');stamp.textContent=model.stamp;
+  stamp.classList.toggle('hidden',!model.stamp);
+  stamp.classList.toggle('dismissal-stamp',night===7);
   const screen=$('resignationScreen');
-  $('resignationDirector').textContent=t('resignationDirector',{office:officeNameValue()});
-  $('resignationText').textContent=t('resignationText');
   $('resignationMenuBtn').textContent=t('backMenu');
   screen.classList.remove('hidden');
   void screen.offsetWidth;
@@ -881,6 +894,7 @@ function showResignation(){
     resignationFadeTimer=null;
     $('victoryScreen').classList.add('hidden');
   },950);
+  return true;
 }
 function clearVictorySequence(){
   if(victoryButtonTimer!==null){clearTimeout(victoryButtonTimer);victoryButtonTimer=null;}
@@ -899,7 +913,7 @@ function showVictorySequence(){
   victoryButtonTimer=setTimeout(()=>{
     victoryButtonTimer=null;
     if(!screen.classList.contains('hidden')){
-      if(currentNight===7)showResignation();
+      if(currentNight>=5)showCompanyDocument(currentNight);
       else button.classList.remove('hidden');
     }
   },7200); // 1.2s dissolve + 4s number roll + 2s pause.
@@ -918,7 +932,10 @@ function finishNight(success,message,attackerId=0){
   cameraToggle.classList.add('hidden');
   stopAudioLoops();
   if(success){
-    if(currentNight===7)sevenNightsComplete=true;
+    if(currentNight===7){
+      sevenNightsComplete=true;customCompleted=true;
+      if(customAI.every(level=>level===20))customMaxCompleted=true;
+    }
     unlockedNight=Math.max(unlockedNight,Math.min(7,currentNight+1));
     updateSaveProgress();
   }
@@ -1004,6 +1021,7 @@ function goMenu(){
   clearVictorySequence();
   clearResignation();
   clearNewspaperIntro();
+  closeNightMenus();
   if(state.active){state.active=false;clearHeldActions();stopAudioLoops();stopRingtone();stopPowerFailureAudio();}
   for(const a of activeOneShots){a.pause();try{a.currentTime=0;}catch(_){}}activeOneShots.clear();
   state.paused=false;pausedAudio.clear();resetJumpscare();resetPowerFailure();resetPhone();
@@ -1018,7 +1036,7 @@ $('restartBtn').addEventListener('click',()=>{
   start($('ending').dataset.success==='true'?currentNight+1:currentNight);
 });
 $('endingMenuBtn').addEventListener('click',goMenu);
-$('victoryNextBtn').addEventListener('click',()=>{if(currentNight===7)goMenu();else start(currentNight+1);});
+$('victoryNextBtn').addEventListener('click',()=>{if(currentNight<=4)start(currentNight+1);else goMenu();});
 $('resignationMenuBtn').addEventListener('click',goMenu);
 const pausedAudio=new Set();
 function pauseGameAudio(){
@@ -1273,6 +1291,10 @@ window.KokhinhinDebug={state,toggleDoor,setLight,findHit,imagePos,setView(v){sta
   phoneState,forcePhoneRing(){if(state.active && currentNight<=5){resetPhone();startRinging();}},answerPhone,hangUpPhone,
   get phoneVoice(){return phoneVoiceAudio;}, get phoneSubtitle(){return phoneSubtitle.textContent;},
   toggleMute,togglePause,get currentNight(){return currentNight;},get unlockedNight(){return unlockedNight;},
-  setLanguage:chooseLanguage,goMenu,updateSaveProgress};
+  setLanguage:chooseLanguage,goMenu,updateSaveProgress,
+  showNightSelect,showCustomNight,showEnding:showCompanyDocument,
+  get customAI(){return [...customAI];},get customCompleted(){return customCompleted;},
+  get customMaxCompleted(){return customMaxCompleted;}};
+window.FNARDebug=window.KokhinhinDebug;
 initCanvas();setSliders();updateStatus();resize();requestAnimationFrame(loop);
 })();
