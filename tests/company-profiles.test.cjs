@@ -32,7 +32,7 @@ test('night gating, custom night, freezing, independent presets and caps',()=>{
     for(let night=1;night<=7;night++){
       const g=game(n,night);
       assert.equal(g.companyModifiers.active,night>=2&&night<=6);
-      const values=Object.values(g.companyModifiers).filter(v=>typeof v==='number');
+      const values=Object.entries(g.companyModifiers).filter(([key,value])=>key!=='target'&&typeof value==='number').map(([,value])=>value);
       for(const value of values)assert.ok(value>=.93&&value<=1.07);
       assert.strictEqual(g.config,AI.NIGHT_CONFIG[night]===undefined?g.config:night===7?g.config:AI.NIGHT_CONFIG[night]);
     }
@@ -78,13 +78,14 @@ test('paired 200-seed simulation has measurable but bounded effects',()=>{
       const baseline=AI.createNight(4,seeded(seed),null,null);
       const modified=AI.createNight(4,seeded(seed),null,p);
       const baselineEnemy=baseline.enemies[p.target-1],modifiedEnemy=modified.enemies[p.target-1];
-      let eventA=0,eventB=0;
+      let eventA=0,eventB=0,trajectoriesDiffer=false;
       for(let t=0;t<2400;t++){
         const input={cameraOpen:p.target===2,camera:p.target===2?baselineEnemy.route[baselineEnemy.step] : 8};
         eventA+=AI.tick(baseline,.1,input).filter(e=>e.id===p.target&&(e.type==='move'||e.type==='rush')).length;
         eventB+=AI.tick(modified,.1,input).filter(e=>e.id===p.target&&(e.type==='move'||e.type==='rush')).length;
+        if(eventA!==eventB||Math.abs(baselineEnemy.anger-modifiedEnemy.anger)>1e-8||Math.abs(baselineEnemy.nextMove-modifiedEnemy.nextMove)>1e-8)trajectoriesDiffer=true;
       }
-      if(eventA!==eventB||Math.abs(baselineEnemy.anger-modifiedEnemy.anger)>1e-8||Math.abs(baselineEnemy.nextMove-modifiedEnemy.nextMove)>1e-8)changed++;
+      if(trajectoriesDiffer)changed++;
     }
     assert.ok(changed>0,name+' must have a measurable effect');
   }
