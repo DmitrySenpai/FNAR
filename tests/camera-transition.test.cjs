@@ -249,11 +249,11 @@ test('CSS contains high-contrast analog noise and reduced-motion handling; camer
   assert.ok(feed.includes('id="cameraRoosterSignal"'));
   assert.ok(!html.split('class="camera-map"')[1].split('</section>')[0].includes('cameraRoosterSignal'));
   assert.ok(html.includes('style.css?v=057'));
-  assert.ok(html.includes('src="fnar-camera-transition.js?v=057"'));
-  assert.ok(html.indexOf('src="fnar-camera-transition.js?v=057"')<html.indexOf('src="app.js?v=057"'));
+  assert.ok(html.includes('src="fnar-camera-transition.js?v=058"'));
+  assert.ok(html.indexOf('src="fnar-camera-transition.js?v=058"')<html.indexOf('src="app.js?v=058"'));
   assert.match(app,/updateCameraScene\(\{allowRoosterTransition:true\}\)/);
   assert.match(app,/if\(changed\)cameraCompositionTransition\.cancel\(\)/);
-  assert.match(app,/if\(next\)\{cameraCompositionTransition\.cancel\(\);updateCameraScene\(\);\}/);
+  assert.match(app,/if\(next\)\{cameraCompositionTransition\.cancel\(\);updateCameraScene\(\{allowRoosterTransition:false\}\);\}/);
   assert.match(app,/cameraCompositionTransition\.update\(\{camera:currentCamera,file,ids\}\)/);
   assert.match(app,/cameraCompositionTransition\.start\(\{[\s\S]*?camera:currentCamera,file,ids,sourceFile:shownCameraFile/);
   assert.ok(!read('fnar-ai.js').includes('fnar-camera-transition'));
