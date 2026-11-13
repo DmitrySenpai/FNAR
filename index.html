@@ -91,10 +91,27 @@
       <input id="officeInput" maxlength="44" placeholder="Мой офис" autocomplete="off" spellcheck="false">
       <button id="startBtn" class="primary" type="button" disabled>ЗАГРУЗКА…</button>
       <button id="continueBtn" class="secondary-action" type="button" disabled>ПРОДОЛЖИТЬ</button>
+       <button id="night6Btn" class="secondary-action hidden" type="button" disabled data-i18n="night6">6 НОЧЬ</button>
+       <button id="customBtn" class="secondary-action hidden" type="button" disabled>CUSTOM</button>
       <p id="loadingStatus" class="loading">Загрузка 0 / 11</p>
     </div>
   </section>
-  <section id="newspaperIntro" class="newspaper-screen hidden" role="dialog" aria-modal="true" aria-label="Газетное объявление">
+  <section id="nightSelectScreen" class="night-menu-screen hidden" role="dialog" aria-modal="true" aria-labelledby="nightSelectTitle">
+     <div class="night-menu-card">
+       <h2 id="nightSelectTitle" data-i18n="nightSelectTitle">ВЫБОР НОЧИ</h2>
+       <div id="nightSelectList" class="night-select-list"></div>
+       <button id="nightSelectBack" type="button" class="secondary-action" data-i18n="back">НАЗАД</button>
+     </div>
+   </section>
+   <section id="customScreen" class="night-menu-screen hidden" role="dialog" aria-modal="true" aria-labelledby="customTitle">
+     <div class="night-menu-card custom-night-card">
+       <h2 id="customTitle">CUSTOM NIGHT</h2>
+       <div id="customAIGrid" class="custom-ai-grid"></div>
+       <button id="customStart" type="button" class="primary" data-i18n="startNight">НАЧАТЬ НОЧЬ</button>
+       <button id="customBack" type="button" class="secondary-action" data-i18n="back">НАЗАД</button>
+     </div>
+   </section>
+   <section id="newspaperIntro" class="newspaper-screen hidden" role="dialog" aria-modal="true" aria-label="Газетное объявление">
     <div class="newspaper-paper" id="newspaperPaper">
       <div class="newspaper-article">
         <h2 id="newspaperHeadline">Компания срочно ищет ночного охранника</h2>
@@ -143,15 +160,19 @@
     </div>
     <button type="button" id="victoryNextBtn" class="primary victory-next hidden" data-i18n="startNextDay">НАЧАТЬ СЛЕДУЮЩИЙ ДЕНЬ</button>
   </section>
-  <section id="resignationScreen" class="resignation-screen hidden" role="dialog" aria-modal="true" aria-label="Заявление об увольнении">
-    <div id="resignationPaper" class="resignation-paper">
-      <div class="resignation-content">
-        <p id="resignationDirector" class="resignation-director">Директору компании</p>
-        <p id="resignationText" class="resignation-message">Прошу вас уволить меня по собственному желанию.</p>
-      </div>
-    </div>
-    <button type="button" id="resignationMenuBtn" class="primary resignation-menu">ГЛАВНОЕ МЕНЮ</button>
-  </section>
+  <section id="resignationScreen" class="resignation-screen hidden" role="dialog" aria-modal="true" aria-labelledby="documentTitle">
+     <div id="resignationPaper" class="resignation-paper">
+       <article class="resignation-content">
+         <div class="document-kicker">FIVE NIGHTS AT ROOSTER'S</div>
+         <h2 id="documentTitle"></h2>
+         <p class="document-company" id="documentOffice"></p>
+         <div id="documentBody" class="document-body"></div>
+         <p class="document-signature" id="documentSignature"></p>
+         <span id="documentStamp" class="document-stamp hidden"></span>
+       </article>
+     </div>
+     <button type="button" id="resignationMenuBtn" class="primary resignation-menu" data-i18n="backMenu">ГЛАВНОЕ МЕНЮ</button>
+   </section>
   <section id="ending" class="hidden" role="dialog" aria-modal="true" aria-labelledby="endingTitle">
     <div class="ending-card"><p id="endingNightLabel" class="eyebrow">Ночь 1</p><h2 id="endingTitle">НОЧЬ ОКОНЧЕНА</h2><p id="endingText"></p><button id="restartBtn" type="button" class="primary">ПОВТОРИТЬ НОЧЬ</button><button id="endingMenuBtn" type="button" class="secondary-action" data-i18n="backMenu">ГЛАВНОЕ МЕНЮ</button></div>
   </section>
