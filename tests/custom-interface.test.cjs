@@ -69,7 +69,7 @@ test('All four Custom Night portraits remain original 1152×1536, never thumbnai
 });
 test('Custom portraits use natural interpolation and new FNAR asset cache',()=>{
   const app=source('app.js'),css=source('style.css');
-  assert.match(app,/PRELOAD_CACHE_NAME='fnar-game-assets-v050'/);
+  assert.match(app,/PRELOAD_CACHE_NAME='fnar-game-assets-v055'/);
   assert.match(css,/#customScreen \.custom-ai-portrait\{[^}]*image-rendering:auto;filter:none;/);
   assert.match(css,/#customScreen \.custom-ai-portrait\{[^}]*object-position:center top;/);
   assert.doesNotMatch(css,/image-rendering:\s*(?:pixelated|crisp-edges)/);

@@ -186,12 +186,13 @@ test('compact pause menu has only one master volume control and no nested panel'
   assert.match(css,/#pauseScreen \.pause-card\s*\{[^}]*overflow:visible/s);
   assert.ok(html.includes('style.css?v=054'));
   assert.ok(html.includes('src="fnar-audio-settings.js?v=054"'));
-  assert.ok(html.indexOf('fnar-audio-settings.js?v=054')<html.indexOf('src="app.js"'));
-  assert.ok(html.indexOf('src="fnar-atmosphere.js"')<html.indexOf('src="app.js"'));
+  assert.ok(html.indexOf('fnar-audio-settings.js?v=054')<html.indexOf('src="app.js?v=055"'));
+  assert.ok(html.indexOf('src="fnar-atmosphere.js"')<html.indexOf('src="app.js?v=055"'));
   assert.ok(app.includes("AUDIO_SETTINGS.set('master',event.currentTarget.value)"));
   assert.ok(app.includes("AUDIO_SETTINGS.register(voice,'phone',.88)"));
   assert.ok(app.includes("atmosphere.tick(passed,atmosphereContext())"));
-  assert.ok(tablet.includes("mixer.register(a,'tablet'"));
+  assert.ok(tablet.includes('window.AudioManager?.play('));
+  assert.ok(read('fnar-audio.js').includes('mixer?.register(handle'));
   assert.ok(tablet.includes('FNAR_SOUND_URL'));
   for(const id of ['atmosphereOffice','atmosphereCamera'])
     assert.ok(html.includes('id="'+id+'"'));

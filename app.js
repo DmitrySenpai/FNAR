@@ -10,11 +10,21 @@ const names = [
 ];
 const src = f => window.KONS_EMBEDDED_ASSETS?.[f] || getCachedAssetURL('assets/room/'+f);
 // Preload before the first night so all effects and camera frames are local when played.
-const PRELOAD_CACHE_NAME='fnar-game-assets-v050';
+const PRELOAD_CACHE_NAME='fnar-game-assets-v055'; // Managed by fnar-audio.js
 const cachedAssetURLs=new Map();
 function getCachedAssetURL(path){return cachedAssetURLs.get(path)||path;}
 const PRELOAD_SOUND_NAMES=["ambience","ambient_room","beep","blip","chimes","door","hang-up","knock-2","knock-3","knock","light","open-camera","os_balloon","os_info","os_shutdown","os_startup","os_usb_connect","os_usb_remove","phone-line","phone","phone_01","phone_02","phone_03","phone_04","phone_05","power-outage","running-fast","running","scream","static-bm"];
 const PRELOAD_CAMERA_NAMES=["cam01.webp","cam01_c2.webp","cam02.webp","cam02_c4.webp","cam03.webp","cam03_c2.webp","cam03_c2_c3.webp","cam03_c3.webp","cam04.webp","cam04_c1.webp","cam04_c1_c4.webp","cam04_c4.webp","cam05.webp","cam05_c1.webp","cam05_c4.webp","cam05_c4_c1.webp","cam06.webp","cam06_c1.webp","cam06_c1_c4.webp","cam06_c4.webp","cam07.webp","cam07_c1.webp","cam07_c1_c4.webp","cam07_c4.webp","cam08.webp","cam08_c2.webp","cam08_c2_c3.webp","cam08_c3.webp","cam09.webp","cam09_c2.webp","cam09_c2_c3.webp","cam09_c3.webp"];
+const DEFERRED_CUSTOM_ASSETS=[1,2,3,4].map(n=>'assets/ui/custom/c'+n+'.png');
+let customAssetPromise=null;
+async function ensureCustomPortraits(){
+  if(location.protocol==='file:')return;
+  if(!customAssetPromise)customAssetPromise=Promise.all(DEFERRED_CUSTOM_ASSETS.map(async path=>{
+    const url=await window.AudioManager.getURL(path);
+    cachedAssetURLs.set(path,url);
+  })).catch(error=>{customAssetPromise=null;throw error;});
+  await customAssetPromise;
+}
 let preloadBusy=false;
 function preloadProgress(completed,total){
   const percentage=total?Math.floor(completed*100/total):100;
@@ -24,6 +34,7 @@ function preloadProgress(completed,total){
 }
 async function preloadAllGameAssets(){
   if(preloadBusy || window.__KONS_VIEW_READY)return;
+  window.AudioManager?.unlock();
   preloadBusy=true;
   $('preloadRetry').classList.add('hidden');
   $('preloadScreen').classList.remove('hidden');
@@ -32,34 +43,43 @@ async function preloadAllGameAssets(){
     ...PRELOAD_SOUND_NAMES.map(n=>'assets/sound/'+n+'.mp3'),
     ...[1,2,3,4].map(n=>'assets/screamers/rooster_'+n+'_scream.webm'),
     'assets/sound/static-bm.webm', 'assets/menu/rooster_menu.webp', 'assets/ui/today_news.webp',
-    ...[1,2,3,4].map(n=>'assets/ui/custom/c'+n+'.png'), 'assets/ui/director_signature.svg', 'assets/ui/tablet/shutdown.webp', 'assets/ui/tablet/desktop.webp', 'assets/ui/tablet/netvideo.webp', 'assets/ui/tablet/boot.webp'];
+    'assets/ui/director_signature.svg', 'assets/ui/tablet/shutdown.webp', 'assets/ui/tablet/desktop.webp', 'assets/ui/tablet/netvideo.webp', 'assets/ui/tablet/boot.webp'];
   let done=0;preloadProgress(done,paths.length);
   // file:// cannot use CacheStorage/fetch; standalone files embed their game art and audio.
   if(location.protocol==='file:'){
     staticVideo.src=staticVideoURL();setMenuBackdrop();setDocumentBackdrop();loadImages();preloadBusy=false;return;
   }
-  let cache=null;
-  try{if('caches' in window)cache=await caches.open(PRELOAD_CACHE_NAME);}catch(e){console.warn('Persistent cache unavailable',e);}
-  let next=0;const failed=[];
+  let next=0;const failed=[],optionalAudioFailures=[];
   async function worker(){
     while(next<paths.length){
       const path=paths[next++];
       try{
         if(!cachedAssetURLs.has(path)){
-          let response=cache?await cache.match(path):null;
-          if(!response){
-            response=await fetch(path,{cache:'no-cache'});
-            if(!response.ok)throw Error('HTTP '+response.status+' '+path);
-            if(cache)try{await cache.put(path,response.clone());}catch(e){console.warn('Unable to persist cache entry',path,e);}
+          const completeURL=await window.AudioManager.getURL(path);
+          cachedAssetURLs.set(path,completeURL);
+          if(path.startsWith('assets/sound/')&&path.endsWith('.mp3')){
+            const name=path.slice('assets/sound/'.length,-4);
+            if(window.AudioManager.isShort(name)){
+              try{await window.AudioManager.preload(name);}
+              catch(error){console.warn('Web Audio decode unavailable, will use preloaded media:',name,error);}
+            }
           }
-          const blob=await response.blob();
-          cachedAssetURLs.set(path,URL.createObjectURL(blob));
         }
-      }catch(e){failed.push(path);console.warn('Asset preload failed',path,e);}
+      }catch(error){
+        // Broken visual and screamer assets must block startup. Optional sounds
+        // are played by native browser audio using the original URL if necessary.
+        if(path.startsWith('assets/sound/')&&path.endsWith('.mp3')){
+          optionalAudioFailures.push(path);
+          console.warn('Optional audio not cached:',path,error);
+        }else{
+          failed.push(path);console.warn('Critical asset failed:',path,error);
+        }
+      }
       done++;preloadProgress(done,paths.length);
     }
   }
   await Promise.all(Array.from({length:5},worker));
+  if(optionalAudioFailures.length)console.warn('Audio fallback count:',optionalAudioFailures.length);
   preloadBusy=false;
   if(failed.length){
     $('preloadStatus').textContent=t('preloadError')+' ('+failed.length+')';
@@ -113,7 +133,7 @@ function writeSave(key,value){
   safeStore(key,v);
 }
 const L10N={
-en:{audioVolume:'VOLUME',holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point at the door controls',imageLoadError:'Could not load {name}. Check the assets/room folder.',
+en:{audioVolume:'VOLUME',doorSideLeft:'Left',doorSideRight:'Right',doorClosing:'{side} door closing',doorOpening:'{side} door opening',fullscreenUnavailable:'Fullscreen unavailable',settingsButton:'View settings',fullscreenButton:'Toggle fullscreen',cameraTablet:'Surveillance tablet',cameraMap:'Camera map',languageScreenLabel:'Choose language',volumeValue:'{value} percent',holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point at the door controls',imageLoadError:'Could not load {name}. Check the assets/room folder.',
   chooseLanguage:'SELECT LANGUAGE',languagePrompt:'Game Language',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'WARNING',warningBody:'This game contains sudden loud noises, jumpscares, flashing images and intense scenes. Keep your volume at a moderate level.',warningAccept:'I UNDERSTAND · CONTINUE',
   preloadTitle:'PREPARING GAME',preloadStatus:'Loading assets: {n} / {total} ({percent}%)',preloadRetry:'RETRY LOADING',preloadError:'Some resources could not be loaded. Check your connection and try again.',
@@ -140,7 +160,7 @@ en:{audioVolume:'VOLUME',holdAction:'HOLD: {action}',pressAction:'PRESS: {action
   bonusTitle:'ADDITIONAL PAYMENT NOTICE',dismissalTitle:'NOTICE OF TERMINATION',
   company:'Company: {office}',signature:'Company Management / Signature: __________',overtime:'OVERTIME SHIFT',dismissed:'TERMINATED'
  },
- ru:{audioVolume:'ГРОМКОСТЬ',holdAction:'УДЕРЖИВАТЬ: {action}',pressAction:'НАЖАТЬ: {action}',hoverHint:'Наведите курсор на кнопки у дверей',imageLoadError:'Ошибка загрузки {name}. Проверьте папку assets/room.',chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langEn:'English',langJa:'日本語',
+ ru:{audioVolume:'ГРОМКОСТЬ',doorSideLeft:'Левая',doorSideRight:'Правая',doorClosing:'{side} дверь закрывается',doorOpening:'{side} дверь открывается',fullscreenUnavailable:'Полный экран недоступен',settingsButton:'Настройки обзора',fullscreenButton:'Полноэкранный режим',cameraTablet:'Планшет камер наблюдения',cameraMap:'Схема объекта',languageScreenLabel:'Выберите язык',volumeValue:'{value} процентов',holdAction:'УДЕРЖИВАТЬ: {action}',pressAction:'НАЖАТЬ: {action}',hoverHint:'Наведите курсор на кнопки у дверей',imageLoadError:'Ошибка загрузки {name}. Проверьте папку assets/room.',chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'ПРЕДУПРЕЖДЕНИЕ',warningBody:'В игре присутствуют внезапные громкие звуки, скримеры, мигающие изображения и напряжённые сцены. Рекомендуется умеренная громкость.',warningAccept:'ПОНИМАЮ · ПРОДОЛЖИТЬ',preloadTitle:'ПОДГОТОВКА ИГРЫ',preloadStatus:'Загрузка ресурсов: {n} / {total} ({percent}%)',preloadRetry:'ПОВТОРИТЬ ЗАГРУЗКУ',preloadError:'Не удалось загрузить ресурсы. Проверьте интернет и повторите попытку.',skipPhone:'ПРОПУСТИТЬ ЗВОНОК',skipConversation:'ПРОПУСТИТЬ РАЗГОВОР',
   officeLabel:'НАЗВАНИЕ ОФИСА',officePlaceholder:'Мой офис',start:'НОВАЯ ИГРА · НОЧЬ 1',continue:'ПРОДОЛЖИТЬ · НОЧЬ {night}',loading:'Загрузка {n} / {total}',
   titleNight:'Ночь {night}',pause:'ПАУЗА',pauseTitle:'ПАУЗА',pauseResume:'ВЕРНУТЬСЯ В ИГРУ',pauseRestart:'ПЕРЕЗАПУСТИТЬ НОЧЬ',pauseMenu:'В ГЛАВНОЕ МЕНЮ',pauseHint:'Esc или P — продолжить',
@@ -157,7 +177,7 @@ en:{audioVolume:'VOLUME',holdAction:'HOLD: {action}',pressAction:'PRESS: {action
   leftLight:'Свет слева',rightLight:'Свет справа',leftDoorLabel:'Дверь слева',rightDoorLabel:'Дверь справа',phoneLabel:'Телефон на столе',
   openCamera:'Открыть камеры наблюдения',closeCamera:'Закрыть камеры наблюдения',
   mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.',nightSelectTitle:'ВЫБОР НОЧИ',night6:'6 НОЧЬ',night:'Ночь {night}',custom:'CUSTOM',startNight:'НАЧАТЬ',customDifficulty:'(0–2) EASY   (3–6) MED   (7–12) HARD   (13–20) EXTREME',back:'НАЗАД',locked:'ЗАБЛОКИРОВАНО',aiLevel:'AI: {level}',payrollTitle:'УВЕДОМЛЕНИЕ О ВЫПЛАТЕ ЗАРАБОТНОЙ ПЛАТЫ',bonusTitle:'УВЕДОМЛЕНИЕ О ДОПОЛНИТЕЛЬНОЙ ВЫПЛАТЕ',dismissalTitle:'УВЕДОМЛЕНИЕ ОБ УВОЛЬНЕНИИ',company:'Компания: {office}',signature:'Администрация компании  /  Подпись: __________',overtime:'СВЕРХУРОЧНАЯ СМЕНА',dismissed:'УВОЛЕН'},
- ja:{audioVolume:'音量',holdAction:'長押し：{action}',pressAction:'押す：{action}',hoverHint:'ドアのボタンにカーソルを合わせてください',imageLoadError:'{name} の読み込みに失敗しました。assets/room を確認してください。',chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langEn:'English',langJa:'日本語',
+ ja:{audioVolume:'音量',doorSideLeft:'左',doorSideRight:'右',doorClosing:'{side}ドアを閉じています',doorOpening:'{side}ドアを開いています',fullscreenUnavailable:'全画面表示を利用できません',settingsButton:'視点設定',fullscreenButton:'全画面表示を切り替える',cameraTablet:'監視カメラのタブレット',cameraMap:'カメラマップ',languageScreenLabel:'言語を選択',volumeValue:'{value}パーセント',holdAction:'長押し：{action}',pressAction:'押す：{action}',hoverHint:'ドアのボタンにカーソルを合わせてください',imageLoadError:'{name} の読み込みに失敗しました。assets/room を確認してください。',chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',skipConversation:'通話をスキップ',
   officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
   titleNight:'第{night}夜',pause:'一時停止',pauseTitle:'一時停止',pauseResume:'ゲームを再開',pauseRestart:'この夜をやり直す',pauseMenu:'メインメニューへ',pauseHint:'Esc または P で再開',
@@ -260,10 +280,19 @@ function renderCustomAI(){
     cell.append(picture,label,controls);grid.appendChild(cell);
   });
 }
-function showCustomNight(debugPreview=false){
+async function showCustomNight(debugPreview=false){
   if(state.active)return;
   closeNightMenus();
   if(unlockedNight<7&&!debugPreview)return;
+  // Custom-only portraits are optional during initial loading, but must be
+  // completely cached before the Custom Night screen first displays them.
+  try{await ensureCustomPortraits();}
+  catch(error){
+    console.warn('Custom Night portraits unavailable:',error);
+    window.alert(t('preloadError'));
+    return;
+  }
+  if(state.active||$('welcome').classList.contains('hidden'))return;
   renderCustomAI();$('customScreen').classList.remove('hidden');
 }
 $('nightSelectBack').addEventListener('click',closeNightMenus);
@@ -305,7 +334,7 @@ async function sceneTransition(swapScene,{activateNight=false}={}){
   if(transitionBusy)return false;
   transitionBusy=true;
   const priorPause=state.paused,priorActive=state.active;
-  if(state.active){state.paused=true;clearHeldActions();atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();}
+  if(state.active){state.paused=true;clearHeldActions();atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();window.AudioManager.setPaused(true);}
   screenTransition.classList.add('is-transitioning');
   let successful=false;
   try{
@@ -314,7 +343,7 @@ async function sceneTransition(swapScene,{activateNight=false}={}){
     if(result===false)throw new Error('Screen preparation was rejected');
     await fadeScreen(false,800);
     if(activateNight){
-      state.active=true;state.paused=false;state.last=performance.now();AUDIO_SETTINGS.pauseAtmosphere(false);
+      state.active=true;state.paused=false;state.last=performance.now();AUDIO_SETTINGS.pauseAtmosphere(false);window.AudioManager.setPaused(false);
       startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);
     }
     successful=true;
@@ -331,6 +360,7 @@ async function sceneTransition(swapScene,{activateNight=false}={}){
   }
 }
 function transitionToNight(night,{intro=false,fromNewspaper=false}={}){
+  window.AudioManager.unlock();
   if(transitionBusy||state.loaded!==names.length||!canStartNight(Number(night)))return false;
   return sceneTransition(()=>{
     if(intro){showNewspaperIntro(night);return true;}
@@ -411,6 +441,30 @@ function applyTranslations(){
   if(typeof updatePauseButton==='function')updatePauseButton();
   if(typeof updatePhoneUI==='function')updatePhoneUI();
   if(typeof updateAudioSettingsUI==='function')updateAudioSettingsUI();
+  updateAccessibility();
+}
+function updateAccessibility(){
+  const label=(id,key)=>{
+    const node=$(id);if(node)node.setAttribute('aria-label',t(key));
+  };
+  label('languageScreen','languageScreenLabel');
+  label('cameraScreen','cameraTablet');
+  label('settingsBtn','settingsButton');
+  label('fullscreenBtn','fullscreenButton');
+  label('audioVolumeMaster','audioVolume');
+  const settings=$('settingsBtn'),fullscreen=$('fullscreenBtn');
+  if(settings)settings.title=t('settingsButton')+' (H)';
+  if(fullscreen)fullscreen.title=t('fullscreenButton')+' (F)';
+  const map=$('cameraScreen').querySelector('.camera-map');
+  if(map)map.setAttribute('aria-label',t('cameraMap'));
+  const names=L10N[gameLanguage].camNames;
+  document.querySelectorAll('.cam-node').forEach(button=>{
+    const cam=Number(button.dataset.camera);
+    button.setAttribute('aria-label','CAM '+String(cam).padStart(2,'0')+' '+(names[cam-1]||''));
+  });
+  const cameraButton=$('cameraToggle');
+  cameraButton.setAttribute('aria-label',cameraOpen?t('closeCamera'):t('openCamera'));
+  cameraButton.title=cameraButton.getAttribute('aria-label')+' (C)';
 }
 function chooseLanguage(lang){
   gameLanguage=['ru','en','ja'].includes(lang)?lang:'ru';writeSave('kokhinhin_lang',gameLanguage);
@@ -446,21 +500,44 @@ function updateMuteUI(){
   if(deathStaticAudio)deathStaticAudio.muted=soundMuted;
   for(const a of activeOneShots)a.muted=soundMuted;
   AUDIO_SETTINGS.setMuted(soundMuted);
+  window.AudioManager.setMuted(soundMuted);
 }
 function playSfx(name,volume=.45){
   if(soundMuted)return;
-  try{const a=new Audio(soundURL(name));a.preload='auto';AUDIO_SETTINGS.register(a,name==='hang-up'?'phone':'effects',volume);activeOneShots.add(a);
-    a.onended=()=>{activeOneShots.delete(a);AUDIO_SETTINGS.forget(a);};a.onerror=()=>{activeOneShots.delete(a);AUDIO_SETTINGS.forget(a);};
-    a.play().catch(()=>activeOneShots.delete(a));return a;}
-  catch(ex){console.warn('SFX error',name,ex);}
+  try{
+    // Predecoded sounds use AudioBuffers; the manager supplies a safe media
+    // fallback if Web Audio or a particular buffer is unavailable.
+    const a=window.AudioManager.play(name,volume,{url:soundURL(name)});
+    if(!a)return null;
+    activeOneShots.add(a);
+    const cleanup=()=>{activeOneShots.delete(a);window.AudioManager.release(a);};
+    a.onended=cleanup;a.onerror=cleanup;
+    return a;
+  }catch(error){console.warn('SFX error:',name,error);return null;}
 }
 function startAudioLoop(name,volume=.15){
   let a=audioLoops.get(name);
+  // Flashlight is a short predecoded, loopable Web Audio buffer when supported.
+  // Long room and phone-line loops remain regular HTMLAudioElement sources.
+  if(name==='light'&&window.AudioManager.hasBuffer(name)){
+    if(!a){
+      a=window.AudioManager.play(name,volume,{loop:true,url:soundURL(name)});
+      audioLoops.set(name,a);
+    }else if(a.paused)a.play().catch(()=>{});
+    return;
+  }
   if(!a){a=new Audio(soundURL(name));a.loop=true;a.preload='auto';audioLoops.set(name,a);}
   AUDIO_SETTINGS.register(a,['ambience','ambient_room','light'].includes(name)?'ambience':name==='phone-line'?'phone':'effects',volume);
   a.play().catch(()=>{});
 }
-function stopAudioLoop(name){const a=audioLoops.get(name);if(a){a.pause();a.currentTime=0;}}
+function stopAudioLoop(name){
+  const a=audioLoops.get(name);
+  if(!a)return;
+  a.pause();try{a.currentTime=0;}catch(_){}
+  if(name==='light'&&a.__webAudio){
+    window.AudioManager.release(a);audioLoops.delete(name);
+  }
+}
 function stopAudioLoops(){for(const name of audioLoops.keys())stopAudioLoop(name);}
 function toggleMute(){soundMuted=!soundMuted;safeStore('kons-muted',soundMuted?'1':'0');updateMuteUI();}
 $('muteBtn').addEventListener('click',toggleMute);updateMuteUI();
@@ -470,7 +547,7 @@ function updateAudioSettingsUI(){
   const slider=$('audioVolumeMaster');
   slider.value=String(value);
   $('audioVolumeMasterValue').textContent=value+'%';
-  slider.setAttribute('aria-valuetext',value+'%');
+  slider.setAttribute('aria-valuetext',t('volumeValue',{value}));
 }
 $('audioVolumeMaster').addEventListener('input',event=>{
   AUDIO_SETTINGS.set('master',event.currentTarget.value);
@@ -512,7 +589,7 @@ let jumpTimer=0,jumpEpoch=0;
 const deathStatic=$('deathStatic'),staticVideo=$('staticVideo');
 staticVideo.muted=true;staticVideo.loop=true;
 function clearDeathStaticAudio(){
-  if(deathStaticAudio){deathStaticAudio.pause();deathStaticAudio.currentTime=0;deathStaticAudio=null;}
+  if(deathStaticAudio){window.AudioManager.release(deathStaticAudio);deathStaticAudio=null;}
 }
 function resetJumpscare(){
   ++jumpEpoch;clearTimeout(jumpTimer);clearDeathStaticAudio();
@@ -718,7 +795,7 @@ function setLight(side,on){
 }
 function toggleDoor(side){
   if(!state.active || state.paused || phoneState.status==='talking' || state.power<=0 || powerFailure.active)return;
-  const prop=side+'Door';state[prop]=!state[prop];playSfx('door',.52);needsComposing=true;updateStatus();showToast(`${side==='left'?'Левая':'Правая'} дверь: ${state[prop]?'закрывается':'открывается'}`);
+  const prop=side+'Door';state[prop]=!state[prop];playSfx('door',.52);needsComposing=true;updateStatus();showToast(t(state[prop]?'doorClosing':'doorOpening',{side:t(side==='left'?'doorSideLeft':'doorSideRight')}));
 }
 function viewFromMouse(e){
   const r=canvas.getBoundingClientRect(),v=clamp(((e.clientX-r.left)/Math.max(1,r.width))*2-1,-1,1);
@@ -1187,7 +1264,8 @@ function goMenuInstant(){
   clearNewspaperIntro();
   closeNightMenus();
   if(state.active){state.active=false;clearHeldActions();stopAudioLoops();stopRingtone();stopPowerFailureAudio();}
-  for(const a of activeOneShots){a.pause();try{a.currentTime=0;}catch(_){}AUDIO_SETTINGS.forget(a);}activeOneShots.clear();
+  for(const a of activeOneShots)window.AudioManager.release(a);
+  activeOneShots.clear();window.AudioManager.stopAll();
   state.paused=false;pausedAudio.clear();resetJumpscare();resetPowerFailure();resetPhone();
   $('pauseScreen').classList.add('hidden');$('ending').classList.add('hidden');
   if(cameraOpen){cameraOpen=false;cameraScreen.classList.remove('is-open');cameraScreen.setAttribute('aria-hidden','true');cameraToggle.setAttribute('aria-expanded','false');}
@@ -1205,16 +1283,19 @@ $('victoryNextBtn').addEventListener('click',()=>{if(currentNight<=4)transitionT
 $('resignationMenuBtn').addEventListener('click',goMenu);
 const pausedAudio=new Set();
 function pauseGameAudio(){
+  window.AudioManager.setPaused(true);
   for(const a of [...audioLoops.values(),...activeOneShots,phoneRingAudio,phoneVoiceAudio,powerFailure.audio].filter(Boolean)){
     if(!a.paused){pausedAudio.add(a);a.pause();}
   }
 }
 function resumeGameAudio(){
+  window.AudioManager.setPaused(false);
   for(const a of pausedAudio){if(a && state.active)a.play().catch(()=>{});}
   pausedAudio.clear();
 }
 function updatePauseButton(){
   $('pauseBtn').textContent='Ⅱ';$('pauseBtn').title=t('pause')+' (Esc / P)';
+  $('pauseBtn').setAttribute('aria-label',$('pauseBtn').title);
 }
 function togglePause(force){
   if(!state.active)return;
@@ -1279,7 +1360,12 @@ canvas.addEventListener('pointercancel',()=>{clearHeldActions();state.dragging=f
 canvas.addEventListener('pointerleave',()=>{canvas.style.cursor='url("arrow.cur") 0 0, auto';if(!state.dragging&&state.pressAction?.startsWith('light-'))clearHeldActions();});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
-  if(e.target instanceof HTMLInputElement && !(e.target.type==='range'&&e.key.toLowerCase()==='m'))return;
+  // Text inputs keep normal editing. Range arrows stay native, while Esc/P/M
+  // remain available to the pause screen even with keyboard focus on the slider.
+  if(e.target instanceof HTMLInputElement){
+    if(e.target.type!=='range')return;
+    if(!['Escape','p','m'].includes(e.key.length===1?e.key.toLowerCase():e.key))return;
+  }
   if(state.paused && !$('settings').classList.contains('hidden') && e.key==='Escape'){
     $('settings').classList.add('hidden');e.preventDefault();return;
   }
@@ -1413,7 +1499,7 @@ function setSliders(){
   }
 }
 function toggleSettings(){if(!state.active)return;if(cameraOpen)setCameraOpen(false);clearHeldActions();$('settings').classList.toggle('hidden');}
-async function toggleFullscreen(){try{if(!document.fullscreenElement){await stage.requestFullscreen();try{await screen.orientation?.lock?.('landscape')}catch(_) {}}else await document.exitFullscreen();}catch(e){showToast('Полный экран недоступен');}}
+async function toggleFullscreen(){try{if(!document.fullscreenElement){await stage.requestFullscreen();try{await screen.orientation?.lock?.('landscape')}catch(_) {}}else await document.exitFullscreen();}catch(e){showToast(t('fullscreenUnavailable'));}}
 $('startBtn').addEventListener('click',()=>transitionToNight(1,{intro:true}));$('continueBtn').addEventListener('click',()=>{if(unlockedNight>1)showNightSelect();});$('officeInput').addEventListener('keydown',e=>{if(e.key==='Enter')transitionToNight(1,{intro:true});});
 $('settingsBtn').addEventListener('click',toggleSettings);
 $('closeSettings').addEventListener('click',toggleSettings);$('closeSettingsPrimary').addEventListener('click',toggleSettings);

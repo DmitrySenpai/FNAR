@@ -1,27 +1,13 @@
-name: FNAR AI, power and tablet-fault regression
+name: FNAR release validation
+
 on:
-  push:
-    paths:
-      - 'fnar-ai.js'
-      - 'fnar-power.js'
-      - 'fnar-tablet-faults.js'
-      - 'app.js'
-      - 'tablet-os.js'
-      - 'tablet-os.css'
-      - 'index.html'
-      - 'tests/**'
-      - '.github/workflows/ai-regression.yml'
   pull_request:
-    paths:
-      - 'fnar-ai.js'
-      - 'fnar-power.js'
-      - 'fnar-tablet-faults.js'
-      - 'app.js'
-      - 'tablet-os.js'
-      - 'tablet-os.css'
-      - 'index.html'
-      - 'tests/**'
-      - '.github/workflows/ai-regression.yml'
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   regression:
     runs-on: ubuntu-latest
@@ -30,12 +16,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check JS syntax
+      - name: Validate JavaScript syntax
         run: |
-          node --check fnar-ai.js
-          node --check fnar-power.js
-          node --check fnar-tablet-faults.js
-          node --check tablet-os.js
-          node --check app.js
-      - name: Test night, power and tablet faults
+          set -e
+          for file in app.js fnar-ai.js fnar-power.js fnar-audio-settings.js fnar-atmosphere.js fnar-endings.js fnar-tablet-faults.js tablet-os.js phone-dialogues.js fnar-audio.js; do
+            node --check "$file"
+          done
+          if test -f fnar-company.js; then node --check fnar-company.js; fi
+      - name: Run every regression and resource test
         run: node --test tests/*.test.cjs

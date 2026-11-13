@@ -259,18 +259,20 @@
   const usbHeading=usb.querySelector('strong'),usbBody=usb.querySelector('p');
   const activeAudio=new Set();
   const audioSound=(name,volume=.65,loop=false)=>{
-    if(safeRead('kons-muted')==='1')return;
-    const source=window.FNAR_SOUND_URL?.(name)||'assets/sound/'+name+'.mp3';
-    const a=new Audio(source);
-    a.preload='auto';a.loop=loop;activeAudio.add(a);
-    const mixer=window.FNAR_AUDIO_SETTINGS;
-    if(mixer)mixer.register(a,'tablet',Math.min(.65,Math.max(0,volume)));
-    else a.volume=Math.min(.65,Math.max(0,volume));
-    a.onended=()=>{activeAudio.delete(a);mixer?.forget(a);};
-    a.onerror=()=>{activeAudio.delete(a);mixer?.forget(a);};
-    a.play().catch(()=>activeAudio.delete(a));return a;
+    if(safeRead('kons-muted')==='1')return null;
+    const sound=window.AudioManager?.play(name,Math.min(.65,Math.max(0,volume)),{
+      loop,url:window.FNAR_SOUND_URL?.(name)
+    });
+    if(!sound)return null;
+    activeAudio.add(sound);
+    const cleanup=()=>{activeAudio.delete(sound);window.AudioManager.release(sound);};
+    sound.onended=cleanup;sound.onerror=cleanup;
+    return sound;
   };
-  function stopSound(){for(const a of activeAudio){a.pause();try{a.currentTime=0}catch(_){}window.FNAR_AUDIO_SETTINGS?.forget(a);}activeAudio.clear();}
+  function stopSound(){
+    for(const sound of activeAudio)window.AudioManager.release(sound);
+    activeAudio.clear();
+  }
   let pausedAudio=false;
   function freezeSound(freeze){
     if(freeze===pausedAudio)return;pausedAudio=freeze;
