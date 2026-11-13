@@ -151,7 +151,7 @@ test('HTML controls and scripts are installed ahead of app, without new MP3 requ
   assert.ok(html.indexOf('src="fnar-audio-settings.js"')<html.indexOf('src="app.js"'));
   assert.ok(html.indexOf('src="fnar-atmosphere.js"')<html.indexOf('src="app.js"'));
   assert.ok(html.includes('style.css?v=053'));
-  assert.match(app,/AUDIO_SETTINGS\.register\(a,'effects',volume\)/);
+  assert.match(app,/AUDIO_SETTINGS\.register\(a,name==='hang-up'\?'phone':'effects',volume\)/);
   assert.match(app,/AUDIO_SETTINGS\.register\(voice,'phone',\.88\)/);
   assert.match(app,/atmosphere\.tick\(passed,atmosphereContext\(\)\)/);
   assert.match(tablet,/mixer\.register\(a,'tablet'/);
