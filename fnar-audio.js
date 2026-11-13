@@ -167,6 +167,7 @@
       get loop(){return el.loop;},set loop(v){el.loop=!!v;},
       get onended(){return el.onended;},set onended(v){el.onended=v;},
       get onerror(){return el.onerror;},set onerror(v){el.onerror=v;} };
+    token.__name=name;
     active.add(token);
     el.addEventListener('ended',()=>active.delete(token),{once:true});
     el.addEventListener('error',()=>active.delete(token),{once:true});
@@ -187,12 +188,13 @@
       get paused(){return stopped;},
       get currentTime(){return stopped?offset:offset+ctx.currentTime-startedAt;},
       set currentTime(_) {},
-      get volume(){return gain.gain.value;},set volume(v){gain.gain.value=muted?0:cap(v);},
+      get volume(){return volume;},set volume(v){volume=cap(v);gain.gain.value=muted?0:volume;},
       get muted(){return muted;},set muted(v){gain.gain.value=v?0:cap(volume);},
       get loop(){return source.loop;},set loop(v){source.loop=!!v;},
       get onended(){return ended;},set onended(fn){ended=fn;}
     };
     source.onended=()=>{if(!stopped){stopped=true;active.delete(handle);if(ended)ended();}};
+    handle.__name=name;
     active.add(handle);
     if(paused){gain.gain.value=0;}
     source.start();
