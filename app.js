@@ -10,7 +10,7 @@ const names = [
 ];
 const src = f => window.KONS_EMBEDDED_ASSETS?.[f] || getCachedAssetURL('assets/room/'+f);
 // Preload before the first night so all effects and camera frames are local when played.
-const PRELOAD_CACHE_NAME='fnar-game-assets-v050';
+const PRELOAD_CACHE_NAME='fnar-game-assets-v055'; // Managed by fnar-audio.js
 const cachedAssetURLs=new Map();
 function getCachedAssetURL(path){return cachedAssetURLs.get(path)||path;}
 const PRELOAD_SOUND_NAMES=["ambience","ambient_room","beep","blip","chimes","door","hang-up","knock-2","knock-3","knock","light","open-camera","os_balloon","os_info","os_shutdown","os_startup","os_usb_connect","os_usb_remove","phone-line","phone","phone_01","phone_02","phone_03","phone_04","phone_05","power-outage","running-fast","running","scream","static-bm"];
@@ -24,6 +24,7 @@ function preloadProgress(completed,total){
 }
 async function preloadAllGameAssets(){
   if(preloadBusy || window.__KONS_VIEW_READY)return;
+  window.AudioManager?.unlock();
   preloadBusy=true;
   $('preloadRetry').classList.add('hidden');
   $('preloadScreen').classList.remove('hidden');
@@ -38,28 +39,37 @@ async function preloadAllGameAssets(){
   if(location.protocol==='file:'){
     staticVideo.src=staticVideoURL();setMenuBackdrop();setDocumentBackdrop();loadImages();preloadBusy=false;return;
   }
-  let cache=null;
-  try{if('caches' in window)cache=await caches.open(PRELOAD_CACHE_NAME);}catch(e){console.warn('Persistent cache unavailable',e);}
-  let next=0;const failed=[];
+  let next=0;const failed=[],optionalAudioFailures=[];
   async function worker(){
     while(next<paths.length){
       const path=paths[next++];
       try{
         if(!cachedAssetURLs.has(path)){
-          let response=cache?await cache.match(path):null;
-          if(!response){
-            response=await fetch(path,{cache:'no-cache'});
-            if(!response.ok)throw Error('HTTP '+response.status+' '+path);
-            if(cache)try{await cache.put(path,response.clone());}catch(e){console.warn('Unable to persist cache entry',path,e);}
+          const completeURL=await window.AudioManager.getURL(path);
+          cachedAssetURLs.set(path,completeURL);
+          if(path.startsWith('assets/sound/')&&path.endsWith('.mp3')){
+            const name=path.slice('assets/sound/'.length,-4);
+            if(window.AudioManager.isShort(name)){
+              try{await window.AudioManager.preload(name);}
+              catch(error){console.warn('Web Audio decode unavailable, will use preloaded media:',name,error);}
+            }
           }
-          const blob=await response.blob();
-          cachedAssetURLs.set(path,URL.createObjectURL(blob));
         }
-      }catch(e){failed.push(path);console.warn('Asset preload failed',path,e);}
+      }catch(error){
+        // Broken visual and screamer assets must block startup. Optional sounds
+        // are played by native browser audio using the original URL if necessary.
+        if(path.startsWith('assets/sound/')&&path.endsWith('.mp3')){
+          optionalAudioFailures.push(path);
+          console.warn('Optional audio not cached:',path,error);
+        }else{
+          failed.push(path);console.warn('Critical asset failed:',path,error);
+        }
+      }
       done++;preloadProgress(done,paths.length);
     }
   }
   await Promise.all(Array.from({length:5},worker));
+  if(optionalAudioFailures.length)console.warn('Audio fallback count:',optionalAudioFailures.length);
   preloadBusy=false;
   if(failed.length){
     $('preloadStatus').textContent=t('preloadError')+' ('+failed.length+')';
@@ -305,7 +315,7 @@ async function sceneTransition(swapScene,{activateNight=false}={}){
   if(transitionBusy)return false;
   transitionBusy=true;
   const priorPause=state.paused,priorActive=state.active;
-  if(state.active){state.paused=true;clearHeldActions();atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();}
+  if(state.active){state.paused=true;clearHeldActions();atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();window.AudioManager.setPaused(true);}
   screenTransition.classList.add('is-transitioning');
   let successful=false;
   try{
@@ -314,7 +324,7 @@ async function sceneTransition(swapScene,{activateNight=false}={}){
     if(result===false)throw new Error('Screen preparation was rejected');
     await fadeScreen(false,800);
     if(activateNight){
-      state.active=true;state.paused=false;state.last=performance.now();AUDIO_SETTINGS.pauseAtmosphere(false);
+      state.active=true;state.paused=false;state.last=performance.now();AUDIO_SETTINGS.pauseAtmosphere(false);window.AudioManager.setPaused(false);
       startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);
     }
     successful=true;
@@ -331,6 +341,7 @@ async function sceneTransition(swapScene,{activateNight=false}={}){
   }
 }
 function transitionToNight(night,{intro=false,fromNewspaper=false}={}){
+  window.AudioManager.unlock();
   if(transitionBusy||state.loaded!==names.length||!canStartNight(Number(night)))return false;
   return sceneTransition(()=>{
     if(intro){showNewspaperIntro(night);return true;}
@@ -446,13 +457,20 @@ function updateMuteUI(){
   if(deathStaticAudio)deathStaticAudio.muted=soundMuted;
   for(const a of activeOneShots)a.muted=soundMuted;
   AUDIO_SETTINGS.setMuted(soundMuted);
+  window.AudioManager.setMuted(soundMuted);
 }
 function playSfx(name,volume=.45){
   if(soundMuted)return;
-  try{const a=new Audio(soundURL(name));a.preload='auto';AUDIO_SETTINGS.register(a,name==='hang-up'?'phone':'effects',volume);activeOneShots.add(a);
-    a.onended=()=>{activeOneShots.delete(a);AUDIO_SETTINGS.forget(a);};a.onerror=()=>{activeOneShots.delete(a);AUDIO_SETTINGS.forget(a);};
-    a.play().catch(()=>activeOneShots.delete(a));return a;}
-  catch(ex){console.warn('SFX error',name,ex);}
+  try{
+    // Predecoded sounds use AudioBuffers; the manager supplies a safe media
+    // fallback if Web Audio or a particular buffer is unavailable.
+    const a=window.AudioManager.play(name,volume,{url:soundURL(name)});
+    if(!a)return null;
+    activeOneShots.add(a);
+    const cleanup=()=>{activeOneShots.delete(a);window.AudioManager.release(a);};
+    a.onended=cleanup;a.onerror=cleanup;
+    return a;
+  }catch(error){console.warn('SFX error:',name,error);return null;}
 }
 function startAudioLoop(name,volume=.15){
   let a=audioLoops.get(name);
@@ -512,7 +530,7 @@ let jumpTimer=0,jumpEpoch=0;
 const deathStatic=$('deathStatic'),staticVideo=$('staticVideo');
 staticVideo.muted=true;staticVideo.loop=true;
 function clearDeathStaticAudio(){
-  if(deathStaticAudio){deathStaticAudio.pause();deathStaticAudio.currentTime=0;deathStaticAudio=null;}
+  if(deathStaticAudio){window.AudioManager.release(deathStaticAudio);deathStaticAudio=null;}
 }
 function resetJumpscare(){
   ++jumpEpoch;clearTimeout(jumpTimer);clearDeathStaticAudio();
@@ -1187,7 +1205,8 @@ function goMenuInstant(){
   clearNewspaperIntro();
   closeNightMenus();
   if(state.active){state.active=false;clearHeldActions();stopAudioLoops();stopRingtone();stopPowerFailureAudio();}
-  for(const a of activeOneShots){a.pause();try{a.currentTime=0;}catch(_){}AUDIO_SETTINGS.forget(a);}activeOneShots.clear();
+  for(const a of activeOneShots)window.AudioManager.release(a);
+  activeOneShots.clear();window.AudioManager.stopAll();
   state.paused=false;pausedAudio.clear();resetJumpscare();resetPowerFailure();resetPhone();
   $('pauseScreen').classList.add('hidden');$('ending').classList.add('hidden');
   if(cameraOpen){cameraOpen=false;cameraScreen.classList.remove('is-open');cameraScreen.setAttribute('aria-hidden','true');cameraToggle.setAttribute('aria-expanded','false');}
@@ -1205,11 +1224,13 @@ $('victoryNextBtn').addEventListener('click',()=>{if(currentNight<=4)transitionT
 $('resignationMenuBtn').addEventListener('click',goMenu);
 const pausedAudio=new Set();
 function pauseGameAudio(){
+  window.AudioManager.setPaused(true);
   for(const a of [...audioLoops.values(),...activeOneShots,phoneRingAudio,phoneVoiceAudio,powerFailure.audio].filter(Boolean)){
     if(!a.paused){pausedAudio.add(a);a.pause();}
   }
 }
 function resumeGameAudio(){
+  window.AudioManager.setPaused(false);
   for(const a of pausedAudio){if(a && state.active)a.play().catch(()=>{});}
   pausedAudio.clear();
 }
