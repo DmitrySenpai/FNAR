@@ -517,11 +517,27 @@ function playSfx(name,volume=.45){
 }
 function startAudioLoop(name,volume=.15){
   let a=audioLoops.get(name);
+  // Flashlight is a short predecoded, loopable Web Audio buffer when supported.
+  // Long room and phone-line loops remain regular HTMLAudioElement sources.
+  if(name==='light'&&window.AudioManager.hasBuffer(name)){
+    if(!a){
+      a=window.AudioManager.play(name,volume,{loop:true,url:soundURL(name)});
+      audioLoops.set(name,a);
+    }else if(a.paused)a.play().catch(()=>{});
+    return;
+  }
   if(!a){a=new Audio(soundURL(name));a.loop=true;a.preload='auto';audioLoops.set(name,a);}
   AUDIO_SETTINGS.register(a,['ambience','ambient_room','light'].includes(name)?'ambience':name==='phone-line'?'phone':'effects',volume);
   a.play().catch(()=>{});
 }
-function stopAudioLoop(name){const a=audioLoops.get(name);if(a){a.pause();a.currentTime=0;}}
+function stopAudioLoop(name){
+  const a=audioLoops.get(name);
+  if(!a)return;
+  a.pause();try{a.currentTime=0;}catch(_){}
+  if(name==='light'&&a.__webAudio){
+    window.AudioManager.release(a);audioLoops.delete(name);
+  }
+}
 function stopAudioLoops(){for(const name of audioLoops.keys())stopAudioLoop(name);}
 function toggleMute(){soundMuted=!soundMuted;safeStore('kons-muted',soundMuted?'1':'0');updateMuteUI();}
 $('muteBtn').addEventListener('click',toggleMute);updateMuteUI();
