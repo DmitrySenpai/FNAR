@@ -56,13 +56,39 @@ button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opac
 #cameraCode{border:.15cqw solid #d1d5cc;padding:.35cqw .55cqw;font-weight:800;font-size:1.18cqw}.camera-live{color:#99efa5;font-size:.88cqw}
 .cctv-energy{position:absolute;z-index:6;bottom:9.5%;left:3%;font-size:1.2cqw;font-weight:800;letter-spacing:0;text-shadow:0 1px 4px #000}
 .cctv-energy>div{margin-bottom:.62cqw}.usage-meter{display:flex;align-items:center;gap:.36cqw}.bar{height:1.45cqw;width:.78cqw;background:#28332d;border:.1cqw solid #3a483d}.bar.on{background:#36e34b;border-color:#42f95e}
-.camera-map{position:absolute;z-index:7;right:2.35%;bottom:8.8%;width:22.8%;height:34.5%;border:.11cqw solid #b4c1c6bb;background:rgba(5,11,14,.48);box-shadow:0 0 1.2cqw #0008,inset 0 0 1.8cqw #0003;backdrop-filter:blur(.18cqw);padding:.45cqw}
+.camera-map{position:absolute;z-index:7;right:2.35%;bottom:8.8%;width:22.8%;height:34.5%;border:.11cqw solid #b4c1c6bb;background:rgba(5,11,14,.35);box-shadow:0 0 .8cqw #0004,inset 0 0 .8cqw #0001;backdrop-filter:none;padding:.45cqw}
 .camera-map-heading{font-size:.66cqw;letter-spacing:.15em;font-weight:700;color:#dae4e3;margin-left:.35cqw;height:12%;display:flex;align-items:center}
 .camera-map-diagram{position:relative;height:86%;width:100%}
 .map-branches{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.map-branches path{fill:none;stroke:#b4c9c7;stroke-width:.8;stroke-linecap:square;stroke-linejoin:miter;opacity:.68}
 .cam-node{position:absolute;top:var(--my);left:var(--mx);transform:translate(-50%,-50%);width:3.55cqw;height:2.42cqw;background:#142024e6;border:.13cqw solid #dee9e9;color:#fcffff;line-height:1.02;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Consolas,monospace;font-weight:900;font-size:.88cqw;letter-spacing:.04em;text-shadow:0 1px 3px #000;box-shadow:0 1px 3px #000;cursor:pointer;touch-action:manipulation}
 .cam-node span{font-size:.49cqw;letter-spacing:.12em}.cam-node:hover,.cam-node:focus-visible{background:#354d4f;border-color:#fff}.cam-node.selected{border-color:#d6ff77;background:#6b9c27;color:#0c1c13;text-shadow:none;box-shadow:0 0 1cqw #c9fd68aa;animation:node-glow 1.7s ease-in-out infinite}
 .office-node{position:absolute;top:var(--my);left:var(--mx);transform:translate(-50%,-50%);background:#212924;border:.13cqw solid #aab8b5;color:#cadbd4;padding:.28cqw .52cqw;font-size:.69cqw;font-weight:900;letter-spacing:.08em}
+/* Composition-only signal: fades the picture change, never the map or controls. */
+.camera-rooster-signal{
+  position:absolute;inset:0;z-index:5;
+  pointer-events:none!important;opacity:0;
+  background:repeating-linear-gradient(to bottom,
+    transparent 0 5px,rgba(162,194,196,.27) 6px 7px,
+    rgba(10,26,31,.27) 8px 11px,transparent 12px 16px),
+    repeating-linear-gradient(95deg,
+    transparent 0 28px,rgba(160,190,195,.14) 31px 33px,
+    transparent 36px 64px);
+  mix-blend-mode:screen;
+}
+.camera-rooster-signal.is-active{
+  animation:camera-rooster-signal 500ms linear both;
+}
+@media (prefers-reduced-motion:reduce){
+  .camera-rooster-signal.is-active{animation:none;opacity:.14}
+}
+@keyframes camera-rooster-signal{
+  0%{opacity:0;background-position:0 0,0 0}
+  18%{opacity:.11;background-position:0 1px,4px 0}
+  40%{opacity:.22;background-position:0 -5px,-7px 0}
+  68%{opacity:.30;background-position:0 6px,8px 0}
+  84%{opacity:.28;background-position:0 -2px,-5px 0}
+  100%{opacity:0;background-position:0 0,0 0}
+}
 .camera-switch-flash{position:absolute;inset:0;z-index:9;pointer-events:none;opacity:0;background:repeating-linear-gradient(0deg,#fff8 0 1px,#070c12 3px 7px),#cde4e288;mix-blend-mode:screen}.camera-switch-flash.burst{animation:camera-burst .23s steps(2,end)}
 .camera-toggle{position:absolute;z-index:10;bottom:1.15%;left:50%;transform:translateX(-50%);width:49%;height:5.3%;min-height:20px;border:.18cqw solid #b7a4a6;background:linear-gradient(180deg,#161521ed,#24151bb8 48%,#0b0c14f2);border-radius:.38cqw .38cqw 0 0;box-shadow:0 -0.2cqw 1.3cqw #000,0 0 1.2cqw #aa5d6660,inset 0 .18cqw .45cqw #d6b2b03d;display:flex;justify-content:center;align-items:center;gap:1.2cqw;color:#f2ccdc;cursor:pointer;touch-action:manipulation;opacity:.84;transition:opacity .18s,background .18s,border-color .18s}
 .camera-toggle:hover,.camera-toggle:focus-visible,.camera-toggle[aria-expanded="true"]{opacity:1;border-color:#f6cad8;background:linear-gradient(180deg,#422631e9,#301a25e6 55%,#130d17f5)}
@@ -78,7 +104,7 @@ button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opac
 @keyframes cctv-led{50%{opacity:.25}}
 @keyframes node-glow{50%{filter:brightness(1.23)}}
 @keyframes camera-burst{0%,45%{opacity:.8}50%,90%{opacity:.12}100%{opacity:0}}
-@media (pointer:coarse){.cam-node{width:4.1cqw;height:3.1cqw;font-size:1.04cqw}.cam-node span{font-size:.62cqw}.camera-map{right:2.5%;width:29%;height:40%;bottom:8.8%}.camera-toggle{height:6.6%;width:55%;bottom:1.1%}.toggle-caption{font-size:1.05cqw}}
+@media (pointer:coarse){.cam-node{width:4.1cqw;height:3.1cqw;font-size:1.04cqw}.cam-node span{font-size:.62cqw}.camera-map{right:2.5%;width:27%;height:37%;bottom:8.8%;background:rgba(5,11,14,.30)}.camera-toggle{height:6.6%;width:55%;bottom:1.1%}.toggle-caption{font-size:1.05cqw}}
 @media (prefers-reduced-motion:reduce){.camera-screen{transition:none}.camera-screen.is-open .camera-picture,.camera-screen.is-open .camera-feed,.cctv-noise,.cctv-noise::before,.cctv-noise::after,.cctv-interlace,.rec-led,.cam-node.selected{animation:none}}
 
 /* Real-time camera power and completed-night dialogs */
