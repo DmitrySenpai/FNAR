@@ -313,8 +313,14 @@ function realCameraGameLoop(){
   ];
   const clock=fakeTimers();
   const tablet={status:{mode:'idle',adVisible:false},canObserveCamera:()=>true,c3Protected:false};
+  // The controller module was loaded in Node's realm, so its default timer
+  // closes over real Node setTimeout. Explicitly inject the same fake clock.
+  const timedCamera={...CAMERA,createController:options=>CAMERA.createController({
+    ...options,schedule:(fn,ms)=>clock.schedule(fn,ms),
+    unschedule:id=>clock.unschedule(id)
+  })};
   const game=vm.runInNewContext(lines.join('\n'),{
-    AI,window:{FNAR_CAMERA_TRANSITION:CAMERA,FNARTabletDebug:tablet},
+    AI,window:{FNAR_CAMERA_TRANSITION:timedCamera,FNARTabletDebug:tablet},
     setTimeout:(fn,ms)=>clock.schedule(fn,ms),clearTimeout:id=>clock.unschedule(id),
     Image:class{set src(_file){throw Error('Missing preloaded camera variant in integration test');}},
     console
