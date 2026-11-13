@@ -184,10 +184,10 @@ test('compact pause menu has only one master volume control and no nested panel'
   assert.ok(!/overflow-y:\s*auto/.test(css.slice(css.indexOf('/* Compact single volume slider'),css.indexOf('/* Harmless visual ambience'))));
   assert.ok(!css.includes('.audio-settings-panel'));
   assert.match(css,/#pauseScreen \.pause-card\s*\{[^}]*overflow:visible/s);
-  assert.ok(html.includes('style.css?v=056'));
+  assert.ok(html.includes('style.css?v=057'));
   assert.ok(html.includes('src="fnar-audio-settings.js?v=054"'));
-  assert.ok(html.indexOf('fnar-audio-settings.js?v=054')<html.indexOf('src="app.js?v=056"'));
-  assert.ok(html.indexOf('src="fnar-atmosphere.js"')<html.indexOf('src="app.js?v=056"'));
+  assert.ok(html.indexOf('fnar-audio-settings.js?v=054')<html.indexOf('src="app.js?v=057"'));
+  assert.ok(html.indexOf('src="fnar-atmosphere.js"')<html.indexOf('src="app.js?v=057"'));
   assert.ok(app.includes("AUDIO_SETTINGS.set('master',event.currentTarget.value)"));
   assert.ok(app.includes("AUDIO_SETTINGS.register(voice,'phone',.88)"));
   assert.ok(app.includes("atmosphere.tick(passed,atmosphereContext())"));
