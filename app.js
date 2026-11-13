@@ -419,7 +419,7 @@ function chooseLanguage(lang){
 $('languageRu').addEventListener('click',()=>chooseLanguage('ru'));
 $('languageJa').addEventListener('click',()=>chooseLanguage('ja'));
 $('languageEn').addEventListener('click',()=>chooseLanguage('en'));
-$('warningAccept').addEventListener('click',()=>{$('warningScreen').classList.add('hidden');$('preloadScreen').classList.remove('hidden');preloadAllGameAssets();});
+$('warningAccept').addEventListener('click',()=>{AUDIO_SETTINGS.unlockAtmosphere();$('warningScreen').classList.add('hidden');$('preloadScreen').classList.remove('hidden');preloadAllGameAssets();});
 
 // Audio: original supplied MP3 effects, all optional if browser audio is blocked.
 const SOUND_PATH='assets/sound/';
@@ -449,7 +449,7 @@ function updateMuteUI(){
 }
 function playSfx(name,volume=.45){
   if(soundMuted)return;
-  try{const a=new Audio(soundURL(name));a.preload='auto';AUDIO_SETTINGS.register(a,'effects',volume);activeOneShots.add(a);
+  try{const a=new Audio(soundURL(name));a.preload='auto';AUDIO_SETTINGS.register(a,name==='hang-up'?'phone':'effects',volume);activeOneShots.add(a);
     a.onended=()=>{activeOneShots.delete(a);AUDIO_SETTINGS.forget(a);};a.onerror=()=>{activeOneShots.delete(a);AUDIO_SETTINGS.forget(a);};
     a.play().catch(()=>activeOneShots.delete(a));return a;}
   catch(ex){console.warn('SFX error',name,ex);}
@@ -457,7 +457,7 @@ function playSfx(name,volume=.45){
 function startAudioLoop(name,volume=.15){
   let a=audioLoops.get(name);
   if(!a){a=new Audio(soundURL(name));a.loop=true;a.preload='auto';audioLoops.set(name,a);}
-  AUDIO_SETTINGS.register(a,['ambience','ambient_room','light'].includes(name)?'ambience':'effects',volume);
+  AUDIO_SETTINGS.register(a,['ambience','ambient_room','light'].includes(name)?'ambience':name==='phone-line'?'phone':'effects',volume);
   a.play().catch(()=>{});
 }
 function stopAudioLoop(name){const a=audioLoops.get(name);if(a){a.pause();a.currentTime=0;}}
