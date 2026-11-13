@@ -317,6 +317,14 @@
     const tear=addChicken('div','tablet-chicken-tear',group);
     tear.style.top=random(28,72)+'%';
     tear.style.setProperty('--tear-shift',random(-22,22)+'px');
+    const corrupt=addChicken('div','tablet-chicken-corrupt',group);
+    corrupt.textContent=choose(['N3T V!DEO 3.0','DOOR XP [ERR?R]','CHICKEN_OV3RFLOW','NET SYSTEM #?!']);
+    corrupt.style.top=random(7,72)+'%';corrupt.style.left=random(7,26)+'%';
+    for(let i=0;i<2;i++){
+      const echo=addChicken('div','tablet-chicken-ghost-button',group);
+      echo.textContent=choose(['CAM 08','CANCEL','NET VIDEO','OK']);
+      echo.style.left=random(16,72)+'%';echo.style.top=random(20,74)+'%';
+    }
     return group;
   }
   function chickenSystemNotice(parent){
@@ -469,8 +477,10 @@
     if(state.mode!=='usb')return;
     complete();audioSound('os_usb_connect',.40);
   }
-  function triggerFault(mode,duration){
-    if(!game.state.active || game.currentNight<4 || !FAULTS.validFault(mode) || state.mode!=='idle')return false;
+  function triggerFault(mode,duration,debug=false){
+    if(!game.state.active || (game.currentNight<4&&!debug&&!state.debugOverride) ||
+       !FAULTS.validFault(mode) || state.mode!=='idle')return false;
+    if(debug)state.debugOverride=true;
     // Clear the previous ad sound; there is only one active fault at a time.
     state.adVisible=false;ad.classList.add('hidden');stopSound();
     state.mode=mode;state.faultRemaining=duration??FAULTS.faultDuration(mode);
@@ -522,12 +532,20 @@
       state.adCountdown=nextAdDelay();
     }
   }
-  function showAd(){
-    if(!game.state.active||game.currentNight<4||state.mode!=='idle'||state.adVisible)return false;
-    state.adVisible=true;state.shown++;
+  function showAd(options={}){
+    const force=Boolean(options.force);
+    if(!game.state.active || (game.currentNight<4&&!force&&!state.debugOverride) ||
+       state.mode!=='idle'||state.adVisible)return false;
     const adTexts=tr().ads;
-    let index=Math.floor(Math.random()*adTexts.length);
-    if(adTexts.length>1 && index===lastAdIndex)index=(index+1+Math.floor(Math.random()*(adTexts.length-1)))%adTexts.length;
+    const specified=Object.prototype.hasOwnProperty.call(options,'index');
+    if(specified && (!Number.isInteger(options.index) || options.index<0 || options.index>=adTexts.length)){
+      console.warn('[FNAR Tablet] Invalid advertising index:',options.index,'expected 0–'+(adTexts.length-1));
+      return false;
+    }
+    state.adVisible=true;state.shown++;
+    let index=specified?options.index:Math.floor(Math.random()*adTexts.length);
+    if(!specified && adTexts.length>1 && index===lastAdIndex)
+      index=(index+1+Math.floor(Math.random()*(adTexts.length-1)))%adTexts.length;
     lastAdIndex=index;
     const [h,txt]=adTexts[index];
     popupHeading.textContent=tr().windowTitle;popupTitle.textContent=h;popupText.textContent=txt;
@@ -545,7 +563,8 @@
     return true;
   }
   function ui(){
-    const canShow=game.state.active&&game.currentNight>=4&&game.cameraOpen;
+    const canShow=game.state.active&&game.cameraOpen&&
+      (game.currentNight>=4||state.debugOverride);
     ad.classList.toggle('hidden',!canShow||!state.adVisible);
     os.classList.toggle('hidden',!canShow||state.mode!=='reboot');
     usb.classList.toggle('hidden',!canShow||state.mode!=='usb');
@@ -567,7 +586,7 @@
   function step(){
     const now=performance.now();wallTime=now;
     const gs=game.state;
-    const active=gs.active&&game.currentNight>=4;
+    const active=gs.active&&(game.currentNight>=4||state.debugOverride);
     if(!active){
       if(previousActive||state.mode!=='idle'||state.adVisible)reset();
       previousActive=false;requestAnimationFrame(step);return;
@@ -636,10 +655,114 @@
       if(e.key==='Escape'){dismiss(false);e.preventDefault();e.stopImmediatePropagation();}
     }
   },true);
+  // Developer-only helpers never alter the underlying guard AI, clock, power or saves.
+  function ensureDebugTablet(){
+    if(!game.state.active){console.warn('[FNAR Tablet] Start a night before using debug commands.');return false;}
+    if(game.state.paused||game.phoneState?.status==='talking'){
+      console.warn('[FNAR Tablet] Resume the game/finish the telephone call before testing.');return false;
+    }
+    if(!game.cameraOpen)game.setCameraOpen(true);
+    if(!game.cameraOpen){
+      console.warn('[FNAR Tablet] CCTV could not be opened (possibly power outage).');return false;
+    }
+    state.debugOverride=true;
+    // The first debug invocation on nights 1–3 must not be erased by the next RAF.
+    state.night=game.currentNight;
+    previousActive=true;previousElapsed=game.state.nightElapsed;
+    return true;
+  }
+  function clearFault(){
+    if(state.mode!=='idle')complete();
+    state.adVisible=false;
+    ad.classList.add('hidden');
+    popupDialog.classList.remove('is-floating','is-paused');
+    faultFrame.classList.add('hidden');
+    crash.classList.add('hidden');usb.classList.add('hidden');os.classList.add('hidden');
+    clearChicken();
+    state.pendingCamera=0;state.pendingDelay=0;state.chickenNext=0;
+    state.chickenEffectSeconds=0;state.faultRemaining=0;
+    state.adCountdown=nextAdDelay();
+    state.cooldown=random(8,12);
+    stopSound();spamAudio=null;
+    state.debugOverride=false;ui();
+    return true;
+  }
+  function forceAd(options={}){
+    if(!options||typeof options!=='object'||Array.isArray(options)){
+      console.warn('[FNAR Tablet] forceAd expects {index?: number}.');return false;
+    }
+    if(Object.prototype.hasOwnProperty.call(options,'index') &&
+      (!Number.isInteger(options.index)||options.index<0||options.index>=tr().ads.length)){
+      console.warn('[FNAR Tablet] Advertising index must be 0–'+(tr().ads.length-1));return false;
+    }
+    if(!ensureDebugTablet())return false;
+    if(state.adVisible)return false; // Never stack two advert windows.
+    if(state.mode!=='idle')clearFault();
+    state.debugOverride=true;
+    const created=showAd({...options,force:true});
+    ui();return created;
+  }
+  function forceChicken(options={}){
+    if(!options||typeof options!=='object'||Array.isArray(options)){
+      console.warn('[FNAR Tablet] forceChicken expects {duration?: number}.');return false;
+    }
+    let duration=options.duration??20;
+    if(typeof duration!=='number'||!Number.isFinite(duration)||duration<1||duration>60){
+      console.warn('[FNAR Tablet] Chicken duration must be between 1 and 60 seconds.');return false;
+    }
+    if(!ensureDebugTablet())return false;
+    clearFault();
+    state.debugOverride=true;
+    if(!triggerFault('chicken',duration,true))return false;
+    chickenVisual('all');state.chickenNext=random(2,3);
+    ui();return true;
+  }
+  function forceChickenEffect(type){
+    if(!CHICKEN_EFFECTS.includes(type)){
+      console.warn('[FNAR Tablet] Invalid Chicken effect:',type,'valid:',CHICKEN_EFFECTS.join(', '));
+      return false;
+    }
+    if(!ensureDebugTablet())return false;
+    if(state.mode!=='chicken' && !forceChicken({duration:20}))return false;
+    const shown=chickenVisual(type);
+    state.chickenNext=random(2,3);
+    ui();return shown;
+  }
+  function setChickenIntensity(value){
+    if(typeof value!=='number'||!Number.isFinite(value)||value<.5||value>2){
+      console.warn('[FNAR Tablet] Intensity must be a number from 0.5 to 2.0.');return false;
+    }
+    state.chickenIntensity=value;
+    return value;
+  }
+  function help(){
+    const commands=[
+      'FNARTabletDebug.help()',
+      'FNARTabletDebug.forceAd()',
+      'FNARTabletDebug.forceAd({ index: 10 })',
+      'FNARTabletDebug.forceChicken()',
+      'FNARTabletDebug.forceChicken({ duration: 20 })',
+      "FNARTabletDebug.forceChickenEffect('glitch')",
+      "FNARTabletDebug.forceChickenEffect('paw')",
+      "FNARTabletDebug.forceChickenEffect('cursor')",
+      "FNARTabletDebug.forceChickenEffect('shortcut')",
+      "FNARTabletDebug.forceChickenEffect('balloon')",
+      "FNARTabletDebug.forceChickenEffect('watched')",
+      "FNARTabletDebug.forceChickenEffect('all')",
+      'FNARTabletDebug.setChickenIntensity(1.5)',
+      'FNARTabletDebug.clearFault()',
+      "FNARTabletDebug.triggerFault('frozen')",
+      'FNARTabletDebug.showAd()',
+      'FNARTabletDebug.reset()'
+    ];
+    console.info('[FNAR Tablet Debug]\n'+commands.join('\n'));
+    return commands;
+  }
   window.FNARTabletDebug={
     get status(){return {...state,camera08Unavailable:this.isCameraUnavailable(8)};},
     get weights(){return FAULTS.CHANCES;},
     showAd,reboot,disconnectUSB,triggerFault,reset,
+    forceAd,forceChicken,forceChickenEffect,setChickenIntensity,clearFault,help,
     isCameraUnavailable(camera){
       return FAULTS.isCameraUnavailable(state.mode,camera,state.faultCamera);
     },
