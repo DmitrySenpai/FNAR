@@ -56,7 +56,10 @@
   }
   function validated200(response,bytes) {
     const length = response.headers.get('Content-Length');
-    if(length!==null && (!/^\d+$/.test(length)||Number(length)!==bytes.byteLength))
+    // Fetch exposes a decoded body, while Content-Length may describe a
+    // compressed transfer (e.g. a gzip-compressed SVG). Compare only identity.
+    const encoding=(response.headers.get('Content-Encoding')||'identity').toLowerCase();
+    if(encoding==='identity'&&length!==null && (!/^\d+$/.test(length)||Number(length)!==bytes.byteLength))
       throw Error('Incomplete HTTP 200 response');
     if(!bytes.byteLength)throw Error('Empty HTTP 200 response');
     return bytes;
