@@ -39,8 +39,11 @@ test('game progression and media rights are not silently declared complete',()=>
   assert.match(readme,/<img src="assets\/branding\/fnar-logo\.webp"/);
   for(const text of ['<a id="japanese">','<a id="russian">','<a id="english">'])assert.ok(readme.includes(text));
   assert.ok(fs.existsSync(path.join(root,'assets/branding/fnar-logo.webp')),'README banner asset missing');
-  assert.match(readme,/GitHub Pages/);
-  assert.match(readme,/1\.0\.0/);
+  assert.match(readme,/dmitrysenpai\.github\.io\/FNAR\/index\.html/);
+  const logo=fs.readFileSync(path.join(root,'assets/branding/fnar-logo.webp'));
+  assert.ok(logo.length>2000,'README logo must contain image data');
+  assert.equal(logo.subarray(0,4).toString(),'RIFF');
+  assert.equal(logo.subarray(8,12).toString(),'WEBP');
   assert.match(changelog,/Release candidate/);
   assert.match(rights,/Статус: открытый аудит/);
   assert.match(read('app.js'),/readSave\('kokhinhin_unlocked'/);
