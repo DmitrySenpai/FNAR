@@ -674,6 +674,9 @@ const POWER=window.FNAR_POWER;
 if(!POWER || POWER.NIGHT_LENGTH!==AI.NIGHT_LENGTH)throw new Error('FNAR power config must load and agree with AI night duration');
 const NIGHT_LENGTH=AI.NIGHT_LENGTH;
 const NIGHT_CONFIG=AI.NIGHT_CONFIG;
+ const COMPANY=window.FNAR_COMPANY;
+ if(!COMPANY)throw new Error('fnar-company.js must load before app.js');
+ let nightCompanyProfile=COMPANY.getCompanyProfile('');
 const aiSession=AI.createNight(1);
 const ENEMIES=aiSession.enemies;
 const cameraScreen=$('cameraScreen'),cameraToggle=$('cameraToggle'),cameraFeed=$('cameraFeed');
@@ -684,7 +687,7 @@ const CAMERA_VARIANTS=new Set(["cam01.webp", "cam01_c2.webp", "cam02.webp", "cam
 let cameraOpen=false,currentCamera=1,cameraFlashTimer=0,shownCameraFile='';
 function randomBetween(min,max){return min+Math.random()*(max-min);}
 function resetEnemies(){
-  AI.resetNight(aiSession,currentNight,undefined,currentNight===7?customAI:null);
+  AI.resetNight(aiSession,currentNight,undefined,currentNight===7?customAI:null,nightCompanyProfile);
   enemySoundLast.clear();
   shownCameraFile='';
 }
@@ -1306,7 +1309,7 @@ function start(night=1,options={}){
   clearVictorySequence();
   clearResignation();
   currentNight=clamp(Number(night)||1,1,7);state.night=currentNight;
-  persistOfficeName();
+  nightCompanyProfile=COMPANY.getCompanyProfile(persistOfficeName());
   $('officeInput').blur();
   state.paused=false;resumeGameAudio();$('pauseScreen').classList.add('hidden');$('pauseBtn').classList.remove('hidden');
   $('settings').classList.add('hidden');$('cameraNightLabel').textContent=t('titleNight',{night:currentNight});
@@ -1364,6 +1367,8 @@ function debugSetTime(hourOrText,minutes=0){
 }
 window.KokhinhinDebug={state,toggleDoor,setLight,findHit,imagePos,setView(v){state.target=state.yaw=clamp(v,-1,1);},get frames(){return state.frames;},get assets(){return state.loaded;},toggleCamera,setCameraOpen,chooseCamera,get currentCamera(){return currentCamera;},get cameraOpen(){return cameraOpen;},
   enemies:ENEMIES,resetEnemies,NIGHT_CONFIG,AI,
+  getCompanyProfile(){return nightCompanyProfile;},
+  testCompany(name){return COMPANY.getCompanyProfile(name);},
   POWER_CONFIG:POWER.POWER_CONFIG,getPowerDrain,getPowerUsageLevel:currentUsage,
   getPowerSnapshot(){return {power:state.power,elapsed:state.nightElapsed,drain:getPowerDrain(),usage:currentUsage(),controls:powerControls()};},
   setEnemyStep(id,step){const e=ENEMIES.find(e=>e.id===id);if(!e)return;
