@@ -22,54 +22,79 @@ const context=(extra={})=>({active:true,paused:false,phone:false,jumpscare:false
 function seeded(seed){
   let s=seed>>>0;return ()=>{s=(Math.imul(1664525,s)+1013904223)>>>0;return s/4294967296;};
 }
-test('five volume categories default to 100, clamp and persist without affecting legacy saves',()=>{
+test('one master setting loads, clamps and migrates legacy category values safely',()=>{
   const store=storage(),manager=AUDIO.createManager(store);
-  assert.deepEqual(manager.get(),AUDIO.DEFAULTS);
+  assert.deepEqual(manager.get(),{master:100});
+  assert.deepEqual(AUDIO.DEFAULTS,{master:100});
+  assert.deepEqual([...AUDIO.CATEGORIES],['master']);
   manager.set('master',70);
-  manager.set('effects',-10);
-  manager.set('phone',300);
-  manager.set('tablet',44.7);
-  assert.deepEqual(manager.get(),{master:70,effects:0,ambience:100,phone:100,tablet:45});
-  assert.deepEqual(AUDIO.createManager(store).get(),manager.get());
+  assert.deepEqual(manager.get(),{master:70});
+  assert.deepEqual(JSON.parse(store.map.get(AUDIO.STORAGE_KEY)),{master:70});
   assert.equal(store.map.has('kokhinhin_unlocked'),false);
-  store.setItem(AUDIO.STORAGE_KEY,'{"master":"oops","effects":-100,"ambience":180,"phone":null,"tablet":77}');
-  const recovered=AUDIO.createManager(store).get();
-  assert.equal(recovered.master,100);
-  assert.equal(recovered.effects,0);
-  assert.equal(recovered.ambience,100);
-  assert.equal(recovered.tablet,77);
+
+  store.setItem(AUDIO.STORAGE_KEY,JSON.stringify({
+    master:60,effects:0,ambience:12,phone:25,tablet:0
+  }));
+  assert.deepEqual(AUDIO.createManager(store).get(),{master:60});
+  store.setItem(AUDIO.STORAGE_KEY,'{"master":-100,"effects":20}');
+  assert.deepEqual(AUDIO.createManager(store).get(),{master:0});
+  store.setItem(AUDIO.STORAGE_KEY,'{"master":150}');
+  assert.deepEqual(AUDIO.createManager(store).get(),{master:100});
+  for(const invalid of ['{invalid','null','{"master":"oops"}','{"master":null}']){
+    store.setItem(AUDIO.STORAGE_KEY,invalid);
+    assert.deepEqual(AUDIO.createManager(store).get(),{master:100});
+  }
+  assert.throws(()=>manager.set('effects',50),/master/);
 });
-test('live adjustments recalculate from base gain rather than compounding',()=>{
-  const mixer=AUDIO.createManager(storage());
-  const effects=media(),ambient=media(),phone=media(),tablet=media();
+test('master affects effects, ambience, phone and tablet equally without compounded gain',()=>{
+  const store=storage(),mixer=AUDIO.createManager(store);
+  const effects=media(),ambience=media(),phone=media(),tablet=media();
   mixer.register(effects,'effects',.45);
-  mixer.register(ambient,'ambience',.18);
+  mixer.register(ambience,'ambience',.18);
   mixer.register(phone,'phone',.88);
   mixer.register(tablet,'tablet',.65);
-  mixer.set('master',80);mixer.set('effects',50);
-  assert.ok(Math.abs(effects.volume-.18)<1e-12);
-  assert.ok(Math.abs(ambient.volume-.144)<1e-12);
+  mixer.set('master',80);
+  assert.ok(Math.abs(effects.volume-.36)<1e-12);
+  assert.ok(Math.abs(ambience.volume-.144)<1e-12);
   assert.ok(Math.abs(phone.volume-.704)<1e-12);
-  mixer.set('effects',50);assert.ok(Math.abs(effects.volume-.18)<1e-12);
-  mixer.set('master',20);assert.ok(effects.volume<=.045);
-  mixer.set('tablet',0);assert.equal(tablet.volume,0);
-  mixer.set('phone',0);assert.equal(phone.volume,0);
-  mixer.set('master',100);assert.equal(ambient.volume,.18);
+  assert.ok(Math.abs(tablet.volume-.52)<1e-12);
+  mixer.set('master',50);mixer.set('master',50);
+  assert.ok(Math.abs(effects.volume-.225)<1e-12,'base gain must not compound');
+  mixer.set('master',0);
+  for(const el of [effects,ambience,phone,tablet])assert.equal(el.volume,0);
+  mixer.set('master',100);
+  assert.equal(effects.volume,.45);
+  assert.equal(ambience.volume,.18);
+  assert.equal(phone.volume,.88);
+  assert.equal(tablet.volume,.65);
   assert.equal(mixer.trackedCount(),4);
   effects.end();assert.equal(mixer.trackedCount(),3);
 });
-test('mute never changes slider positions and restores exact adjusted audio levels',()=>{
+test('mute does not change master position and restores live gain',()=>{
   const mixer=AUDIO.createManager(storage()),sfx=media();
   mixer.register(sfx,'effects',.5);
-  mixer.set('master',70);mixer.set('effects',40);
-  const expected=sfx.volume;
+  mixer.set('master',70);
+  const base=sfx.volume;
   mixer.setMuted(true);
   assert.equal(sfx.muted,true);
-  assert.equal(sfx.volume,expected);
+  assert.equal(sfx.volume,base);
   assert.equal(mixer.get().master,70);
   mixer.setMuted(false);
   assert.equal(sfx.muted,false);
-  assert.equal(sfx.volume,expected);
+  assert.equal(sfx.volume,base);
+});
+test('obsoleted category values never multiply audio gain',()=>{
+  const store=storage();
+  store.setItem(AUDIO.STORAGE_KEY,JSON.stringify({
+    master:80,effects:10,ambience:0,phone:0,tablet:0
+  }));
+  const mixer=AUDIO.createManager(store);
+  for(const category of ['effects','ambience','phone','tablet']){
+    const el=media();mixer.register(el,category,.5);
+    assert.equal(el.volume,.4,category+' must ignore old category multipliers');
+  }
+  mixer.set('master',90);
+  assert.deepEqual(JSON.parse(store.map.get(AUDIO.STORAGE_KEY)),{master:90});
 });
 test('all six atmosphere types exist with exact nightly caps',()=>{
   assert.deepEqual([...ATMOS.TYPES],['light_flicker','distant_creak','camera_static',
@@ -142,20 +167,37 @@ test('400 paired full-shift simulations preserve AI and power when ambience diff
     assert.ok(atmosphere.status().count<=2);
   }
 });
-test('HTML controls and scripts are installed ahead of app, without new MP3 requests',()=>{
-  const html=read('index.html'),app=read('app.js'),tablet=read('tablet-os.js');
+test('compact pause menu has only one master volume control and no nested panel',()=>{
+  const html=read('index.html'),app=read('app.js'),css=read('style.css'),tablet=read('tablet-os.js');
+  assert.ok(html.includes('id="audioVolumeMaster"'));
+  assert.ok(html.includes('id="audioVolumeMasterValue"'));
+  assert.equal((html.match(/type="range"/g)||[]).filter(Boolean).length>0,true);
   for(const id of ['pauseAudioSettings','audioSettingsPanel','audioSettingsBack',
-    'audioVolumeMaster','audioVolumeEffects','audioVolumeAmbience','audioVolumePhone',
-    'audioVolumeTablet','atmosphereOffice','atmosphereCamera'])
-    assert.ok(html.includes('id="'+id+'"'),id);
-  assert.ok(html.indexOf('src="fnar-audio-settings.js"')<html.indexOf('src="app.js"'));
+    'audioVolumeEffects','audioVolumeAmbience','audioVolumePhone','audioVolumeTablet'])
+    assert.ok(!html.includes('id="'+id+'"'),'obsolete element: '+id);
+  const pauseMarkup=html.split('id="pauseScreen"')[1].split('</section>')[0];
+  assert.equal((pauseMarkup.match(/type="range"/g)||[]).length,1);
+  assert.ok(pauseMarkup.indexOf('id="pauseMenu"')<pauseMarkup.indexOf('class="pause-volume"'));
+  assert.ok(pauseMarkup.indexOf('class="pause-volume"')<pauseMarkup.indexOf('class="pause-utilities"'));
+  for(const id of ['pauseResume','pauseRestart','pauseMenu','muteBtn','settingsBtn','fullscreenBtn'])
+    assert.ok(pauseMarkup.includes('id="'+id+'"'),id);
+  assert.ok(!/overflow-y:\s*auto/.test(css.slice(css.indexOf('/* Compact single volume slider'),css.indexOf('/* Harmless visual ambience'))));
+  assert.ok(!css.includes('.audio-settings-panel'));
+  assert.match(css,/#pauseScreen \.pause-card\s*\{[^}]*overflow:visible/s);
+  assert.ok(html.includes('style.css?v=054'));
+  assert.ok(html.includes('src="fnar-audio-settings.js?v=054"'));
+  assert.ok(html.indexOf('fnar-audio-settings.js?v=054')<html.indexOf('src="app.js"'));
   assert.ok(html.indexOf('src="fnar-atmosphere.js"')<html.indexOf('src="app.js"'));
-  assert.ok(html.includes('style.css?v=053'));
-  assert.match(app,/AUDIO_SETTINGS\.register\(a,name==='hang-up'\?'phone':'effects',volume\)/);
-  assert.match(app,/AUDIO_SETTINGS\.register\(voice,'phone',\.88\)/);
-  assert.match(app,/atmosphere\.tick\(passed,atmosphereContext\(\)\)/);
-  assert.match(tablet,/mixer\.register\(a,'tablet'/);
-  assert.match(tablet,/FNAR_SOUND_URL/);
+  assert.ok(app.includes("AUDIO_SETTINGS.set('master',event.currentTarget.value)"));
+  assert.ok(app.includes("AUDIO_SETTINGS.register(voice,'phone',.88)"));
+  assert.ok(app.includes("atmosphere.tick(passed,atmosphereContext())"));
+  assert.ok(tablet.includes("mixer.register(a,'tablet'"));
+  assert.ok(tablet.includes('FNAR_SOUND_URL'));
+  for(const id of ['atmosphereOffice','atmosphereCamera'])
+    assert.ok(html.includes('id="'+id+'"'));
+  for(const text of ["audioVolume:'ГРОМКОСТЬ'","audioVolume:'VOLUME'","audioVolume:'音量'"])
+    assert.ok(app.includes(text));
+  assert.ok(app.includes("toggleMute();e.preventDefault()"));
   assert.ok(!read('fnar-audio-settings.js').includes('fetch('));
   assert.ok(!read('fnar-atmosphere.js').includes('fetch('));
 });
