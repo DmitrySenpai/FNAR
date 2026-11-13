@@ -508,3 +508,6 @@ html, body, #app, #stage, #stage *, button, input {
   #languageScreen .language-buttons {width:min(78%,420px);gap:2cqw;}
   #languageScreen .language-buttons .primary {padding:1.8cqw 1.5cqw;}
 }
+
+#languageScreen .language-choice {width:100%;display:flex;flex-direction:column;align-items:center;gap:1.8cqw;}
+#languageScreen .language-choice h2 {margin:0;color:#eee;font-size:clamp(15px,2.4cqw,38px);text-align:center;letter-spacing:.09em;}
