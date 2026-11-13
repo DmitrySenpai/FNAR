@@ -446,7 +446,29 @@ test('closed tablet and serious Door XP faults cancel a real AI-driven signal',a
     assert.equal(game.pending(),null,mode);
     clock.advance(700);
     assert.equal(game.pending(),null);
+    if(mode!=='close'){
+      // Fault recovery must show the CURRENT empty room and never play
+      // a deferred queue of old rooster movements.
+      game.mode('idle');
+      game.move(.05);
+      assert.equal(game.picture(),'cam07.webp');
+      assert.equal(game.events.filter(e=>e==='signal:on').length,1);
+      assert.equal(game.pending(),null);
+    }
   }
+});
+test('an audio-only Door XP event does not hide a visible CAM07 rooster departure',async()=>{
+  const {game,clock}=realCameraGameLoop();
+  game.setup(7,[4]);
+  game.mode('audio_spam');
+  game.enemy(4).nextMove=0;
+  game.move(.05);
+  await flush();
+  assert.equal(game.signal(),true);
+  clock.advance(250);
+  assert.equal(game.picture(),'cam07.webp');
+  clock.advance(250);
+  assert.equal(game.signal(),false);
 });
 test('last-departure visual test uses actual displayed file even if remembered roster became stale',()=>{
   assert.equal(CAMERA.cameraRosterChanged({
