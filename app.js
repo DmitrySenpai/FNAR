@@ -305,7 +305,7 @@ async function sceneTransition(swapScene,{activateNight=false}={}){
   if(transitionBusy)return false;
   transitionBusy=true;
   const priorPause=state.paused,priorActive=state.active;
-  if(state.active){state.paused=true;clearHeldActions();}
+  if(state.active){state.paused=true;clearHeldActions();atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();}
   screenTransition.classList.add('is-transitioning');
   let successful=false;
   try{
@@ -314,7 +314,7 @@ async function sceneTransition(swapScene,{activateNight=false}={}){
     if(result===false)throw new Error('Screen preparation was rejected');
     await fadeScreen(false,800);
     if(activateNight){
-      state.active=true;state.paused=false;state.last=performance.now();
+      state.active=true;state.paused=false;state.last=performance.now();AUDIO_SETTINGS.pauseAtmosphere(false);
       startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);
     }
     successful=true;
@@ -937,6 +937,7 @@ function answerPhone(){
   if(state.nightElapsed>=phoneState.ringEndsAt){missPhone();return;}
   stopRingtone();
   phoneState.status='talking';phoneState.subtitleIndex=-1;
+  AUDIO_SETTINGS.pauseAtmosphere(true);
   state.last=performance.now(); // No catch-up of world time while dialogue audio is playing.
   phoneParagraphs=currentPhoneParagraphs();
   phoneSubtitle.textContent=phoneParagraphs[0] || '...';
@@ -962,7 +963,7 @@ function answerPhone(){
 function hangUpPhone(){
   if(phoneState.status!=='talking')return;
   stopPhoneVoice();stopAudioLoop('phone-line');playSfx('hang-up',.24);
-  phoneState.status='completed';state.last=performance.now();updatePhoneUI();
+  phoneState.status='completed';AUDIO_SETTINGS.pauseAtmosphere(false);state.last=performance.now();updatePhoneUI();
 }
 function updatePhone(){
   if(!state.active||powerFailure.active||currentNight>=6)return;
@@ -1098,6 +1099,7 @@ function showVictorySequence(){
 }
 function finishNight(success,message,attackerId=0){
   if(!state.active)return;
+  atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();
   clearVictorySequence();
   // Hold the current camera frame during the dissolve to 6 AM.
   if(cameraOpen&&!success)setCameraOpen(false);
@@ -1196,12 +1198,14 @@ function moveEnemies(dt){
 cameraToggle.addEventListener('click',toggleCamera);
 cameraNodes.forEach(b=>b.addEventListener('click',()=>chooseCamera(Number(b.dataset.camera))));
 function goMenuInstant(){
+  atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();AUDIO_SETTINGS.pauseAtmosphere(false);
+  toggleAudioSettings(false);
   clearVictorySequence();
   clearResignation();
   clearNewspaperIntro();
   closeNightMenus();
   if(state.active){state.active=false;clearHeldActions();stopAudioLoops();stopRingtone();stopPowerFailureAudio();}
-  for(const a of activeOneShots){a.pause();try{a.currentTime=0;}catch(_){}}activeOneShots.clear();
+  for(const a of activeOneShots){a.pause();try{a.currentTime=0;}catch(_){}AUDIO_SETTINGS.forget(a);}activeOneShots.clear();
   state.paused=false;pausedAudio.clear();resetJumpscare();resetPowerFailure();resetPhone();
   $('pauseScreen').classList.add('hidden');$('ending').classList.add('hidden');
   if(cameraOpen){cameraOpen=false;cameraScreen.classList.remove('is-open');cameraScreen.setAttribute('aria-hidden','true');cameraToggle.setAttribute('aria-expanded','false');}
@@ -1236,8 +1240,9 @@ function togglePause(force){
   if(state.paused===next)return;
   state.paused=next;clearHeldActions();state.dragging=false;state.leftKey=false;state.rightKey=false;
   $('pauseScreen').classList.toggle('hidden',!next);
-  if(!next)$('settings').classList.add('hidden');
+  if(!next){$('settings').classList.add('hidden');toggleAudioSettings(false);}
   state.last=performance.now();
+  AUDIO_SETTINGS.pauseAtmosphere(next||phoneState.status==='talking');
   if(next)pauseGameAudio();else resumeGameAudio();
 }
 $('pauseBtn').addEventListener('click',()=>togglePause());
@@ -1293,6 +1298,9 @@ canvas.addEventListener('pointerleave',()=>{canvas.style.cursor='url("arrow.cur"
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
   if(e.target instanceof HTMLInputElement)return;
+  if(state.paused && !$('audioSettingsPanel').classList.contains('hidden') && e.key==='Escape'){
+    toggleAudioSettings(false);e.preventDefault();return;
+  }
   if(state.paused && !$('settings').classList.contains('hidden') && e.key==='Escape'){
     $('settings').classList.add('hidden');e.preventDefault();return;
   }
@@ -1370,6 +1378,7 @@ function advanceGameStep(dt){
       if(state.power<=0)startPowerFailure();
     }
   }
+  if(state.active)atmosphere.tick(passed,atmosphereContext());
   updateOfficePower();
   updateClock();
 }
@@ -1402,6 +1411,7 @@ function start(night=1,options={}){
   clearVictorySequence();
   clearResignation();
   currentNight=clamp(Number(night)||1,1,7);state.night=currentNight;
+  atmosphere.reset(currentNight);AUDIO_SETTINGS.stopAtmosphere();AUDIO_SETTINGS.pauseAtmosphere(false);toggleAudioSettings(false);
   persistOfficeName();
   $('officeInput').blur();
   state.paused=false;resumeGameAudio();$('pauseScreen').classList.add('hidden');$('pauseBtn').classList.remove('hidden');
