@@ -31,7 +31,8 @@ async function preloadAllGameAssets(){
     ...PRELOAD_CAMERA_NAMES.map(n=>'assets/cameras/'+n),
     ...PRELOAD_SOUND_NAMES.map(n=>'assets/sound/'+n+'.mp3'),
     ...[1,2,3,4].map(n=>'assets/screamers/rooster_'+n+'_scream.webm'),
-    'assets/sound/static-bm.webm', 'assets/menu/rooster_menu.webp', 'assets/ui/today_news.webp', 'assets/ui/tablet/shutdown.webp', 'assets/ui/tablet/desktop.webp', 'assets/ui/tablet/netvideo.webp', 'assets/ui/tablet/boot.webp'];
+    'assets/sound/static-bm.webm', 'assets/menu/rooster_menu.webp', 'assets/ui/today_news.webp',
+    ...[1,2,3,4].map(n=>'assets/ui/custom/c'+n+'.png'), 'assets/ui/director_signature.svg', 'assets/ui/tablet/shutdown.webp', 'assets/ui/tablet/desktop.webp', 'assets/ui/tablet/netvideo.webp', 'assets/ui/tablet/boot.webp'];
   let done=0;preloadProgress(done,paths.length);
   // file:// cannot use CacheStorage/fetch; standalone files embed their game art and audio.
   if(location.protocol==='file:'){
@@ -210,7 +211,7 @@ function renderCustomAI(){
   customAI.forEach((initial,i)=>{
     const cell=document.createElement('div');cell.className='custom-ai-row';
     const picture=document.createElement('img');picture.className='custom-ai-portrait';
-    picture.src='assets/ui/custom/c'+(i+1)+'.png';picture.alt='';picture.draggable=false;
+    picture.src=getCachedAssetURL('assets/ui/custom/c'+(i+1)+'.png');picture.alt='';picture.draggable=false;
     const label=document.createElement('span');label.className='custom-ai-label';label.textContent='A.I. Level';
     const controls=document.createElement('div');controls.className='custom-ai-controls';
     const down=document.createElement('button');down.type='button';down.textContent='◀';
