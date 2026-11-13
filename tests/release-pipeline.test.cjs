@@ -35,7 +35,10 @@ test('critical assets stay eager and Custom Night portraits complete before firs
 test('game progression and media rights are not silently declared complete',()=>{
   const readme=read('README.md'),changelog=read('CHANGELOG.md'),rights=read('ASSET_RIGHTS.md');
   assert.match(readme,/Five Nights at Rooster/);
-  assert.match(readme,/LICENSE/);
+  assert.doesNotMatch(readme,/LICENSE|licen[sc]e|лицензи|ライセンス/i);
+  assert.match(readme,/<img src="assets\/branding\/fnar-logo\.webp"/);
+  for(const text of ['<a id="japanese">','<a id="russian">','<a id="english">'])assert.ok(readme.includes(text));
+  assert.ok(fs.existsSync(path.join(root,'assets/branding/fnar-logo.webp')),'README banner asset missing');
   assert.match(readme,/GitHub Pages/);
   assert.match(readme,/1\.0\.0/);
   assert.match(changelog,/Release candidate/);
