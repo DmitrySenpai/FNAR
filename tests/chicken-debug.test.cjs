@@ -16,7 +16,7 @@ function fixture({night=1,language='ru'}={}){
       this.className=cls;this.children=[];this.selectors=new Map();this.dataset={};
       this.clientWidth=1280;this.clientHeight=720;this.offsetWidth=360;this.offsetHeight=200;
       this.textContent='';this.src='assets/cameras/cam08_c3.webp';
-      this.currentSrc=this.src;this.complete=true;this.naturalWidth=1280;
+      this.currentSrc=this.src;this.complete=true;this.naturalWidth=960;this.naturalHeight=540;this.listeners=new Map();
       this.style={setProperty(key,val){this[key]=val;},removeProperty(key){delete this[key];}};
       this.classList={
         contains:(name)=>this.className.split(/\s+/).includes(name),
@@ -37,7 +37,14 @@ function fixture({night=1,language='ru'}={}){
       if(!this.selectors.has(selector))this.selectors.set(selector,new Node());
       return this.selectors.get(selector);
     }
-    addEventListener(){}
+    addEventListener(type,fn){
+      if(!this.listeners.has(type))this.listeners.set(type,[]);
+      this.listeners.get(type).push(fn);
+    }
+    fire(type){
+      const evt={stopPropagation(){},preventDefault(){},stopImmediatePropagation(){},target:this};
+      for(const handler of this.listeners.get(type)||[])handler(evt);
+    }
     blur(){}
     contains(){return true;}
     getBoundingClientRect(){return {left:0,top:0,width:this.clientWidth,height:this.clientHeight};}
@@ -222,4 +229,76 @@ test('Static CSS ensures pointer safety, reduced motion, lightweight effects and
   assert.match(tabletSource,/chickenSystemBody:'Обнаружено/);
   assert.match(tabletSource,/chickenSystemBody:'メモリ内/);
   assert.doesNotMatch(tabletSource,/<iframe|\.exe\?download=/);
+});
+
+test('No duplicate Net Video icon is rendered: only a transparent hotspot over the art',()=>{
+  const v=fixture({night:4});
+  const crash=v.overlay('tablet-crash-screen');
+  assert.ok(crash);
+  assert.doesNotMatch(crash.innerHTML,/tablet-crash-shortcut/);
+  assert.doesNotMatch(crash.innerHTML,/<strong>Net Video 3\.0<\/strong>/);
+  assert.match(crash.innerHTML,/class="tablet-crash-hotspot hidden" aria-label="Net Video 3\.0"/);
+  assert.match(tabletCSS,/\.tablet-crash-hotspot\{/);
+  assert.doesNotMatch(tabletCSS,/\.tablet-crash-shortcut/);
+  assert.match(tabletCSS,/background:#111 url\('assets\/ui\/tablet\/desktop\.webp'\) center\/contain no-repeat/);
+});
+test('Contain image geometry centers the original desktop and maintains icon alignment',()=>{
+  const v=fixture({night:4});
+  const calc=v.debug.desktopShortcutGeometry;
+  const original={x:9,y:156,w:82,h:74};
+  for(const [viewportW,viewportH] of [[960,540],[1280,720],[1024,768],[390,844],[844,390],[320,568]]){
+    const bounds=calc(viewportW,viewportH,960,540);
+    const scale=Math.min(viewportW/960,viewportH/540);
+    const x0=(viewportW-960*scale)/2;
+    const y0=(viewportH-540*scale)/2;
+    assert.ok(Math.abs(bounds.left-(x0+original.x*scale))<.001);
+    assert.ok(Math.abs(bounds.top-(y0+original.y*scale))<.001);
+    assert.ok(bounds.width>=32&&bounds.height>=28);
+    // Door Player ends above the Net Video region in the 960x540 wallpaper.
+    assert.ok(bounds.top>y0+145*scale);
+    // Clicking the icon does not cover the image's far edge or letterbox.
+    assert.ok(bounds.left+bounds.width<=x0+110*scale+12);
+    assert.ok(bounds.top+bounds.height<=y0+255*scale);
+  }
+  assert.equal(calc(0,720,960,540),null);
+  assert.equal(calc(1280,0,960,540),null);
+});
+test('Crash: close error, click existing Net Video artwork and restore CCTV after 2–3s',()=>{
+  const v=fixture({night:4});
+  v.game.setCameraOpen(true);
+  v.frame(0); // Initialize the regular night-4 tablet event loop.
+  assert.equal(v.debug.triggerFault('crash'),true);
+  assert.equal(v.debug.status.crashStep,'error');
+  const crash=v.overlay('tablet-crash-screen');
+  const dismiss=crash.querySelector('.tablet-crash-dismiss');
+  const icon=crash.querySelector('.tablet-crash-hotspot');
+  assert.equal(icon.classList.contains('hidden'),true);
+  dismiss.fire('click');
+  assert.equal(v.debug.status.crashStep,'desktop');
+  assert.equal(icon.classList.contains('hidden'),false);
+  assert.ok(Number.parseFloat(icon.style.width)>30);
+  assert.ok(Number.parseFloat(icon.style.height)>25);
+  assert.equal(icon.textContent,'','hotspot must have no added icon or caption');
+  icon.fire('click');
+  assert.equal(v.debug.status.crashStep,'launch');
+  assert.equal(icon.classList.contains('hidden'),true);
+  assert.equal(crash.querySelector('.tablet-crash-launch').classList.contains('hidden'),false);
+  const countdown=v.debug.status.faultRemaining;
+  assert.ok(countdown>=2&&countdown<=3);
+  v.frame(countdown+.01);
+  assert.equal(v.debug.status.mode,'idle');
+  assert.equal(crash.classList.contains('hidden'),true);
+  assert.equal(v.game.cameraOpen,true,'CCTV should return after relaunch');
+});
+test('Favicon is linked and both icon sizes are valid PNG/ICO files',()=>{
+  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+  assert.match(html,/rel="icon" href="favicon\.ico\?v=0504"/);
+  assert.match(html,/href="favicon-32\.png\?v=0504"/);
+  const ico=fs.readFileSync(path.join(root,'favicon.ico'));
+  const png=fs.readFileSync(path.join(root,'favicon-32.png'));
+  assert.equal(ico.subarray(0,4).toString('hex'),'00000100');
+  assert.equal(ico.readUInt16LE(4),2);
+  assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+  assert.equal(png.readUInt32BE(16),32);
+  assert.equal(png.readUInt32BE(20),32);
 });

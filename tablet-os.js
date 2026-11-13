@@ -159,13 +159,43 @@
   const faultSpinner=faultFrame.querySelector('.tablet-fault-spinner');
   // Desktop for a failed Net Video process (this is only a simulated webpage window).
   const crash=html('div','tablet-crash-screen hidden',tablet);
-  crash.innerHTML='<div class="tablet-crash-error"><div class="tablet-crash-title"></div><div class="tablet-crash-content"><span class="tablet-crash-symbol">×</span><div><p></p><small></small></div></div><button type="button" class="tablet-crash-dismiss"></button></div><button type="button" class="tablet-crash-shortcut hidden"><span>▣</span><strong>Net Video 3.0</strong></button><div class="tablet-crash-launch hidden"></div>';
+  crash.innerHTML='<div class="tablet-crash-error"><div class="tablet-crash-title"></div><div class="tablet-crash-content"><span class="tablet-crash-symbol">×</span><div><p></p><small></small></div></div><button type="button" class="tablet-crash-dismiss"></button></div><button type="button" class="tablet-crash-hotspot hidden" aria-label="Net Video 3.0"></button><div class="tablet-crash-launch hidden"></div>';
   const errorTitle=crash.querySelector('.tablet-crash-title');
   const errorBody=crash.querySelector('.tablet-crash-content p');
   const errorCode=crash.querySelector('.tablet-crash-content small');
   const errorClose=crash.querySelector('.tablet-crash-dismiss');
-  const relaunch=crash.querySelector('.tablet-crash-shortcut');
+  const relaunch=crash.querySelector('.tablet-crash-hotspot');
   const relaunchSplash=crash.querySelector('.tablet-crash-launch');
+  // The Door XP wallpaper already contains the Net Video icon. Align a TRANSPARENT
+  // button to that original artwork, not to the viewport; contain adds letterboxing.
+  // Coordinates below describe the Net Video label+camera drawing inside desktop.webp
+  // (960x540 pixels), not a second icon.
+  const NET_VIDEO_ART_RECT=Object.freeze({x:9,y:156,width:82,height:74});
+  const desktopArt=document.createElement('img');
+  function desktopShortcutGeometry(viewWidth,viewHeight,imageWidth,imageHeight){
+    if(!(viewWidth>0&&viewHeight>0&&imageWidth>0&&imageHeight>0))return null;
+    const scale=Math.min(viewWidth/imageWidth,viewHeight/imageHeight);
+    const imageLeft=(viewWidth-imageWidth*scale)/2;
+    const imageTop=(viewHeight-imageHeight*scale)/2;
+    return {
+      left:imageLeft+NET_VIDEO_ART_RECT.x*scale,
+      top:imageTop+NET_VIDEO_ART_RECT.y*scale,
+      width:Math.max(32,NET_VIDEO_ART_RECT.width*scale),
+      height:Math.max(28,NET_VIDEO_ART_RECT.height*scale),
+      imageLeft,imageTop,scale
+    };
+  }
+  function placeDesktopShortcut(){
+    // The crash element can have zero dimensions while display:none.
+    const bounds=desktopShortcutGeometry(crash.clientWidth,crash.clientHeight,
+      desktopArt.naturalWidth||960,desktopArt.naturalHeight||540);
+    if(!bounds)return;
+    for(const k of ['left','top','width','height'])relaunch.style[k]=bounds[k]+'px';
+  }
+  desktopArt.addEventListener('load',placeDesktopShortcut);
+  desktopArt.src=media('desktop');
+  window.addEventListener('resize',placeDesktopShortcut);
+  if(window.ResizeObserver)new ResizeObserver(placeDesktopShortcut).observe(crash);
   const chickenLayer=html('div','tablet-chicken-layer hidden',tablet);
   chickenLayer.innerHTML='<div class="tablet-chicken-noise"></div><div class="tablet-chicken-effect"></div><div class="tablet-chicken-cursor hidden">🐓</div><div class="tablet-chicken-trails"></div>';
   const chickenEffect=chickenLayer.querySelector('.tablet-chicken-effect');
@@ -416,7 +446,7 @@
     e.stopPropagation();
     if(game.state.paused||state.mode!=='crash'||state.crashStep!=='error')return;
     state.crashStep='desktop';
-    errorClose.blur();ui();
+    errorClose.blur();ui();placeDesktopShortcut();
   });
   relaunch.addEventListener('click',e=>{
     e.stopPropagation();
@@ -577,10 +607,11 @@
     if(canShow&&state.mode==='crash'){
       errorTitle.textContent=faultText().crashTitle;
       errorBody.textContent=faultText().crashBody;errorCode.textContent=faultText().crashCode;
-      errorClose.textContent=faultText().close;relaunch.querySelector('strong').textContent=faultText().launch;
+      errorClose.textContent=faultText().close;
       crash.querySelector('.tablet-crash-error').classList.toggle('hidden',state.crashStep!=='error');
       relaunch.classList.toggle('hidden',state.crashStep!=='desktop');
       relaunchSplash.classList.toggle('hidden',state.crashStep!=='launch');
+      if(state.crashStep==='desktop')placeDesktopShortcut();
     }
     chickenLayer.classList.toggle('hidden',!canShow||state.mode!=='chicken');
   }
@@ -773,7 +804,8 @@
     get c3Protected(){
       return this.isCameraUnavailable(8) || game.state.nightElapsed<state.c3GraceUntil;
     },
-    get history(){return [...imageHistory];}
+    get history(){return [...imageHistory];},
+    desktopShortcutGeometry,
   };
   updateLocalization();reset();requestAnimationFrame(step);
 })();
