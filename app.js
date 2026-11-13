@@ -933,6 +933,7 @@ function updateCameraScene({allowRoosterTransition=false}={}){
 function chooseCamera(id){
  if(id<1||id>CAMS.length)return;
  const changed=currentCamera!==id;
+ if(changed)cameraCompositionTransition.cancel();
  currentCamera=id;
  const [title,code,tint]=CAMS[id-1];
  $('cameraName').textContent=L10N[gameLanguage].camNames[id-1];$('cameraCode').textContent='CAM '+String(id).padStart(2,'0');
@@ -945,6 +946,7 @@ function setCameraOpen(open){
  if(!state.active || state.paused || phoneState.status==='talking' || powerFailure.active || !$('settings').classList.contains('hidden'))return;
  if(cameraOpen===open)return;
  cameraOpen=open;
+ cameraCompositionTransition.cancel();
  if(open){clearHeldActions();state.leftKey=false;state.rightKey=false;state.dragging=false;canvas.style.cursor='url("arrow.cur") 0 0, auto';}
  cameraScreen.classList.toggle('is-open',open);
  cameraScreen.setAttribute('aria-hidden',String(!open));
@@ -1214,6 +1216,7 @@ function showVictorySequence(){
 }
 function finishNight(success,message,attackerId=0){
   if(!state.active)return;
+  cameraCompositionTransition.cancel();
   atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();
   clearVictorySequence();
   // Hold the current camera frame during the dissolve to 6 AM.
@@ -1308,11 +1311,12 @@ function moveEnemies(dt){
       return;
     }
   }
-  if(changed){needsComposing=true;updateCameraScene();}
+  if(changed){needsComposing=true;updateCameraScene({allowRoosterTransition:true});}
 }
 cameraToggle.addEventListener('click',toggleCamera);
 cameraNodes.forEach(b=>b.addEventListener('click',()=>chooseCamera(Number(b.dataset.camera))));
 function goMenuInstant(){
+  cameraCompositionTransition.cancel();
   atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();AUDIO_SETTINGS.pauseAtmosphere(false);
   clearVictorySequence();
   clearResignation();
@@ -1356,7 +1360,9 @@ function togglePause(force){
   if(!state.active)return;
   const next=typeof force==='boolean'?force:!state.paused;
   if(state.paused===next)return;
-  state.paused=next;clearHeldActions();state.dragging=false;state.leftKey=false;state.rightKey=false;
+  state.paused=next;
+  if(next){cameraCompositionTransition.cancel();updateCameraScene();}
+  clearHeldActions();state.dragging=false;state.leftKey=false;state.rightKey=false;
   $('pauseScreen').classList.toggle('hidden',!next);
   if(!next)$('settings').classList.add('hidden');
   state.last=performance.now();
@@ -1467,6 +1473,11 @@ document.addEventListener('visibilitychange',()=>{
 // partitioned into 50 ms simulation steps. One frame at 5 FPS therefore simulates
 // the full 200 ms, instead of incorrectly counting only 60 ms.
 function advanceGameStep(dt){
+  const pendingSignal=cameraCompositionTransition.status();
+  if(pendingSignal&&!cameraSignalAllowed(pendingSignal)){
+    cameraCompositionTransition.cancel();
+    updateCameraScene();
+  }
   if(state.active&&!cameraOpen&&$('settings').classList.contains('hidden')){
     if(state.leftKey||state.rightKey)
       state.target=clamp(state.target+((state.rightKey?1:0)-(state.leftKey?1:0))*dt*1.22,-1,1);
@@ -1545,7 +1556,8 @@ function start(night=1,options={}){
   state.leftDoorPos=state.rightDoorPos=0;
   resetEnemies();needsComposing=true;
   if(cameraOpen){cameraOpen=false;cameraScreen.classList.remove('is-open');cameraScreen.setAttribute('aria-hidden','true');cameraToggle.setAttribute('aria-expanded','false');}
-  shownCameraFile='';chooseCamera(1);updateClock();updateStatus();
+  shownCameraFile='';shownCameraIndex=0;shownCameraIds=[];
+  chooseCamera(1);updateClock();updateStatus();
   return true;
 }
 function setSliders(){
