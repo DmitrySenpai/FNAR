@@ -1,18 +1,22 @@
-name: FNAR AI regression
+name: FNAR AI and power regression
 on:
   push:
     paths:
       - 'fnar-ai.js'
+      - 'fnar-power.js'
       - 'app.js'
       - 'index.html'
       - 'tests/ai-simulation.test.cjs'
+      - 'tests/power-balance.test.cjs'
       - '.github/workflows/ai-regression.yml'
   pull_request:
     paths:
       - 'fnar-ai.js'
+      - 'fnar-power.js'
       - 'app.js'
       - 'index.html'
       - 'tests/ai-simulation.test.cjs'
+      - 'tests/power-balance.test.cjs'
       - '.github/workflows/ai-regression.yml'
 jobs:
   ai-regression:
@@ -22,9 +26,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check syntax
+      - name: Check JavaScript syntax
         run: |
           node --check fnar-ai.js
+          node --check fnar-power.js
           node --check app.js
-      - name: Simulate all seven nights and run assertions
-        run: node --test tests/ai-simulation.test.cjs
+      - name: Simulate all nights and verify power budgets
+        run: node --test tests/*.test.cjs

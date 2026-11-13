@@ -464,9 +464,11 @@ function updateStatus(){
   $('statusRight').textContent=t('rightDoorLabel');
   updateOfficePower();
 }
-function currentUsage(){
-  return Math.min(4,1+Number(cameraOpen)+Number(state.leftDoor)+Number(state.rightDoor)+Number(state.leftLight)+Number(state.rightLight));
+function powerControls(){
+  return {cameraOpen,leftDoor:state.leftDoor,rightDoor:state.rightDoor,leftLight:state.leftLight,rightLight:state.rightLight};
 }
+function getPowerDrain(){return POWER.getPowerDrain(powerControls());}
+function currentUsage(){return state.power<=0?0:POWER.getUsageLevel(powerControls());}
 function updateOfficePower(){
   const power=Math.max(0,Math.ceil(state.power))+'%';
   $('officePowerValue').textContent=power;
@@ -515,6 +517,8 @@ const CAMS = [
 // Pure night and enemy tuning lives in fnar-ai.js; keep its array identity for debug.
 const AI=window.FNAR_AI;
 if(!AI)throw new Error('fnar-ai.js must load before app.js');
+const POWER=window.FNAR_POWER;
+if(!POWER || POWER.NIGHT_LENGTH!==AI.NIGHT_LENGTH)throw new Error('FNAR power config must load and agree with AI night duration');
 const NIGHT_LENGTH=AI.NIGHT_LENGTH;
 const NIGHT_CONFIG=AI.NIGHT_CONFIG;
 const aiSession=AI.createNight(1);
@@ -684,6 +688,7 @@ function answerPhone(){
   if(state.nightElapsed>=phoneState.ringEndsAt){missPhone();return;}
   stopRingtone();
   phoneState.status='talking';phoneState.subtitleIndex=-1;
+  state.last=performance.now(); // No catch-up of world time while dialogue audio is playing.
   phoneParagraphs=currentPhoneParagraphs();
   phoneSubtitle.textContent=phoneParagraphs[0] || '...';
   phoneState.subtitleIndex=0;
@@ -708,7 +713,7 @@ function answerPhone(){
 function hangUpPhone(){
   if(phoneState.status!=='talking')return;
   stopPhoneVoice();stopAudioLoop('phone-line');playSfx('hang-up',.24);
-  phoneState.status='completed';updatePhoneUI();
+  phoneState.status='completed';state.last=performance.now();updatePhoneUI();
 }
 function updatePhone(){
   if(!state.active||powerFailure.active||currentNight>=6)return;
@@ -958,6 +963,7 @@ function togglePause(force){
   state.paused=next;clearHeldActions();state.dragging=false;state.leftKey=false;state.rightKey=false;
   $('pauseScreen').classList.toggle('hidden',!next);
   if(!next)$('settings').classList.add('hidden');
+  state.last=performance.now();
   if(next)pauseGameAudio();else resumeGameAudio();
 }
 $('pauseBtn').addEventListener('click',()=>togglePause());
@@ -1050,43 +1056,65 @@ window.addEventListener('keyup',e=>{
   if(key==='e'){state.eHeld=false;setLight('right',false);}
 });
 window.addEventListener('blur',()=>{state.leftKey=state.rightKey=state.dragging=false;clearHeldActions();});
-function loop(timestamp){
-  const dt=Math.min(.06,Math.max(0,(timestamp-state.last)/1000));state.last=timestamp;
-  if(state.paused){draw();requestAnimationFrame(loop);return;}
-  if(state.active && phoneState.status==='talking'){
-    updatePhoneCaption();draw();requestAnimationFrame(loop);return;
-  }
+// A suspended background tab must not skip unseen enemy warnings or silently drain power.
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden && state.active && !state.paused)togglePause(true);
+  state.last=performance.now();
+});
+// The clock, AI and power all consume the SAME unclamped wall-frame elapsed time,
+// partitioned into 50 ms simulation steps. One frame at 5 FPS therefore simulates
+// the full 200 ms, instead of incorrectly counting only 60 ms.
+function advanceGameStep(dt){
   if(state.active&&!cameraOpen&&$('settings').classList.contains('hidden')){
-    if(state.leftKey||state.rightKey){state.target=clamp(state.target+((state.rightKey?1:0)-(state.leftKey?1:0))*dt*1.22,-1,1);}
-    const k=3.6+state.smooth*10;state.yaw+=(state.target-state.yaw)*(1-Math.exp(-k*dt));
+    if(state.leftKey||state.rightKey)
+      state.target=clamp(state.target+((state.rightKey?1:0)-(state.leftKey?1:0))*dt*1.22,-1,1);
+    const k=3.6+state.smooth*10;
+    state.yaw+=(state.target-state.yaw)*(1-Math.exp(-k*dt));
     if(Math.abs(state.yaw-state.target)<.00002)state.yaw=state.target;
   }
   const prevLeft=state.leftDoorPos, prevRight=state.rightDoorPos;
   const doorSpeed=7.2;
-  state.leftDoorPos += (state.leftDoor?1:-1)*doorSpeed*dt;
-  state.rightDoorPos += (state.rightDoor?1:-1)*doorSpeed*dt;
-  state.leftDoorPos=clamp(state.leftDoorPos,0,1);state.rightDoorPos=clamp(state.rightDoorPos,0,1);
-  if(Math.abs(prevLeft-state.leftDoorPos)>0.0001||Math.abs(prevRight-state.rightDoorPos)>0.0001)needsComposing=true;
-  if(state.active && $('settings').classList.contains('hidden')){
-    state.nightElapsed+=dt;
-    if(state.nightElapsed>=NIGHT_LENGTH){
-      state.nightElapsed=NIGHT_LENGTH;
-      updateClock();finishNight(true,t('winText',{night:currentNight}));
-    }else{
-      if(powerFailure.active){
-        updatePowerFailure();
-      }else{
-        moveEnemies(dt);
-        if(state.active){
-          updatePhone();
-          const drain=(.12+(currentNight-1)*.015)+(cameraOpen?.10:0)+(state.leftDoor?.28:0)+(state.rightDoor?.28:0)+
-            (state.leftLight?.26:0)+(state.rightLight?.26:0);
-          state.power=Math.max(0,state.power-dt*drain);
-          if(state.power<=0)startPowerFailure();
-        }
-      }
+  state.leftDoorPos=clamp(state.leftDoorPos+(state.leftDoor?1:-1)*doorSpeed*dt,0,1);
+  state.rightDoorPos=clamp(state.rightDoorPos+(state.rightDoor?1:-1)*doorSpeed*dt,0,1);
+  if(Math.abs(prevLeft-state.leftDoorPos)>.0001||Math.abs(prevRight-state.rightDoorPos)>.0001)
+    needsComposing=true;
+  if(!state.active||!$('settings').classList.contains('hidden')||state.paused||phoneState.status==='talking')
+    return;
+  const passed=POWER.advanceClock(state,dt);
+  if(state.nightElapsed>=NIGHT_LENGTH){
+    updateClock();
+    finishNight(true,t('winText',{night:currentNight}));
+    return;
+  }
+  if(powerFailure.active){
+    updatePowerFailure();
+  }else{
+    moveEnemies(passed);
+    if(state.active){
+      updatePhone();
+      POWER.spendPower(state,passed,powerControls());
+      if(state.power<=0)startPowerFailure();
     }
-    updateOfficePower();updateClock();
+  }
+  updateOfficePower();
+  updateClock();
+}
+function loop(timestamp){
+  const realElapsed=Math.max(0,(timestamp-state.last)/1000);
+  state.last=timestamp;
+  if(state.paused){draw();requestAnimationFrame(loop);return;}
+  if(state.active && phoneState.status==='talking'){
+    updatePhoneCaption();draw();requestAnimationFrame(loop);return;
+  }
+  if(state.active){
+    POWER.forEachStep(realElapsed,dt=>{
+      if(!state.active||state.paused||phoneState.status==='talking')return false;
+      advanceGameStep(dt);
+      return state.active;
+    });
+  }else{
+    // Keep menu transitions responsive without running AI or clock simulations.
+    advanceGameStep(Math.min(realElapsed,POWER.SIMULATION_STEP));
   }
   $('turnPin').style.left=(50+state.yaw*state.angle*45)+'%';
   $('directionLabel').textContent=t(state.yaw<-.23?'viewLeft':state.yaw>.23?'viewRight':'viewCenter');
@@ -1106,7 +1134,7 @@ function start(night=1,options={}){
   state.started=state.active=true;state.gameOver=false;
   startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);
   $('welcome').classList.add('hidden');syncMenuStatic();$('hud').classList.remove('hidden');$('ending').classList.add('hidden');cameraToggle.classList.remove('hidden');
-  state.target=state.yaw=0;state.power=100;state.nightElapsed=0;
+  state.target=state.yaw=0;POWER.resetNight(state);state.last=performance.now();
   state.leftDoor=state.rightDoor=state.leftLight=state.rightLight=false;
   state.leftDoorPos=state.rightDoorPos=0;
   resetEnemies();needsComposing=true;
@@ -1155,6 +1183,8 @@ function debugSetTime(hourOrText,minutes=0){
 }
 window.KokhinhinDebug={state,toggleDoor,setLight,findHit,imagePos,setView(v){state.target=state.yaw=clamp(v,-1,1);},get frames(){return state.frames;},get assets(){return state.loaded;},toggleCamera,setCameraOpen,chooseCamera,get currentCamera(){return currentCamera;},get cameraOpen(){return cameraOpen;},
   enemies:ENEMIES,resetEnemies,NIGHT_CONFIG,AI,
+  POWER_CONFIG:POWER.POWER_CONFIG,getPowerDrain,getPowerUsageLevel:currentUsage,
+  getPowerSnapshot(){return {power:state.power,elapsed:state.nightElapsed,drain:getPowerDrain(),usage:currentUsage(),controls:powerControls()};},
   setEnemyStep(id,step){const e=ENEMIES.find(e=>e.id===id);if(!e)return;
     e.step=clamp(step,0,e.route.length);e.phase=e.step===e.route.length?AI.PHASES.DOOR:AI.PHASES.APPROACH;
     e.attack=0;e.blocked=0;e.knocks=0;e.nextMove=5;e.burst=0;needsComposing=true;updateCameraScene();},
