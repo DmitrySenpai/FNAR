@@ -867,7 +867,7 @@ function cameraSignalAllowed(target){
   const tablet=window.FNARTabletDebug, fault=tablet?.status;
   return Boolean(state.active&&!state.paused&&phoneState.status!=='talking'&&cameraOpen&&!powerFailure.active&&
     $('settings').classList.contains('hidden')&&
-    (!fault||(fault.mode==='idle'&&!fault.adVisible))&&
+    (!fault||(['idle','audio_spam'].includes(fault.mode)&&!fault.adVisible))&&
     (!tablet||tablet.canObserveCamera(currentCamera))&&
     currentCamera===target.camera);
 }
@@ -897,7 +897,7 @@ const cameraCompositionTransition=CAMERA_TRANSITION.createController({
     roosterSignal.classList.remove('is-active');
     // If the roster changed again while the signal was running, reconcile
     // immediately from live AI state without starting a second visual effect.
-    if(reason==='completed'||reason==='load-error')updateCameraScene();
+    if(reason==='completed'||reason==='load-error')updateCameraScene({allowRoosterTransition:false});
   }
 });
 function displayCameraFile(file,visibleIds){
@@ -917,7 +917,7 @@ function displayCameraFile(file,visibleIds){
   pending.onerror=()=>{cameraUnavailable.add(file);console.warn('Missing camera asset',file);};
   pending.src=cameraImageURL(file);
 }
-function updateCameraScene({allowRoosterTransition=false}={}){
+function updateCameraScene({allowRoosterTransition=true}={}){
   if(!state.loaded)return;
   const file=cameraFile(),ids=AI.visibleIds(aiSession,currentCamera);
   const pending=cameraCompositionTransition.status();
@@ -953,7 +953,7 @@ function chooseCamera(id){
  $('cameraName').textContent=L10N[gameLanguage].camNames[id-1];$('cameraCode').textContent='CAM '+String(id).padStart(2,'0');
  cameraFeed.dataset.camera=String(id).padStart(2,'0');cameraFeed.style.setProperty('--feed-accent',tint);
  cameraNodes.forEach(b=>{const active=Number(b.dataset.camera)===id;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));});
- updateCameraScene();
+ updateCameraScene({allowRoosterTransition:cameraOpen&&!changed});
  if(cameraOpen && changed){showCameraFlash();playSfx('blip',.26);}
 }
 function setCameraOpen(open){
@@ -968,7 +968,7 @@ function setCameraOpen(open){
  cameraToggle.setAttribute('aria-label',open?t('closeCamera'):t('openCamera'));
  updateOfficePower();
  playSfx('open-camera',.37);
- if(open){updateCameraScene();showCameraFlash();}
+ if(open){updateCameraScene({allowRoosterTransition:false});showCameraFlash();}
  // CCTV picture interference is visual only; static-bm plays once after a jumpscare.
 }
 function toggleCamera(){setCameraOpen(!cameraOpen);}
@@ -1326,7 +1326,12 @@ function moveEnemies(dt){
       return;
     }
   }
-  if(changed){needsComposing=true;updateCameraScene({allowRoosterTransition:true});}
+  if(changed)needsComposing=true;
+  // Reconcile the watched feed after EVERY real AI.tick(), not only a whitelist
+  // of emitted events. In particular, leaving CAM 07 for DOOR must be caught.
+  // No image work or new timer occurs when the current composition is unchanged.
+  if(cameraOpen)updateCameraScene({allowRoosterTransition:true});
+  else if(changed)updateCameraScene({allowRoosterTransition:false});
 }
 cameraToggle.addEventListener('click',toggleCamera);
 cameraNodes.forEach(b=>b.addEventListener('click',()=>chooseCamera(Number(b.dataset.camera))));
@@ -1376,7 +1381,7 @@ function togglePause(force){
   const next=typeof force==='boolean'?force:!state.paused;
   if(state.paused===next)return;
   state.paused=next;
-  if(next){cameraCompositionTransition.cancel();updateCameraScene();}
+  if(next){cameraCompositionTransition.cancel();updateCameraScene({allowRoosterTransition:false});}
   clearHeldActions();state.dragging=false;state.leftKey=false;state.rightKey=false;
   $('pauseScreen').classList.toggle('hidden',!next);
   if(!next)$('settings').classList.add('hidden');
@@ -1491,7 +1496,7 @@ function advanceGameStep(dt){
   const pendingSignal=cameraCompositionTransition.status();
   if(pendingSignal&&!cameraSignalAllowed(pendingSignal)){
     cameraCompositionTransition.cancel();
-    updateCameraScene();
+    updateCameraScene({allowRoosterTransition:false});
   }
   if(state.active&&!cameraOpen&&$('settings').classList.contains('hidden')){
     if(state.leftKey||state.rightKey)
@@ -1619,9 +1624,11 @@ window.KokhinhinDebug={state,toggleDoor,setLight,findHit,imagePos,setView(v){sta
   enemies:ENEMIES,resetEnemies,NIGHT_CONFIG,AI,
   POWER_CONFIG:POWER.POWER_CONFIG,getPowerDrain,getPowerUsageLevel:currentUsage,
   getPowerSnapshot(){return {power:state.power,elapsed:state.nightElapsed,drain:getPowerDrain(),usage:currentUsage(),controls:powerControls()};},
-  setEnemyStep(id,step){const e=ENEMIES.find(e=>e.id===id);if(!e)return;
+  setEnemyStep(id,step,{animate=false}={}){const e=ENEMIES.find(e=>e.id===id);if(!e)return;
     e.step=clamp(step,0,e.route.length);e.phase=e.step===e.route.length?AI.PHASES.DOOR:AI.PHASES.APPROACH;
-    e.attack=0;e.blocked=0;e.knocks=0;e.nextMove=5;e.burst=0;needsComposing=true;updateCameraScene();},
+    e.attack=0;e.blocked=0;e.knocks=0;e.nextMove=5;e.burst=0;needsComposing=true;
+    updateCameraScene({allowRoosterTransition:Boolean(animate)});},
+  testCameraDeparture:debugTestCameraDeparture,
   setPower(value){state.power=clamp(value,0,100);updateOfficePower();},
   startPowerFailure, powerFailure, setNightElapsed(value){state.nightElapsed=clamp(value,0,NIGHT_LENGTH);updateClock();},
   finishNight:finishNight,setTime:debugSetTime,finishDay:debugFinishDay,winNight:debugFinishDay,triggerScreamer(id){if(state.active)finishNight(false,'Тестовый скример петуха C'+id+'.',Number(id));},
