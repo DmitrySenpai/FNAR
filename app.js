@@ -1333,6 +1333,47 @@ function moveEnemies(dt){
   if(cameraOpen)updateCameraScene({allowRoosterTransition:true});
   else if(changed)updateCameraScene({allowRoosterTransition:false});
 }
+// Diagnostic only: stages a single visible rooster then advances its REAL AI
+// by one step into DOOR. No save/progression keys are written; only the current
+// disposable game session's enemy positions are changed.
+async function debugTestCameraDeparture(camera=7,id=1){
+  camera=Number(camera);id=Number(id);
+  const e=ENEMIES.find(enemy=>enemy.id===id);
+  if(!e||!CAMS[camera-1]||e.route[e.route.length-1]!==camera)
+    throw new RangeError('Choose an enemy and its final-route camera (C1/C4: CAM07, C2/C3: CAM09)');
+  const tablet=window.FNARTabletDebug?.status;
+  if(!state.active||!state.loaded||state.paused||phoneState.status==='talking'||
+    powerFailure.active||!$('settings').classList.contains('hidden')||
+    (tablet&&(tablet.mode!=='idle'||tablet.adVisible)))
+    throw new Error('Run during an active, unpaused night without a Door XP fault');
+  if(currentCamera!==camera)chooseCamera(camera);
+  if(!cameraOpen)setCameraOpen(true);
+  if(!cameraOpen||currentCamera!==camera)throw new Error('Camera could not open');
+  // Isolate the chosen bird in the camera view and clear occupied danger slots.
+  // Debug-only manipulation, never part of a normal gameplay AI decision.
+  for(const other of ENEMIES){
+    if(other===e||(!AI.isDanger(other)&&!AI.visibleIds(aiSession,camera).includes(other.id)))continue;
+    other.step=0;other.phase=AI.PHASES.REST;other.nextMove=Infinity;
+    other.attack=0;other.blocked=0;
+  }
+  cameraCompositionTransition.cancel();
+  e.step=e.route.length-1;e.phase=AI.PHASES.APPROACH;e.nextMove=Infinity;
+  e.attack=0;e.blocked=0;e.knocks=0;e.burst=0;e.holds=0;
+  const before=cameraFile();
+  await warmCameraFile(before);
+  if(!state.active||!cameraOpen||currentCamera!==camera)throw new Error('Camera changed during debug preparation');
+  displayCameraFile(before,AI.visibleIds(aiSession,camera));
+  // Let the occupied frame visibly paint; allow an existing switch-flash to end.
+  await new Promise(resolve=>setTimeout(resolve,260));
+  if(!state.active||!cameraOpen||currentCamera!==camera||state.paused||!cameraSignalAllowed({camera}))
+    throw new Error('Camera no longer ready to test');
+  e.nextMove=0;
+  moveEnemies(.05); // Real AI.tick(): APPROACH -> DOOR emits warning.
+  const after=cameraFile(),status=cameraCompositionTransition.status();
+  const result={camera,id,before,after,phase:e.phase,transitionQueued:Boolean(status),saved:false};
+  console.info('[FNAR debug] CAM departure (in-memory gameplay only):',result);
+  return result;
+}
 cameraToggle.addEventListener('click',toggleCamera);
 cameraNodes.forEach(b=>b.addEventListener('click',()=>chooseCamera(Number(b.dataset.camera))));
 function goMenuInstant(){
