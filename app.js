@@ -15,6 +15,16 @@ const cachedAssetURLs=new Map();
 function getCachedAssetURL(path){return cachedAssetURLs.get(path)||path;}
 const PRELOAD_SOUND_NAMES=["ambience","ambient_room","beep","blip","chimes","door","hang-up","knock-2","knock-3","knock","light","open-camera","os_balloon","os_info","os_shutdown","os_startup","os_usb_connect","os_usb_remove","phone-line","phone","phone_01","phone_02","phone_03","phone_04","phone_05","power-outage","running-fast","running","scream","static-bm"];
 const PRELOAD_CAMERA_NAMES=["cam01.webp","cam01_c2.webp","cam02.webp","cam02_c4.webp","cam03.webp","cam03_c2.webp","cam03_c2_c3.webp","cam03_c3.webp","cam04.webp","cam04_c1.webp","cam04_c1_c4.webp","cam04_c4.webp","cam05.webp","cam05_c1.webp","cam05_c4.webp","cam05_c4_c1.webp","cam06.webp","cam06_c1.webp","cam06_c1_c4.webp","cam06_c4.webp","cam07.webp","cam07_c1.webp","cam07_c1_c4.webp","cam07_c4.webp","cam08.webp","cam08_c2.webp","cam08_c2_c3.webp","cam08_c3.webp","cam09.webp","cam09_c2.webp","cam09_c2_c3.webp","cam09_c3.webp"];
+const DEFERRED_CUSTOM_ASSETS=[1,2,3,4].map(n=>'assets/ui/custom/c'+n+'.png');
+let customAssetPromise=null;
+async function ensureCustomPortraits(){
+  if(location.protocol==='file:')return;
+  if(!customAssetPromise)customAssetPromise=Promise.all(DEFERRED_CUSTOM_ASSETS.map(async path=>{
+    const url=await window.AudioManager.getURL(path);
+    cachedAssetURLs.set(path,url);
+  })).catch(error=>{customAssetPromise=null;throw error;});
+  await customAssetPromise;
+}
 let preloadBusy=false;
 function preloadProgress(completed,total){
   const percentage=total?Math.floor(completed*100/total):100;
@@ -33,7 +43,7 @@ async function preloadAllGameAssets(){
     ...PRELOAD_SOUND_NAMES.map(n=>'assets/sound/'+n+'.mp3'),
     ...[1,2,3,4].map(n=>'assets/screamers/rooster_'+n+'_scream.webm'),
     'assets/sound/static-bm.webm', 'assets/menu/rooster_menu.webp', 'assets/ui/today_news.webp',
-    ...[1,2,3,4].map(n=>'assets/ui/custom/c'+n+'.png'), 'assets/ui/director_signature.svg', 'assets/ui/tablet/shutdown.webp', 'assets/ui/tablet/desktop.webp', 'assets/ui/tablet/netvideo.webp', 'assets/ui/tablet/boot.webp'];
+    'assets/ui/director_signature.svg', 'assets/ui/tablet/shutdown.webp', 'assets/ui/tablet/desktop.webp', 'assets/ui/tablet/netvideo.webp', 'assets/ui/tablet/boot.webp'];
   let done=0;preloadProgress(done,paths.length);
   // file:// cannot use CacheStorage/fetch; standalone files embed their game art and audio.
   if(location.protocol==='file:'){
@@ -270,10 +280,19 @@ function renderCustomAI(){
     cell.append(picture,label,controls);grid.appendChild(cell);
   });
 }
-function showCustomNight(debugPreview=false){
+async function showCustomNight(debugPreview=false){
   if(state.active)return;
   closeNightMenus();
   if(unlockedNight<7&&!debugPreview)return;
+  // Custom-only portraits are optional during initial loading, but must be
+  // completely cached before the Custom Night screen first displays them.
+  try{await ensureCustomPortraits();}
+  catch(error){
+    console.warn('Custom Night portraits unavailable:',error);
+    window.alert(t('preloadError'));
+    return;
+  }
+  if(state.active||!$('welcome').classList.contains('hidden'))return;
   renderCustomAI();$('customScreen').classList.remove('hidden');
 }
 $('nightSelectBack').addEventListener('click',closeNightMenus);
