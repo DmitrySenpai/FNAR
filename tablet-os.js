@@ -90,7 +90,9 @@
       audio:'NET SYSTEM — Воспроизведение рекламы',chickenTitle:'Chicken.exe — Установка завершена',
       chickenBody:'Поздравляем! Ваш компьютер теперь находится под защитой куриных технологий!',
       chickenWatch:'CHICKEN.EXE IS WATCHING YOU',chickenAlert:'Ваша куриная защита работает исправно!',
-      chickenEgg:'Система обнаружила 47 куриных следов.',chickenUpdate:'Chicken.exe обновляет клюв…'
+      chickenEgg:'Система обнаружила 47 куриных следов.',chickenUpdate:'Chicken.exe обновляет клюв…',
+      chickenSystemTitle:'Chicken.exe — System Warning',
+      chickenSystemBody:'Обнаружено несанкционированное перемещение перьев в оперативной памяти.'
     },
     ja:{
       frozen:'WARNING: VIDEO FEED FROZEN',stale:'PLAYBACK DELAY DETECTED',signal:'NO SIGNAL',
@@ -101,7 +103,9 @@
       audio:'NET SYSTEM — 広告を再生中',chickenTitle:'Chicken.exe — インストール完了',
       chickenBody:'おめでとうございます！お使いのPCはニワトリ技術によって保護されています！',
       chickenWatch:'CHICKEN.EXE IS WATCHING YOU',chickenAlert:'ニワトリの保護機能は正常に動作しています！',
-      chickenEgg:'47個のニワトリの足跡を検出しました。',chickenUpdate:'Chicken.exeがクチバシを更新中…'
+      chickenEgg:'47個のニワトリの足跡を検出しました。',chickenUpdate:'Chicken.exeがクチバシを更新中…',
+      chickenSystemTitle:'Chicken.exe — システム警告',
+      chickenSystemBody:'メモリ内で許可されていない羽の移動が検出されました。'
     }
   };
   const faultText=()=>uiText[lang()];
@@ -163,9 +167,12 @@
   const relaunch=crash.querySelector('.tablet-crash-shortcut');
   const relaunchSplash=crash.querySelector('.tablet-crash-launch');
   const chickenLayer=html('div','tablet-chicken-layer hidden',tablet);
-  chickenLayer.innerHTML='<div class="tablet-chicken-effect"></div><div class="tablet-chicken-cursor hidden">🐓</div>';
+  chickenLayer.innerHTML='<div class="tablet-chicken-noise"></div><div class="tablet-chicken-effect"></div><div class="tablet-chicken-cursor hidden">🐓</div><div class="tablet-chicken-trails"></div>';
   const chickenEffect=chickenLayer.querySelector('.tablet-chicken-effect');
   const chickenCursor=chickenLayer.querySelector('.tablet-chicken-cursor');
+  const chickenTrails=chickenLayer.querySelector('.tablet-chicken-trails');
+  const chickenGhosts=Array.from({length:3},()=>html('span','tablet-chicken-cursor-ghost',chickenTrails));
+  let cursorPoints=[];
   const imageHistory=[];
   let historyCurrent='',historyCamera=0,historyStart=0;
   const usb=html('div','tablet-usb-failure hidden',feed);
@@ -198,7 +205,8 @@
     stageIndex:-1,stageRemaining:0,usbRemaining:0,shown:0,accepted:0,declined:0,
     faultRemaining:0,faultCamera:0,faultFrame:'',faultClock:0,
     pendingCamera:0,pendingDelay:0,crashStep:'error',
-    chickenNext:0,chickenEffectSeconds:0,chickenType:'',c3GraceUntil:0,
+    chickenNext:0,chickenEffectSeconds:0,chickenType:'',chickenTypes:[],
+    chickenIntensity:1.5,debugOverride:false,c3GraceUntil:0,
     cooldown:0,faultHistory:[]};
   const faultSoundNames=['os_balloon','beep','blip','os_info'];
   let spamAudio=null;
@@ -232,46 +240,164 @@
     faultTime.textContent='CAM '+String(camera).padStart(2,'0')+'  '+stamp(state.faultClock);
     faultSpinner.classList.add('hidden');
   }
+  const CHICKEN_EFFECTS=Object.freeze(['glitch','paw','cursor','shortcut','balloon','watched','all']);
+  const CHICKEN_ERRORS=Object.freeze([
+    'ERROR: CHICKEN OVERFLOW','ROOSTER ACCESS GRANTED',
+    '47 SUSPICIOUS FEATHERS DETECTED','NET VIDEO MEMORY CORRUPTED',
+    'CHICKEN.EXE IS WATCHING YOU'
+  ]);
+  // The whole effect is a non-interactive DOM layer; never move real buttons.
   function clearChicken(){
-    chickenEffect.replaceChildren();chickenCursor.classList.add('hidden');chickenLayer.classList.add('hidden');
+    chickenEffect.replaceChildren();
+    cursorPoints=[];chickenCursor.classList.add('hidden');
+    chickenLayer.classList.add('hidden');
+    chickenLayer.classList.remove('is-cursor','is-paused');
+    chickenTrails.classList.add('hidden');
+    chickenGhosts.forEach(g=>{g.style.opacity='0';});
     tablet.style.removeProperty('cursor');
-    chickenLayer.classList.remove('is-cursor');
-    state.chickenType='';
+    state.chickenType='';state.chickenTypes=[];
   }
-  function chickenVisual(){
-    clearChicken();
-    const types=['paw','cursor','shortcut','glitch','balloon','watched'];
-    const type=choose(types);state.chickenType=type;
-    state.chickenEffectSeconds=4;
-    chickenLayer.classList.remove('hidden');
-    const add=(tag,cls,text,parent=chickenEffect)=>{const e=html(tag,cls,parent);e.textContent=text;return e;};
-    if(type==='paw'){
-      for(let i=0;i<5;i++){
-        const p=add('span','tablet-chicken-print','♢');
-        p.style.left=random(15,84)+'%';p.style.top=random(10,82)+'%';
-        p.style.transform='rotate('+random(-55,55)+'deg)';
-      }
-    }else if(type==='cursor'){
-      chickenCursor.classList.remove('hidden');chickenLayer.classList.add('is-cursor');
-      if(matchMedia('(pointer:fine)').matches)tablet.style.cursor='none';
-    }else if(type==='shortcut'){
-      add('div','tablet-chicken-shortcut','🐓  Chicken.exe');
-    }else if(type==='glitch'){
-      for(let i=0;i<4;i++){
-        const p=add('div','tablet-chicken-glitch','');
-        p.style.top=random(12,82)+'%';p.style.left=random(8,75)+'%';p.style.width=random(12,34)+'%';
-      }
+  const addChicken=(tag,cls,parent=chickenEffect)=>{
+    const el=html(tag,cls,parent);return el;
+  };
+  function footPrint(parent,i,total){
+    const mark=addChicken('span','tablet-chicken-print',parent);
+    // Three forward toes and one rear toe, all drawn as a vector silhouette.
+    mark.innerHTML='<svg viewBox="0 0 64 76" aria-hidden="true"><path d="M32 58 L32 37 M32 37 L9 14 M32 37 L32 6 M32 37 L55 14 M32 58 L20 71" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="32" cy="39" r="7" fill="currentColor"/></svg>';
+    const x=Math.min(84,Math.max(10,16+i*9+random(-5,5)));
+    const y=Math.min(77,Math.max(8,18+i*5+random(-7,7)));
+    mark.style.left=x+'%';mark.style.top=y+'%';
+    mark.style.setProperty('--foot-rotation',random(-36,36)+'deg');
+    mark.style.setProperty('--foot-delay',(i*.16).toFixed(2)+'s');
+    mark.style.setProperty('--foot-size',random(1.0,1.45).toFixed(2));
+    return mark;
+  }
+  function chickenPaws(parent){
+    const n=Math.min(8,Math.max(4,Math.round(random(4,8.99))));
+    for(let i=0;i<n;i++)footPrint(parent,i,n);
+  }
+  function chickenGlitch(parent){
+    const intensity=state.chickenIntensity;
+    const group=addChicken('div','tablet-chicken-glitch-field',parent);
+    const duration=random(.4,.9);
+    group.style.setProperty('--glitch-duration',duration.toFixed(3)+'s');
+    const n=Math.round(5+intensity*5);
+    const image=selectedImage(); // reuse the existing image; never generate new bitmap data
+    for(let i=0;i<n;i++){
+      const band=addChicken('div','tablet-chicken-glitch-band',group);
+      const w=random(30,Math.min(94,54+intensity*18));
+      band.style.left=random(0,Math.max(0,100-w))+'%';
+      band.style.width=w+'%';
+      band.style.top=random(2,95)+'%';
+      band.style.height=random(.9,2+intensity*5)+'%';
+      band.style.setProperty('--band-shift',random(-26,26).toFixed(1)+'px');
+      band.style.setProperty('--band-hue',Math.round(random(-65,65))+'deg');
+      band.style.setProperty('--band-opacity',random(.45,.88).toFixed(2));
+      if(i%3===0&&image)band.style.backgroundImage='url("'+image.replaceAll('"','%22')+'")';
+    }
+    const segments=Math.round(2+intensity*2);
+    for(let i=0;i<segments;i++){
+      const slice=addChicken('div','tablet-chicken-rgb-slice',group);
+      const width=random(26,Math.min(90,42+intensity*18));
+      slice.style.left=random(0,100-width)+'%';
+      slice.style.width=width+'%';
+      slice.style.top=random(3,91)+'%';
+      slice.style.height=random(4,5+intensity*9)+'%';
+      slice.style.setProperty('--rgb-offset',random(6,16)*intensity+'px');
+      if(image)slice.style.backgroundImage='url("'+image.replaceAll('"','%22')+'")';
+    }
+    const blocks=Math.round(intensity*7);
+    for(let i=0;i<blocks;i++){
+      const pixel=addChicken('div','tablet-chicken-pixel',group);
+      pixel.style.left=random(4,94)+'%';pixel.style.top=random(4,91)+'%';
+      pixel.style.width=random(.6,3.8*intensity)+'%';
+      pixel.style.height=random(1.1,5.5*intensity)+'%';
+      pixel.style.opacity=random(.35,.82).toFixed(2);
+    }
+    const tear=addChicken('div','tablet-chicken-tear',group);
+    tear.style.top=random(28,72)+'%';
+    tear.style.setProperty('--tear-shift',random(-22,22)+'px');
+    const corrupt=addChicken('div','tablet-chicken-corrupt',group);
+    corrupt.textContent=choose(['N3T V!DEO 3.0','DOOR XP [ERR?R]','CHICKEN_OV3RFLOW','NET SYSTEM #?!']);
+    corrupt.style.top=random(7,72)+'%';corrupt.style.left=random(7,26)+'%';
+    for(let i=0;i<2;i++){
+      const echo=addChicken('div','tablet-chicken-ghost-button',group);
+      echo.textContent=choose(['CAM 08','CANCEL','NET VIDEO','OK']);
+      echo.style.left=random(16,72)+'%';echo.style.top=random(20,74)+'%';
+    }
+    return group;
+  }
+  function chickenSystemNotice(parent){
+    const panel=addChicken('div','tablet-chicken-error-window',parent);
+    const title=addChicken('div','tablet-chicken-error-title',panel);
+    title.textContent=faultText().chickenSystemTitle;
+    const body=addChicken('div','tablet-chicken-error-body',panel);
+    body.textContent=choose([faultText().chickenSystemBody,...CHICKEN_ERRORS,
+      faultText().chickenAlert,faultText().chickenEgg]);
+    panel.style.left=random(7,42)+'%';panel.style.top=random(12,58)+'%';
+    return panel;
+  }
+  function renderChickenPart(type,parent){
+    if(type==='glitch'){chickenGlitch(parent);return;}
+    if(type==='paw'){chickenPaws(parent);return;}
+    if(type==='cursor'){
+      chickenCursor.classList.remove('hidden');
+      chickenTrails.classList.remove('hidden');
+      chickenLayer.classList.add('is-cursor');
+      if(window.matchMedia?.('(pointer:fine)').matches)tablet.style.cursor='none';
+      return;
+    }
+    if(type==='shortcut'){
+      const item=addChicken('div','tablet-chicken-shortcut',parent);
+      item.textContent='🐓  Chicken.exe';
     }else if(type==='balloon'){
-      add('div','tablet-chicken-balloon',choose([faultText().chickenAlert,faultText().chickenEgg,faultText().chickenUpdate]));
-    }else{
-      add('div','tablet-chicken-watch',faultText().chickenWatch);
+      chickenSystemNotice(parent);
+    }else if(type==='watched'){
+      const item=addChicken('div','tablet-chicken-watch',parent);
+      item.textContent=faultText().chickenWatch;
     }
   }
+  function chickenVisual(requested='random'){
+    if(state.mode!=='chicken')return false;
+    if(requested!=='random'&&!CHICKEN_EFFECTS.includes(requested))return false;
+    // Clear only the earlier visual wave; the infection and game clock continue.
+    chickenEffect.replaceChildren();
+    chickenCursor.classList.add('hidden');
+    chickenTrails.classList.add('hidden');
+    chickenLayer.classList.remove('is-cursor');
+    cursorPoints=[];tablet.style.removeProperty('cursor');
+    const main=requested==='all'?'glitch':
+      requested==='random'?choose(['glitch','glitch','paw','balloon','shortcut','watched','cursor']):requested;
+    let secondary=null;
+    if(requested==='all')secondary='paw';
+    else if(requested==='random'&&Math.random()<.65){
+      const alternatives=['paw','balloon','cursor','watched','shortcut'].filter(x=>x!==main);
+      secondary=choose(alternatives);
+    }
+    const parts=[main,...(secondary?[secondary]:[])];
+    const primary=addChicken('div','tablet-chicken-primary');
+    renderChickenPart(main,primary);
+    if(secondary){
+      const second=addChicken('div','tablet-chicken-secondary');
+      renderChickenPart(secondary,second);
+    }
+    state.chickenType=main;state.chickenTypes=parts;
+    state.chickenEffectSeconds=3;
+    chickenLayer.classList.remove('hidden');
+    return parts;
+  }
   tablet.addEventListener('pointermove',e=>{
-    if(state.mode!=='chicken'||state.chickenType!=='cursor')return;
+    if(state.mode!=='chicken'||!state.chickenTypes.includes('cursor'))return;
     const r=tablet.getBoundingClientRect();
-    chickenCursor.style.left=(e.clientX-r.left)+'px';
-    chickenCursor.style.top=(e.clientY-r.top)+'px';
+    const x=e.clientX-r.left,y=e.clientY-r.top;
+    if(cursorPoints.length===0)cursorPoints=[{x,y},{x,y},{x,y}];
+    else cursorPoints=[{x,y},...cursorPoints].slice(0,4);
+    chickenCursor.style.left=x+'px';chickenCursor.style.top=y+'px';
+    chickenGhosts.forEach((g,i)=>{
+      const point=cursorPoints[i+1]||{x,y};
+      g.textContent='🐓';g.style.left=point.x+'px';g.style.top=point.y+'px';
+      g.style.opacity=String(.25/(i+1));
+    });
   },{passive:true});
   // Input lag applies ONLY to CCTV selectors, never doors, lights or pause.
   tablet.addEventListener('click',e=>{
@@ -306,6 +432,7 @@
     state.stageRemaining=0;state.usbRemaining=0;state.faultRemaining=0;
     state.faultCamera=0;state.faultFrame='';state.pendingCamera=0;state.pendingDelay=0;
     state.c3GraceUntil=0;state.crashStep='error';state.chickenNext=0;state.chickenEffectSeconds=0;
+    state.chickenIntensity=1.5;state.debugOverride=false;
     state.cooldown=0;state.faultHistory=[];imageHistory.length=0;historyCurrent='';historyCamera=0;
     previousElapsed=null;ad.classList.add('hidden');
     popupDialog.classList.remove('is-floating','is-paused');adMoving=false;
@@ -351,7 +478,10 @@
     complete();audioSound('os_usb_connect',.40);
   }
   function triggerFault(mode,duration){
-    if(!game.state.active || game.currentNight<4 || !FAULTS.validFault(mode) || state.mode!=='idle')return false;
+    const debug=Boolean(arguments[2]); // preserve the legacy two-argument signature
+    if(!game.state.active || (game.currentNight<4&&!debug&&!state.debugOverride) ||
+       !FAULTS.validFault(mode) || state.mode!=='idle')return false;
+    if(debug)state.debugOverride=true;
     // Clear the previous ad sound; there is only one active fault at a time.
     state.adVisible=false;ad.classList.add('hidden');stopSound();
     state.mode=mode;state.faultRemaining=duration??FAULTS.faultDuration(mode);
@@ -384,10 +514,9 @@
       const sound=choose(faultSoundNames);
       spamAudio=audioSound(sound,.23,true);
     }else if(mode==='chicken'){
-      state.chickenNext=random(4,7);
-      chickenLayer.classList.remove('hidden');
-      chickenEffect.replaceChildren();
-      const welcome=html('div','tablet-chicken-balloon',chickenEffect);
+      state.chickenNext=random(1.1,1.7);
+      clearChicken();chickenLayer.classList.remove('hidden');
+      const welcome=addChicken('div','tablet-chicken-balloon');
       welcome.textContent=faultText().chickenTitle+' — '+faultText().chickenBody;
     }
     ui();return true;
@@ -404,12 +533,20 @@
       state.adCountdown=nextAdDelay();
     }
   }
-  function showAd(){
-    if(!game.state.active||game.currentNight<4||state.mode!=='idle'||state.adVisible)return false;
-    state.adVisible=true;state.shown++;
+  function showAd(options={}){
+    const force=Boolean(options.force);
+    if(!game.state.active || (game.currentNight<4&&!force&&!state.debugOverride) ||
+       state.mode!=='idle'||state.adVisible)return false;
     const adTexts=tr().ads;
-    let index=Math.floor(Math.random()*adTexts.length);
-    if(adTexts.length>1 && index===lastAdIndex)index=(index+1+Math.floor(Math.random()*(adTexts.length-1)))%adTexts.length;
+    const specified=Object.prototype.hasOwnProperty.call(options,'index');
+    if(specified && (!Number.isInteger(options.index) || options.index<0 || options.index>=adTexts.length)){
+      console.warn('[FNAR Tablet] Invalid advertising index:',options.index,'expected 0–'+(adTexts.length-1));
+      return false;
+    }
+    state.adVisible=true;state.shown++;
+    let index=specified?options.index:Math.floor(Math.random()*adTexts.length);
+    if(!specified && adTexts.length>1 && index===lastAdIndex)
+      index=(index+1+Math.floor(Math.random()*(adTexts.length-1)))%adTexts.length;
     lastAdIndex=index;
     const [h,txt]=adTexts[index];
     popupHeading.textContent=tr().windowTitle;popupTitle.textContent=h;popupText.textContent=txt;
@@ -427,7 +564,8 @@
     return true;
   }
   function ui(){
-    const canShow=game.state.active&&game.currentNight>=4&&game.cameraOpen;
+    const canShow=game.state.active&&game.cameraOpen&&
+      (game.currentNight>=4||state.debugOverride);
     ad.classList.toggle('hidden',!canShow||!state.adVisible);
     os.classList.toggle('hidden',!canShow||state.mode!=='reboot');
     usb.classList.toggle('hidden',!canShow||state.mode!=='usb');
@@ -449,7 +587,7 @@
   function step(){
     const now=performance.now();wallTime=now;
     const gs=game.state;
-    const active=gs.active&&game.currentNight>=4;
+    const active=gs.active&&(game.currentNight>=4||state.debugOverride);
     if(!active){
       if(previousActive||state.mode!=='idle'||state.adVisible)reset();
       previousActive=false;requestAnimationFrame(step);return;
@@ -467,6 +605,7 @@
     if(spamAudio && !frozen && safeRead('kons-muted')==='1')spamAudio.pause();
     else if(spamAudio && !frozen && spamAudio.paused && safeRead('kons-muted')!=='1')spamAudio.play().catch(()=>{});
     popupDialog.classList.toggle('is-paused',frozen);
+    chickenLayer.classList.toggle('is-paused',frozen);
     if(!frozen && dt>0){
       captureCameraHistory();
       if(state.mode==='reboot'){
@@ -497,7 +636,7 @@
         if(state.mode==='chicken'){
           state.chickenNext-=dt;state.chickenEffectSeconds-=dt;
           if(state.chickenNext<=0){
-            chickenVisual();state.chickenNext=random(4,7);
+            chickenVisual();state.chickenNext=random(2,3);
           }
         }
         if(state.faultRemaining<=0)complete();
@@ -517,10 +656,114 @@
       if(e.key==='Escape'){dismiss(false);e.preventDefault();e.stopImmediatePropagation();}
     }
   },true);
+  // Developer-only helpers never alter the underlying guard AI, clock, power or saves.
+  function ensureDebugTablet(){
+    if(!game.state.active){console.warn('[FNAR Tablet] Start a night before using debug commands.');return false;}
+    if(game.state.paused||game.phoneState?.status==='talking'){
+      console.warn('[FNAR Tablet] Resume the game/finish the telephone call before testing.');return false;
+    }
+    if(!game.cameraOpen)game.setCameraOpen(true);
+    if(!game.cameraOpen){
+      console.warn('[FNAR Tablet] CCTV could not be opened (possibly power outage).');return false;
+    }
+    state.debugOverride=true;
+    // The first debug invocation on nights 1–3 must not be erased by the next RAF.
+    state.night=game.currentNight;
+    previousActive=true;previousElapsed=game.state.nightElapsed;
+    return true;
+  }
+  function clearFault(){
+    if(state.mode!=='idle')complete();
+    state.adVisible=false;
+    ad.classList.add('hidden');
+    popupDialog.classList.remove('is-floating','is-paused');
+    faultFrame.classList.add('hidden');
+    crash.classList.add('hidden');usb.classList.add('hidden');os.classList.add('hidden');
+    clearChicken();
+    state.pendingCamera=0;state.pendingDelay=0;state.chickenNext=0;
+    state.chickenEffectSeconds=0;state.faultRemaining=0;
+    state.adCountdown=nextAdDelay();
+    state.cooldown=random(8,12);
+    stopSound();spamAudio=null;
+    state.debugOverride=false;ui();
+    return true;
+  }
+  function forceAd(options={}){
+    if(!options||typeof options!=='object'||Array.isArray(options)){
+      console.warn('[FNAR Tablet] forceAd expects {index?: number}.');return false;
+    }
+    if(Object.prototype.hasOwnProperty.call(options,'index') &&
+      (!Number.isInteger(options.index)||options.index<0||options.index>=tr().ads.length)){
+      console.warn('[FNAR Tablet] Advertising index must be 0–'+(tr().ads.length-1));return false;
+    }
+    if(!ensureDebugTablet())return false;
+    if(state.adVisible)return false; // Never stack two advert windows.
+    if(state.mode!=='idle')clearFault();
+    state.debugOverride=true;
+    const created=showAd({...options,force:true});
+    ui();return created;
+  }
+  function forceChicken(options={}){
+    if(!options||typeof options!=='object'||Array.isArray(options)){
+      console.warn('[FNAR Tablet] forceChicken expects {duration?: number}.');return false;
+    }
+    let duration=options.duration??20;
+    if(typeof duration!=='number'||!Number.isFinite(duration)||duration<1||duration>60){
+      console.warn('[FNAR Tablet] Chicken duration must be between 1 and 60 seconds.');return false;
+    }
+    if(!ensureDebugTablet())return false;
+    clearFault();
+    state.debugOverride=true;
+    if(!triggerFault('chicken',duration,true))return false;
+    chickenVisual('all');state.chickenNext=random(2,3);
+    ui();return true;
+  }
+  function forceChickenEffect(type){
+    if(!CHICKEN_EFFECTS.includes(type)){
+      console.warn('[FNAR Tablet] Invalid Chicken effect:',type,'valid:',CHICKEN_EFFECTS.join(', '));
+      return false;
+    }
+    if(!ensureDebugTablet())return false;
+    if(state.mode!=='chicken' && !forceChicken({duration:20}))return false;
+    const shown=chickenVisual(type);
+    state.chickenNext=random(2,3);
+    ui();return shown;
+  }
+  function setChickenIntensity(value){
+    if(typeof value!=='number'||!Number.isFinite(value)||value<.5||value>2){
+      console.warn('[FNAR Tablet] Intensity must be a number from 0.5 to 2.0.');return false;
+    }
+    state.chickenIntensity=value;
+    return value;
+  }
+  function help(){
+    const commands=[
+      'FNARTabletDebug.help()',
+      'FNARTabletDebug.forceAd()',
+      'FNARTabletDebug.forceAd({ index: 10 })',
+      'FNARTabletDebug.forceChicken()',
+      'FNARTabletDebug.forceChicken({ duration: 20 })',
+      "FNARTabletDebug.forceChickenEffect('glitch')",
+      "FNARTabletDebug.forceChickenEffect('paw')",
+      "FNARTabletDebug.forceChickenEffect('cursor')",
+      "FNARTabletDebug.forceChickenEffect('shortcut')",
+      "FNARTabletDebug.forceChickenEffect('balloon')",
+      "FNARTabletDebug.forceChickenEffect('watched')",
+      "FNARTabletDebug.forceChickenEffect('all')",
+      'FNARTabletDebug.setChickenIntensity(1.5)',
+      'FNARTabletDebug.clearFault()',
+      "FNARTabletDebug.triggerFault('frozen')",
+      'FNARTabletDebug.showAd()',
+      'FNARTabletDebug.reset()'
+    ];
+    console.info('[FNAR Tablet Debug]\n'+commands.join('\n'));
+    return commands;
+  }
   window.FNARTabletDebug={
     get status(){return {...state,camera08Unavailable:this.isCameraUnavailable(8)};},
     get weights(){return FAULTS.CHANCES;},
     showAd,reboot,disconnectUSB,triggerFault,reset,
+    forceAd,forceChicken,forceChickenEffect,setChickenIntensity,clearFault,help,
     isCameraUnavailable(camera){
       return FAULTS.isCameraUnavailable(state.mode,camera,state.faultCamera);
     },

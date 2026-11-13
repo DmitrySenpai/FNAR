@@ -200,3 +200,154 @@
   .tablet-crash-shortcut{width:24%}
   .tablet-fault-label{letter-spacing:0}
 }
+
+/* FNAR v0.5.3 — amplified Chicken.exe.
+   The effects are DOM illusions, pointer-events:none: real controls remain clickable. */
+.tablet-chicken-layer{isolation:isolate;contain:paint}
+.tablet-chicken-noise{
+ position:absolute;inset:0;pointer-events:none;opacity:.18;
+ background-image:repeating-linear-gradient(0deg,transparent 0 3px,#67c7ff16 3px 4px),
+  repeating-linear-gradient(91deg,#ff00250d 0 2px,#00d5dd13 2px 5px,#000 5px 8px);
+ background-size:100% 7px,19px 17px;
+ animation:fnar-chicken-grain .74s steps(3,end) infinite;
+}
+.tablet-chicken-primary,.tablet-chicken-secondary{position:absolute;inset:0;pointer-events:none}
+.tablet-chicken-primary{z-index:1}.tablet-chicken-secondary{z-index:2}
+.tablet-chicken-glitch-field{
+ position:absolute;inset:0;overflow:hidden;pointer-events:none;
+ animation:fnar-chicken-burst var(--glitch-duration,.7s) steps(4,end) both;
+}
+.tablet-chicken-glitch-band{
+ position:absolute;display:block;
+ background-color:rgba(39,127,173,.7);
+ background-image:repeating-linear-gradient(91deg,#f12a4cb9 0 3px,#38e7e3a1 3px 8px,#2231e6a2 8px 13px);
+ background-blend-mode:screen;background-size:cover;
+ box-shadow:-4px 0 0 #d13046ad,4px 0 0 #20dbe29c,0 1px 3px #0201087c;
+ opacity:var(--band-opacity,.7);
+ transform:translateX(var(--band-shift,10px)) skewX(-2deg);
+ filter:hue-rotate(var(--band-hue,0deg));
+ animation:fnar-chicken-band-jitter .19s steps(2,end) 3;
+}
+.tablet-chicken-rgb-slice{
+ position:absolute;background-color:#111b29ab;background-size:cover;
+ background-position:center;image-rendering:pixelated;
+ outline:2px solid #dd244f73;
+ box-shadow:-8px 0 0 #f7254d7d,8px 0 0 #1af6ca7d;
+ transform:translateX(var(--rgb-offset,12px));
+ animation:fnar-chicken-rgb .24s steps(2,end) 3;
+}
+.tablet-chicken-rgb-slice::before,.tablet-chicken-rgb-slice::after{
+ content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;opacity:.7
+}
+.tablet-chicken-rgb-slice::before{background:#fd273e5d;transform:translateX(-6px)}
+.tablet-chicken-rgb-slice::after{background:#00dcfa6c;transform:translateX(6px)}
+.tablet-chicken-pixel{
+ position:absolute;image-rendering:pixelated;
+ background:repeating-linear-gradient(90deg,#ef215d 0 4px,#36fdc5 4px 8px,#4750ec 8px 12px);
+ outline:1px solid #101820;box-shadow:3px 0 0 #d6f9fd55;
+ animation:fnar-chicken-pixel .3s steps(2,end) 2;
+}
+.tablet-chicken-tear{
+ position:absolute;left:0;width:100%;height:5.5%;
+ background:repeating-linear-gradient(90deg,#e722426c 0 9px,#0229436a 9px 16px,#08fdb76a 16px 25px);
+ box-shadow:0 -3px 0 #d52b504f,0 3px 0 #14e9ff44;
+ transform:translateX(var(--tear-shift,9px)) skewX(-2deg);
+ animation:fnar-chicken-rgb .17s steps(2,end) 3;
+}
+.tablet-chicken-print{
+ position:absolute;z-index:4;
+ width:clamp(37px,5.2cqw,96px);height:clamp(45px,6cqw,106px);
+ color:#2d1808e0;filter:drop-shadow(2px 2px 1px #ffa851a3);
+ transform:rotate(var(--foot-rotation,0deg)) scale(var(--foot-size,1));
+ opacity:0;
+ animation:fnar-chicken-step 2.8s ease-out var(--foot-delay,0s) both;
+}
+.tablet-chicken-print svg{width:100%;height:100%;display:block}
+.tablet-chicken-error-window{
+ position:absolute;max-width:64%;min-width:min(42%,210px);
+ background:#e9ebde;border:2px solid #2263b5;
+ box-shadow:0 .35em 1em #0008;color:#17212b;
+ font:clamp(11px,1.15cqw,20px)/1.35 Tahoma,'Segoe UI',sans-serif;
+ transform:rotate(-.6deg);animation:fnar-chicken-window .6s ease-in-out both;
+}
+.tablet-chicken-error-title{
+ padding:.45em .7em;color:#fff;font-weight:bold;
+ background:linear-gradient(180deg,#4799f4,#124b9c);
+}
+.tablet-chicken-error-body{
+ padding:1.2em 1.1em;
+ overflow-wrap:anywhere;
+ background:#e9ebdf;
+}
+.tablet-chicken-corrupt{
+ position:absolute;max-width:75%;
+ padding:.25em .45em;background:#030f14db;color:#64f0d2;
+ font:700 clamp(10px,1.55cqw,28px)/1.3 Consolas,monospace;
+ letter-spacing:.1em;text-shadow:2px 0 #d72846, -2px 0 #237eed;
+ transform:translateX(-3px);
+ animation:fnar-chicken-rgb .24s steps(2,end) 3;
+}
+.tablet-chicken-ghost-button{
+ position:absolute;padding:.3em .55em;background:#dce6ffbd;
+ color:#153352;border:2px solid #64baffd1;
+ box-shadow:4px 3px 0 #e835566e,-3px -2px 0 #2ce0d977;
+ font:700 clamp(10px,1cqw,24px) Tahoma,sans-serif;
+ opacity:.84;transform:translate(7px,3px);
+ animation:fnar-chicken-window .6s ease-in-out both;
+}
+.tablet-chicken-cursor{
+ font-size:clamp(35px,5.5cqw,89px);
+ transform:translate(-15%,-22%);
+ animation:fnar-chicken-cursor-jitter .23s steps(3,end) infinite;
+}
+.tablet-chicken-trails{position:absolute;inset:0;pointer-events:none;z-index:4}
+.tablet-chicken-cursor-ghost{
+ position:absolute;font-size:clamp(22px,3.6cqw,52px);
+ transform:translate(-15%,-22%);filter:grayscale(.4) drop-shadow(2px 2px 0 #fa3a6175);
+ pointer-events:none;opacity:0;
+}
+.tablet-chicken-layer.is-paused,.tablet-chicken-layer.is-paused *,
+.tablet-chicken-layer.is-paused *::before,.tablet-chicken-layer.is-paused *::after{
+ animation-play-state:paused!important;
+}
+@keyframes fnar-chicken-burst{
+ 0%{opacity:.85}30%{opacity:1}55%{opacity:.76}78%{opacity:.95}100%{opacity:0}
+}
+@keyframes fnar-chicken-grain{
+ 0%{background-position:0 0,0 0}50%{background-position:0 3px,6px 3px}100%{background-position:0 5px,-5px 7px}
+}
+@keyframes fnar-chicken-band-jitter{
+ 0%,100%{transform:translateX(var(--band-shift,10px))}
+ 50%{transform:translateX(calc(var(--band-shift,10px) * -1))}
+}
+@keyframes fnar-chicken-rgb{
+ 0%,100%{transform:translateX(var(--rgb-offset,12px))}
+ 50%{transform:translateX(calc(var(--rgb-offset,12px) * -.6))}
+}
+@keyframes fnar-chicken-pixel{
+ 0%,100%{opacity:.7}50%{opacity:.4}
+}
+@keyframes fnar-chicken-window{
+ from{opacity:0;transform:translate(7px,6px)}
+ 50%{opacity:1;transform:translate(1px,-2px)}
+ to{opacity:.86;transform:translate(3px,0)}
+}
+@keyframes fnar-chicken-step{
+ 0%{opacity:0}12%,70%{opacity:.93}100%{opacity:0}
+}
+@keyframes fnar-chicken-cursor-jitter{
+ 0%,100%{translate:0 0}50%{translate:2px -1px}75%{translate:-2px 1px}
+}
+@media(max-width:680px){
+ .tablet-chicken-error-window{max-width:83%}
+ .tablet-chicken-ghost-button{font-size:clamp(10px,2.1cqw,18px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .tablet-chicken-layer *, .tablet-chicken-layer *::before,.tablet-chicken-layer *::after{
+  animation:none!important;
+ }
+ .tablet-chicken-glitch-field{opacity:.55}
+ .tablet-chicken-print{opacity:.65}
+ .tablet-chicken-noise{opacity:.05}
+ .tablet-chicken-cursor{translate:0 0}
+}
