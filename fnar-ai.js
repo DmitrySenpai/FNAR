@@ -130,6 +130,12 @@
         continue;
       }
       if(e.id===3 && (e.phase===PHASES.WATCH||e.phase===PHASES.ANGRY)){
+        if(input.c3Protected){
+          // Technical inability to watch CAM 08: freeze anger without calming it.
+          // An already rushing C3 never enters this branch.
+          e.watchTime=0;
+          continue;
+        }
         updateC3(g,e,dt,Boolean(input.cameraOpen && seeing===8),events);
         continue;
       }

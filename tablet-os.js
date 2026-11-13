@@ -183,7 +183,7 @@
   let pausedAudio=false;
   function freezeSound(freeze){
     if(freeze===pausedAudio)return;pausedAudio=freeze;
-    for(const a of activeAudio){if(freeze) a.pause();else if(!safeRead('kons-muted')||safeRead('kons-muted')!=='1')a.play().catch(()=>{});}
+    for(const a of activeAudio){if(freeze||safeRead('kons-muted')==='1')a.pause();else a.play().catch(()=>{});}
   }
   const rebootStages=[
     {id:'shutdown',sec:4,sound:'os_shutdown'},
@@ -203,7 +203,7 @@
   const faultSoundNames=['os_balloon','beep','blip','os_info'];
   let spamAudio=null;
   function captureCameraHistory(){
-    if(!game.cameraOpen)return;
+    if(!game.cameraOpen||state.adVisible||!['idle','input_lag','audio_spam','chicken'].includes(state.mode))return;
     const cam=game.currentCamera,img=document.getElementById('cameraPicture');
     if(!img || img.classList.contains('hidden') || !img.complete || !img.naturalWidth)return;
     const src=img.currentSrc||img.src;
@@ -234,6 +234,7 @@
   }
   function clearChicken(){
     chickenEffect.replaceChildren();chickenCursor.classList.add('hidden');chickenLayer.classList.add('hidden');
+    tablet.style.removeProperty('cursor');
     chickenLayer.classList.remove('is-cursor');
     state.chickenType='';
   }
@@ -252,6 +253,7 @@
       }
     }else if(type==='cursor'){
       chickenCursor.classList.remove('hidden');chickenLayer.classList.add('is-cursor');
+      if(matchMedia('(pointer:fine)').matches)tablet.style.cursor='none';
     }else if(type==='shortcut'){
       add('div','tablet-chicken-shortcut','🐓  Chicken.exe');
     }else if(type==='glitch'){
@@ -362,7 +364,7 @@
       updateLocalization();usb.classList.remove('hidden');audioSound('os_usb_remove',.46);
     }else if(mode==='frozen'||mode==='stale'){
       const cam=game.currentCamera;
-      const current=selectedImage();
+      const current=selectedImage()||[...imageHistory].reverse().find(v=>v.camera===cam)?.src||'';
       const old=imageHistory.filter(v=>v.camera===cam && v.time<=game.state.nightElapsed-1.4);
       const previous=old.length?old[old.length-1].src:'';
       // Fallback to a genuine frozen frame if there isn't a prior capture.
@@ -462,6 +464,8 @@
     previousElapsed=gs.nightElapsed;
     const frozen=gs.paused||game.phoneState?.status==='talking';
     freezeSound(frozen);
+    if(spamAudio && !frozen && safeRead('kons-muted')==='1')spamAudio.pause();
+    else if(spamAudio && !frozen && spamAudio.paused && safeRead('kons-muted')!=='1')spamAudio.play().catch(()=>{});
     popupDialog.classList.toggle('is-paused',frozen);
     if(!frozen && dt>0){
       captureCameraHistory();
