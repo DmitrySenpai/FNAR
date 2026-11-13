@@ -856,7 +856,10 @@ function updatePhoneCaption(){
   const duration=Number.isFinite(phoneVoiceAudio.duration)&&phoneVoiceAudio.duration>0?phoneVoiceAudio.duration:0;
   if(!duration)return;
   // Match complete transcript to the audio duration without inventing speech timestamps.
-  const weights=phoneParagraphs.map(txt=>Math.max(4,Array.from(txt).length));
+  // Keep English captions aligned with the original Russian audio's phrase pacing.
+  // Timing follows currentTime/duration; no artificial English voice files are requested.
+  const timingText=gameLanguage==='en'?(window.KOKHINHIN_PHONE_TEXTS?.ru?.[String(currentNight)]||phoneParagraphs):phoneParagraphs;
+  const weights=phoneParagraphs.map((txt,i)=>Math.max(4,Array.from(timingText[Math.min(i,timingText.length-1)]||txt).length));
   const total=weights.reduce((a,b)=>a+b,0);
   const elapsed=Math.max(0,Math.min(duration-.001,phoneVoiceAudio.currentTime));
   const point=total*elapsed/duration;
