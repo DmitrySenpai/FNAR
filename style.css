@@ -132,8 +132,6 @@ button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opac
 .initial-card{width:min(72%,680px);padding:4.5cqw 5cqw;text-align:center;border:1px solid #77664e;background:#0b0c0ceb;box-shadow:0 2cqw 7cqw #000}
 .initial-card h2{font-size:3.2cqw;margin:2cqw 0;color:#efe1cb;letter-spacing:.05em}
 .initial-card p:not(.eyebrow){font-size:1.6cqw;line-height:1.65;color:#d7cab8}
-.language-buttons{display:flex;justify-content:center;gap:1.5cqw;margin-top:3cqw}
-.language-buttons button{min-width:35%;font-size:1.75cqw}
 .warning-card .primary{margin-top:2cqw;width:80%}
 .secondary-action{border:1px solid #a79072;background:#151311eb;color:#e9d9c6;font-size:1.14cqw;padding:1cqw;min-height:3.65cqw;font-weight:800;letter-spacing:.07em;text-align:center}
 .secondary-action:hover:not(:disabled){background:#34291dbb;border-color:#f1bd7e}
@@ -155,10 +153,53 @@ button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opac
 html, body, #app, #stage, #stage *, button, input {
   cursor: url("arrow.cur") 0 0, auto !important;
 }
-/* Two centered language buttons on pure black, with Japanese kept on one line. */
 .initial-screen{background:#000!important;box-shadow:none!important}
-#languageScreen .language-buttons{display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:2cqw;margin:0;max-width:94%;width:52%;}
-#languageScreen .language-buttons .primary{flex:1 1 0;min-width:0;width:50%;font-size:2cqw;padding:1.3cqw 1.5cqw;white-space:nowrap;word-break:keep-all;line-height:1.2;}
+
+/* Language selection: one authoritative vertical layout, release v052. */
+#languageScreen {background:#000!important;}
+#languageScreen .language-choice {
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+#languageScreen .language-buttons {
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:clamp(10px,1.45cqw,18px);
+  width:min(360px,80%);
+  margin:0 auto;
+}
+#languageScreen .language-buttons .primary {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  width:100%;
+  min-width:0;
+  height:clamp(48px,5cqw,66px);
+  min-height:0;
+  box-sizing:border-box;
+  padding:0 16px;
+  font-size:clamp(16px,2cqw,26px);
+  line-height:1.2;
+  letter-spacing:.035em;
+  white-space:nowrap;
+  word-break:normal;
+  text-align:center;
+  color:#1a120b;
+  background:#dab17a;
+  border:1px solid #eec18c;
+  border-radius:2px;
+  transition:background-color .12s ease;
+}
+#languageScreen .language-buttons .primary:hover:not(:disabled) {
+  background:#eed0a0;
+}
+#languageScreen .language-buttons .primary:active:not(:disabled) {
+  background:#ba8d57;
+}
 /* No border, vignette card, eyebrow or office artwork on the warning screen. */
 #warningScreen .initial-card{width:min(76%,700px);max-width:90%;padding:2cqw;background:transparent!important;border:0!important;box-shadow:none!important}
 #warningScreen .warning-card .primary{width:auto;min-width:46%;max-width:100%;white-space:nowrap}
@@ -173,7 +214,7 @@ html, body, #app, #stage, #stage *, button, input {
 .phone-dialog-text{margin:0;color:#fff!important;font-size:clamp(13px,1.75cqw,30px);font-family:'Segoe UI',Arial,sans-serif;
   font-weight:700;line-height:1.5;max-height:22cqw;overflow:hidden;overflow-wrap:anywhere;
   text-shadow:2px 2px 3px #000,-2px -2px 3px #000,0 0 12px #000,0 0 22px #000;}
-@media (max-width:660px){#languageScreen .language-buttons{width:75%;gap:3cqw}.pause-utilities .icon-button{width:6cqw;height:6cqw;font-size:3cqw}.phone-dialog-text{font-size:2.35cqw}}
+@media (max-width:660px){.pause-utilities .icon-button{width:6cqw;height:6cqw;font-size:3cqw}.phone-dialog-text{font-size:2.35cqw}}
 /* Settings must be layered above the pause menu so its controls remain clickable. */
 #settings{z-index:28}
 /* Black canvas even outside the 16:9 stage on the two opening screens. */
@@ -483,31 +524,4 @@ html, body, #app, #stage, #stage *, button, input {
   -webkit-user-select:text;
   user-select:text;
 }
-/* All three languages share a vertical, centered black opening screen. */
-#languageScreen .language-buttons {
-  display:flex;
-  flex-direction:column;
-  flex-wrap:nowrap;
-  justify-content:center;
-  align-items:stretch;
-  gap:1.45cqw;
-  width:min(56%,420px);
-  max-width:90%;
-  margin:0 auto;
-}
-#languageScreen .language-buttons .primary {
-  width:100%;
-  flex:0 0 auto;
-  min-width:0;
-  padding:1.2cqw 1.5cqw;
-  font-size:clamp(14px,2cqw,32px);
-  white-space:nowrap;
-}
 .phone-dialog-text { overflow-wrap:anywhere; }
-@media(max-width:660px) {
-  #languageScreen .language-buttons {width:min(78%,420px);gap:2cqw;}
-  #languageScreen .language-buttons .primary {padding:1.8cqw 1.5cqw;}
-}
-
-#languageScreen .language-choice {width:100%;display:flex;flex-direction:column;align-items:center;gap:1.8cqw;}
-#languageScreen .language-choice h2 {margin:0;color:#eee;font-size:clamp(15px,2.4cqw,38px);text-align:center;letter-spacing:.09em;}
