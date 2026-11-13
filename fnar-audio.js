@@ -66,7 +66,7 @@
     let response = await fetch(request);
     if(response.status===200) {
       const bytes = validated200(response,await response.arrayBuffer());
-      return new Response(bytes,{status:200,headers:{'Content-Type':response.headers.get('Content-Type')||guessType(path)}});
+      return new Response(bytes,{status:200,headers:{'Content-Type':response.headers.get('Content-Type')||guessType(path),'Content-Length':String(bytes.byteLength)}});
     }
     if(response.status!==206) throw Error('HTTP '+response.status+' for '+path);
     // Some servers insist on 206. Reconstruct with strict byte ranges and no overlap.
@@ -84,7 +84,7 @@
       if(part.status===200 && start===0) {
         const all=validated200(part,await part.arrayBuffer());
         if(all.byteLength!==total) throw Error('Full response differs from advertised total');
-        return new Response(all,{status:200,headers:{'Content-Type':part.headers.get('Content-Type')||mime}});
+        return new Response(all,{status:200,headers:{'Content-Type':part.headers.get('Content-Type')||mime,'Content-Length':String(all.byteLength)}});
       }
       if(part.status!==206) throw Error('Expected 206 for range '+start+'-'+end+', got '+part.status);
       const range=contentRange(part);
@@ -155,9 +155,9 @@
     sounds.set(name,promise);
     return promise;
   }
-  function makeMedia(name,volume,loop) {
+  function makeMedia(name,volume,loop,url) {
     const path='assets/sound/'+name+'.mp3';
-    const el=new Audio(urls.get(path)||path);
+    const el=new Audio(url||urls.get(path)||path);
     el.preload='auto';el.loop=loop;el.volume=cap(volume);el.muted=muted;
     const token={ pause(){el.pause();},play(){return el.play();},
       get paused(){return el.paused;},get currentTime(){return el.currentTime;},
@@ -177,7 +177,7 @@
   function play(name,volume=.5,options={}) {
     const loop=!!options.loop;
     if(!SHORT.has(name)||!audioBuffers.has(name)||!getContext())
-      return makeMedia(name,volume,loop);
+      return makeMedia(name,volume,loop,options.url);
     const ctx=getContext(),source=ctx.createBufferSource(),gain=ctx.createGain();
     source.buffer=audioBuffers.get(name);source.loop=loop;gain.gain.value=muted?0:cap(volume);
     source.connect(gain);gain.connect(ctx.destination);
@@ -195,6 +195,7 @@
     };
     source.onended=()=>{if(!stopped){stopped=true;active.delete(handle);if(ended)ended();}};
     handle.__name=name;
+    handle.__webAudio=true;
     active.add(handle);
     if(paused){gain.gain.value=0;}
     source.start();
@@ -209,6 +210,7 @@
     for(const token of active)token.muted=muted;
   }
   function setPaused(value) {
+    if(paused===!!value)return;
     paused=!!value;
     if(context) {
       if(paused)context.suspend().catch(()=>{});
