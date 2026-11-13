@@ -869,7 +869,7 @@ function cameraSignalAllowed(target){
     $('settings').classList.contains('hidden')&&
     (!fault||(fault.mode==='idle'&&!fault.adVisible))&&
     (!tablet||tablet.canObserveCamera(currentCamera))&&
-    currentCamera===target.camera&&cameraFile()===target.file);
+    currentCamera===target.camera);
 }
 function warmCameraFile(file){
   if(cameraCache.has(file))return Promise.resolve();
@@ -887,11 +887,18 @@ const cameraCompositionTransition=CAMERA_TRANSITION.createController({
     roosterSignal.classList.remove('is-active');void roosterSignal.offsetWidth;
     roosterSignal.classList.add('is-active');
   },
-  onReveal(job){
-    // Keep the old frame until the signal hides the image replacement.
-    displayCameraFile(job.file,AI.visibleIds(aiSession,job.camera));
+  onReveal(target){
+    // Decode the latest available frame before revealing; never render a stale
+    // intermediate rooster roster if AI moved again during the interference.
+    if(target.camera!==currentCamera||target.file!==cameraFile())return;
+    displayCameraFile(target.file,AI.visibleIds(aiSession,target.camera));
   },
-  onFinish(){roosterSignal.classList.remove('is-active');}
+  onFinish(_job,reason){
+    roosterSignal.classList.remove('is-active');
+    // If the roster changed again while the signal was running, reconcile
+    // immediately from live AI state without starting a second visual effect.
+    if(reason==='completed'||reason==='load-error')updateCameraScene();
+  }
 });
 function displayCameraFile(file,visibleIds){
   if(shownCameraFile===file){
@@ -915,19 +922,26 @@ function updateCameraScene({allowRoosterTransition=false}={}){
   const file=cameraFile(),ids=AI.visibleIds(aiSession,currentCamera);
   const pending=cameraCompositionTransition.status();
   if(pending){
-    // A pending transition is single-shot, even when AI ticks repeatedly.
-    if(pending.camera===currentCamera&&pending.file===file&&
-      cameraSignalAllowed(pending))return;
-    cameraCompositionTransition.cancel();
-    allowRoosterTransition=false;
+    // An in-flight 500ms effect keeps only the newest target frame and does
+    // not restart when another rooster arrives or leaves during the noise.
+    if(pending.camera===currentCamera&&cameraSignalAllowed(pending)){
+      if(cameraCompositionTransition.update({camera:currentCamera,file,ids}))return;
+    }else{
+      cameraCompositionTransition.cancel();
+      allowRoosterTransition=false;
+    }
   }
-  if(shownCameraFile===file&&shownCameraIndex===currentCamera)return;
-  if(allowRoosterTransition&&CAMERA_TRANSITION.secondRoosterArrives({
+  if(shownCameraFile===file&&shownCameraIndex===currentCamera){
+    shownCameraIds=[...ids];return;
+  }
+  if(allowRoosterTransition&&CAMERA_TRANSITION.cameraRosterChanged({
     previousCamera:shownCameraIndex,currentCamera,
     previousIds:shownCameraIds,nextIds:ids,
     previousFile:shownCameraFile,nextFile:file,
     eligible:cameraSignalAllowed({camera:currentCamera,file})
-  })&&cameraCompositionTransition.start({camera:currentCamera,file}))return;
+  })&&cameraCompositionTransition.start({
+    camera:currentCamera,file,ids,sourceFile:shownCameraFile
+  }))return;
   displayCameraFile(file,ids);
 }
 function chooseCamera(id){
