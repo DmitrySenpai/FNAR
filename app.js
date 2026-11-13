@@ -113,7 +113,7 @@ function writeSave(key,value){
   safeStore(key,v);
 }
 const L10N={
-en:{holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point at the door controls',imageLoadError:'Could not load {name}. Check the assets/room folder.',
+en:{audioSettingsTitle:'AUDIO SETTINGS',audioMaster:'Master Volume',audioEffects:'Sound Effects',audioAmbience:'Ambience',audioPhone:'Phone',audioTablet:'Door XP',holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point at the door controls',imageLoadError:'Could not load {name}. Check the assets/room folder.',
   chooseLanguage:'SELECT LANGUAGE',languagePrompt:'Game Language',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'WARNING',warningBody:'This game contains sudden loud noises, jumpscares, flashing images and intense scenes. Keep your volume at a moderate level.',warningAccept:'I UNDERSTAND · CONTINUE',
   preloadTitle:'PREPARING GAME',preloadStatus:'Loading assets: {n} / {total} ({percent}%)',preloadRetry:'RETRY LOADING',preloadError:'Some resources could not be loaded. Check your connection and try again.',
@@ -140,7 +140,7 @@ en:{holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point a
   bonusTitle:'ADDITIONAL PAYMENT NOTICE',dismissalTitle:'NOTICE OF TERMINATION',
   company:'Company: {office}',signature:'Company Management / Signature: __________',overtime:'OVERTIME SHIFT',dismissed:'TERMINATED'
  },
- ru:{holdAction:'УДЕРЖИВАТЬ: {action}',pressAction:'НАЖАТЬ: {action}',hoverHint:'Наведите курсор на кнопки у дверей',imageLoadError:'Ошибка загрузки {name}. Проверьте папку assets/room.',chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langEn:'English',langJa:'日本語',
+ ru:{audioSettingsTitle:'НАСТРОЙКИ ЗВУКА',audioMaster:'Общая громкость',audioEffects:'Звуковые эффекты',audioAmbience:'Атмосфера',audioPhone:'Телефон',audioTablet:'Door XP',holdAction:'УДЕРЖИВАТЬ: {action}',pressAction:'НАЖАТЬ: {action}',hoverHint:'Наведите курсор на кнопки у дверей',imageLoadError:'Ошибка загрузки {name}. Проверьте папку assets/room.',chooseLanguage:'ВЫБЕРИТЕ ЯЗЫК',languagePrompt:'Язык игры',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'ПРЕДУПРЕЖДЕНИЕ',warningBody:'В игре присутствуют внезапные громкие звуки, скримеры, мигающие изображения и напряжённые сцены. Рекомендуется умеренная громкость.',warningAccept:'ПОНИМАЮ · ПРОДОЛЖИТЬ',preloadTitle:'ПОДГОТОВКА ИГРЫ',preloadStatus:'Загрузка ресурсов: {n} / {total} ({percent}%)',preloadRetry:'ПОВТОРИТЬ ЗАГРУЗКУ',preloadError:'Не удалось загрузить ресурсы. Проверьте интернет и повторите попытку.',skipPhone:'ПРОПУСТИТЬ ЗВОНОК',skipConversation:'ПРОПУСТИТЬ РАЗГОВОР',
   officeLabel:'НАЗВАНИЕ ОФИСА',officePlaceholder:'Мой офис',start:'НОВАЯ ИГРА · НОЧЬ 1',continue:'ПРОДОЛЖИТЬ · НОЧЬ {night}',loading:'Загрузка {n} / {total}',
   titleNight:'Ночь {night}',pause:'ПАУЗА',pauseTitle:'ПАУЗА',pauseResume:'ВЕРНУТЬСЯ В ИГРУ',pauseRestart:'ПЕРЕЗАПУСТИТЬ НОЧЬ',pauseMenu:'В ГЛАВНОЕ МЕНЮ',pauseHint:'Esc или P — продолжить',
@@ -157,7 +157,7 @@ en:{holdAction:'HOLD: {action}',pressAction:'PRESS: {action}',hoverHint:'Point a
   leftLight:'Свет слева',rightLight:'Свет справа',leftDoorLabel:'Дверь слева',rightDoorLabel:'Дверь справа',phoneLabel:'Телефон на столе',
   openCamera:'Открыть камеры наблюдения',closeCamera:'Закрыть камеры наблюдения',
   mute:'Выключить звук',unmute:'Включить звук',viewCenter:'ВЗГЛЯД ПО ЦЕНТРУ',viewLeft:'СМОТРИТЕ ВЛЕВО',viewRight:'СМОТРИТЕ ВПРАВО',newspaperHeadline:'{office} срочно ищет ночного охранника',newspaperShift:'График работы: с 00:00 до 06:00.',newspaperDuty:'Обязанности: наблюдение за офисом в ночное время.',newspaperPay:'Зарплата: 250 долларов в неделю.',nightSelectTitle:'ВЫБОР НОЧИ',night6:'6 НОЧЬ',night:'Ночь {night}',custom:'CUSTOM',startNight:'НАЧАТЬ',customDifficulty:'(0–2) EASY   (3–6) MED   (7–12) HARD   (13–20) EXTREME',back:'НАЗАД',locked:'ЗАБЛОКИРОВАНО',aiLevel:'AI: {level}',payrollTitle:'УВЕДОМЛЕНИЕ О ВЫПЛАТЕ ЗАРАБОТНОЙ ПЛАТЫ',bonusTitle:'УВЕДОМЛЕНИЕ О ДОПОЛНИТЕЛЬНОЙ ВЫПЛАТЕ',dismissalTitle:'УВЕДОМЛЕНИЕ ОБ УВОЛЬНЕНИИ',company:'Компания: {office}',signature:'Администрация компании  /  Подпись: __________',overtime:'СВЕРХУРОЧНАЯ СМЕНА',dismissed:'УВОЛЕН'},
- ja:{holdAction:'長押し：{action}',pressAction:'押す：{action}',hoverHint:'ドアのボタンにカーソルを合わせてください',imageLoadError:'{name} の読み込みに失敗しました。assets/room を確認してください。',chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langEn:'English',langJa:'日本語',
+ ja:{audioSettingsTitle:'サウンド設定',audioMaster:'マスター音量',audioEffects:'効果音',audioAmbience:'環境音',audioPhone:'電話',audioTablet:'Door XP',holdAction:'長押し：{action}',pressAction:'押す：{action}',hoverHint:'ドアのボタンにカーソルを合わせてください',imageLoadError:'{name} の読み込みに失敗しました。assets/room を確認してください。',chooseLanguage:'言語を選択',languagePrompt:'ゲームの言語',langRu:'Русский',langEn:'English',langJa:'日本語',
   warningHeading:'ご注意',warningBody:'このゲームには突然の大きな音、ジャンプスケア、点滅する映像、恐怖を感じる場面が含まれています。音量を控えめにしてプレイしてください。',warningAccept:'確認しました · 続ける',preloadTitle:'ゲームデータを準備中',preloadStatus:'データ読み込み: {n} / {total} ({percent}%)',preloadRetry:'再試行',preloadError:'データの読み込みに失敗しました。通信を確認して再試行してください。',skipPhone:'着信を無視',skipConversation:'通話をスキップ',
   officeLabel:'オフィス名',officePlaceholder:'私のオフィス',start:'ニューゲーム · 第1夜',continue:'続きから · 第{night}夜',loading:'読み込み中 {n} / {total}',
   titleNight:'第{night}夜',pause:'一時停止',pauseTitle:'一時停止',pauseResume:'ゲームを再開',pauseRestart:'この夜をやり直す',pauseMenu:'メインメニューへ',pauseHint:'Esc または P で再開',
@@ -305,7 +305,7 @@ async function sceneTransition(swapScene,{activateNight=false}={}){
   if(transitionBusy)return false;
   transitionBusy=true;
   const priorPause=state.paused,priorActive=state.active;
-  if(state.active){state.paused=true;clearHeldActions();}
+  if(state.active){state.paused=true;clearHeldActions();atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();}
   screenTransition.classList.add('is-transitioning');
   let successful=false;
   try{
@@ -314,7 +314,7 @@ async function sceneTransition(swapScene,{activateNight=false}={}){
     if(result===false)throw new Error('Screen preparation was rejected');
     await fadeScreen(false,800);
     if(activateNight){
-      state.active=true;state.paused=false;state.last=performance.now();
+      state.active=true;state.paused=false;state.last=performance.now();AUDIO_SETTINGS.pauseAtmosphere(false);
       startAudioLoop('ambient_room',.18);startAudioLoop('ambience',.065);
     }
     successful=true;
@@ -410,6 +410,7 @@ function applyTranslations(){
   if(typeof chooseCamera==='function')chooseCamera(currentCamera);
   if(typeof updatePauseButton==='function')updatePauseButton();
   if(typeof updatePhoneUI==='function')updatePhoneUI();
+  if(typeof updateAudioSettingsUI==='function')updateAudioSettingsUI();
 }
 function chooseLanguage(lang){
   gameLanguage=['ru','en','ja'].includes(lang)?lang:'ru';writeSave('kokhinhin_lang',gameLanguage);
@@ -418,7 +419,7 @@ function chooseLanguage(lang){
 $('languageRu').addEventListener('click',()=>chooseLanguage('ru'));
 $('languageJa').addEventListener('click',()=>chooseLanguage('ja'));
 $('languageEn').addEventListener('click',()=>chooseLanguage('en'));
-$('warningAccept').addEventListener('click',()=>{$('warningScreen').classList.add('hidden');$('preloadScreen').classList.remove('hidden');preloadAllGameAssets();});
+$('warningAccept').addEventListener('click',()=>{AUDIO_SETTINGS.unlockAtmosphere();$('warningScreen').classList.add('hidden');$('preloadScreen').classList.remove('hidden');preloadAllGameAssets();});
 
 // Audio: original supplied MP3 effects, all optional if browser audio is blocked.
 const SOUND_PATH='assets/sound/';
@@ -428,6 +429,9 @@ const soundURL=name=>window.KONS_EMBEDDED_SOUNDS?.[name] ||
     : getCachedAssetURL(SOUND_PATH+name+'.mp3'));
 const screamerURL=id=>window.KONS_EMBEDDED_SCREAMERS?.[id]||getCachedAssetURL('assets/screamers/rooster_'+id+'_scream.webm');
 const staticVideoURL=()=>window.KONS_EMBEDDED_STATIC_VIDEO||getCachedAssetURL('assets/sound/static-bm.webm');
+const AUDIO_SETTINGS=window.FNAR_AUDIO_SETTINGS;
+if(!AUDIO_SETTINGS)throw new Error('fnar-audio-settings.js must load before app.js');
+window.FNAR_SOUND_URL=soundURL; // Tablet reuses preloaded blob URLs; no duplicate MP3 fetch.
 const audioLoops=new Map();
 let soundMuted=safeRead('kons-muted')==='1';
 let phoneRingAudio=null,phoneVoiceAudio=null,deathStaticAudio=null;
@@ -441,24 +445,84 @@ function updateMuteUI(){
   if(phoneVoiceAudio)phoneVoiceAudio.muted=soundMuted;
   if(deathStaticAudio)deathStaticAudio.muted=soundMuted;
   for(const a of activeOneShots)a.muted=soundMuted;
+  AUDIO_SETTINGS.setMuted(soundMuted);
 }
 function playSfx(name,volume=.45){
   if(soundMuted)return;
-  try{const a=new Audio(soundURL(name));a.preload='auto';a.volume=clamp(volume,0,1);a.muted=soundMuted;activeOneShots.add(a);
-    a.onended=()=>activeOneShots.delete(a);a.onerror=()=>activeOneShots.delete(a);
+  try{const a=new Audio(soundURL(name));a.preload='auto';AUDIO_SETTINGS.register(a,name==='hang-up'?'phone':'effects',volume);activeOneShots.add(a);
+    a.onended=()=>{activeOneShots.delete(a);AUDIO_SETTINGS.forget(a);};a.onerror=()=>{activeOneShots.delete(a);AUDIO_SETTINGS.forget(a);};
     a.play().catch(()=>activeOneShots.delete(a));return a;}
   catch(ex){console.warn('SFX error',name,ex);}
 }
 function startAudioLoop(name,volume=.15){
   let a=audioLoops.get(name);
   if(!a){a=new Audio(soundURL(name));a.loop=true;a.preload='auto';audioLoops.set(name,a);}
-  a.volume=clamp(volume,0,1);a.muted=soundMuted;
+  AUDIO_SETTINGS.register(a,['ambience','ambient_room','light'].includes(name)?'ambience':name==='phone-line'?'phone':'effects',volume);
   a.play().catch(()=>{});
 }
 function stopAudioLoop(name){const a=audioLoops.get(name);if(a){a.pause();a.currentTime=0;}}
 function stopAudioLoops(){for(const name of audioLoops.keys())stopAudioLoop(name);}
 function toggleMute(){soundMuted=!soundMuted;safeStore('kons-muted',soundMuted?'1':'0');updateMuteUI();}
 $('muteBtn').addEventListener('click',toggleMute);updateMuteUI();
+// Five independently persistent volume sliders; changing a value updates live audio.
+const volumeControls=[
+  ['master','audioVolumeMaster'],['effects','audioVolumeEffects'],
+  ['ambience','audioVolumeAmbience'],['phone','audioVolumePhone'],
+  ['tablet','audioVolumeTablet']
+];
+function updateAudioSettingsUI(){
+  const settings=AUDIO_SETTINGS.get();
+  for(const [category,id] of volumeControls){
+    const slider=$(id),output=$(id+'Value');
+    if(!slider||!output)continue;
+    slider.value=String(settings[category]);
+    output.textContent=String(settings[category])+'%';
+    slider.setAttribute('aria-valuetext',String(settings[category])+'%');
+  }
+}
+for(const [category,id] of volumeControls)
+  $(id).addEventListener('input',e=>AUDIO_SETTINGS.set(category,e.currentTarget.value));
+AUDIO_SETTINGS.subscribe(updateAudioSettingsUI);
+updateAudioSettingsUI();
+function toggleAudioSettings(open){
+  if(!state.paused&&open)return false;
+  const panel=$('audioSettingsPanel'),visible=Boolean(open);
+  panel.classList.toggle('hidden',!visible);
+  $('pauseAudioSettings').setAttribute('aria-expanded',String(visible));
+  if(visible)updateAudioSettingsUI();
+  return true;
+}
+$('pauseAudioSettings').addEventListener('click',()=>toggleAudioSettings($('audioSettingsPanel').classList.contains('hidden')));
+$('audioSettingsBack').addEventListener('click',()=>toggleAudioSettings(false));
+const ATMOSPHERE=window.FNAR_ATMOSPHERE;
+if(!ATMOSPHERE)throw new Error('fnar-atmosphere.js must load before app.js');
+const atmosphereView=ATMOSPHERE.createRenderer({
+  office:$('atmosphereOffice'),camera:$('atmosphereCamera'),audio:AUDIO_SETTINGS,
+  reducedMotion:()=>window.matchMedia('(prefers-reduced-motion:reduce)').matches
+});
+const atmosphere=ATMOSPHERE.createSystem({
+  onStart:atmosphereView.onStart,onFrame:atmosphereView.onFrame,onEnd:atmosphereView.onEnd
+});
+function atmosphereContext(){
+  const tablet=window.FNARTabletDebug?.status;
+  return {
+    active:state.active,paused:state.paused,
+    phone:phoneState.status==='talking',
+    jumpscare:!$('jumpscare').classList.contains('hidden'),
+    victory:state.gameOver||!$('victoryScreen').classList.contains('hidden'),
+    blackout:powerFailure.active,
+    tabletBusy:Boolean(tablet&&(tablet.mode!=='idle'||tablet.adVisible)),
+    danger:ENEMIES.some(e=>e.phase===AI.PHASES.DOOR||e.phase===AI.PHASES.RUSH||
+      (e.phase===AI.PHASES.APPROACH&&e.step>=e.route.length-2)),
+    cameraOpen,camera:currentCamera
+  };
+}
+window.FNARAtmosphereDebug=Object.freeze({
+  status:()=>atmosphere.status(),
+  trigger:type=>atmosphere.trigger(type,atmosphereContext()),
+  clear:()=>atmosphere.clear()
+});
+
 // Transparent VP9 WebM is composited directly over the live office scene.
 const jumpOverlay=$('jumpscare'),jumpVideo=$('jumpscareVideo');
 let jumpTimer=0,jumpEpoch=0;
@@ -813,13 +877,14 @@ function updatePhoneUI(){
 }
 function stopRingtone(){
   if(phoneRingAudio){phoneRingAudio.pause();phoneRingAudio.currentTime=0;
-    phoneRingAudio.onended=null;phoneRingAudio.onerror=null;phoneRingAudio=null;}
+    phoneRingAudio.onended=null;phoneRingAudio.onerror=null;AUDIO_SETTINGS.forget(phoneRingAudio);phoneRingAudio=null;}
 }
 function stopPhoneVoice(){
   if(!phoneVoiceAudio)return;
   phoneVoiceAudio.onended=null;phoneVoiceAudio.onerror=null;
   phoneVoiceAudio.pause();try{phoneVoiceAudio.currentTime=0;}catch(_){ }
   pausedAudio.delete(phoneVoiceAudio);
+  AUDIO_SETTINGS.forget(phoneVoiceAudio);
   phoneVoiceAudio=null;
 }
 function resetPhone(){
@@ -839,7 +904,7 @@ function startRinging(){
   const epoch=phoneEpoch;
   phoneState.status='ringing';phoneState.ringEndsAt=state.nightElapsed+PHONE_RING_SECONDS;
   updatePhoneUI();
-  const audio=new Audio(soundURL('phone'));audio.volume=.52;audio.muted=soundMuted;
+  const audio=new Audio(soundURL('phone'));AUDIO_SETTINGS.register(audio,'phone',.52);
   audio.preload='auto';audio.loop=false;phoneRingAudio=audio;
   audio.onended=()=>{if(epoch===phoneEpoch)missPhone();};
   audio.play().catch(()=>{});
@@ -872,6 +937,7 @@ function answerPhone(){
   if(state.nightElapsed>=phoneState.ringEndsAt){missPhone();return;}
   stopRingtone();
   phoneState.status='talking';phoneState.subtitleIndex=-1;
+  AUDIO_SETTINGS.pauseAtmosphere(true);
   state.last=performance.now(); // No catch-up of world time while dialogue audio is playing.
   phoneParagraphs=currentPhoneParagraphs();
   phoneSubtitle.textContent=phoneParagraphs[0] || '...';
@@ -884,7 +950,7 @@ function answerPhone(){
   }
   const epoch=phoneEpoch;
   const voice=new Audio(soundURL('phone_'+String(currentNight).padStart(2,'0')));
-  phoneVoiceAudio=voice;voice.preload='auto';voice.loop=false;voice.volume=.88;voice.muted=soundMuted;
+  phoneVoiceAudio=voice;voice.preload='auto';voice.loop=false;AUDIO_SETTINGS.register(voice,'phone',.88);
   voice.onended=()=>{if(phoneEpoch===epoch && phoneVoiceAudio===voice)hangUpPhone();};
   voice.onerror=()=>{if(phoneEpoch===epoch && phoneVoiceAudio===voice){
     console.warn('Phone audio unavailable:',voice.src);hangUpPhone();
@@ -897,7 +963,7 @@ function answerPhone(){
 function hangUpPhone(){
   if(phoneState.status!=='talking')return;
   stopPhoneVoice();stopAudioLoop('phone-line');playSfx('hang-up',.24);
-  phoneState.status='completed';state.last=performance.now();updatePhoneUI();
+  phoneState.status='completed';AUDIO_SETTINGS.pauseAtmosphere(false);state.last=performance.now();updatePhoneUI();
 }
 function updatePhone(){
   if(!state.active||powerFailure.active||currentNight>=6)return;
@@ -1033,6 +1099,7 @@ function showVictorySequence(){
 }
 function finishNight(success,message,attackerId=0){
   if(!state.active)return;
+  atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();
   clearVictorySequence();
   // Hold the current camera frame during the dissolve to 6 AM.
   if(cameraOpen&&!success)setCameraOpen(false);
@@ -1131,12 +1198,14 @@ function moveEnemies(dt){
 cameraToggle.addEventListener('click',toggleCamera);
 cameraNodes.forEach(b=>b.addEventListener('click',()=>chooseCamera(Number(b.dataset.camera))));
 function goMenuInstant(){
+  atmosphere.clear();AUDIO_SETTINGS.stopAtmosphere();AUDIO_SETTINGS.pauseAtmosphere(false);
+  toggleAudioSettings(false);
   clearVictorySequence();
   clearResignation();
   clearNewspaperIntro();
   closeNightMenus();
   if(state.active){state.active=false;clearHeldActions();stopAudioLoops();stopRingtone();stopPowerFailureAudio();}
-  for(const a of activeOneShots){a.pause();try{a.currentTime=0;}catch(_){}}activeOneShots.clear();
+  for(const a of activeOneShots){a.pause();try{a.currentTime=0;}catch(_){}AUDIO_SETTINGS.forget(a);}activeOneShots.clear();
   state.paused=false;pausedAudio.clear();resetJumpscare();resetPowerFailure();resetPhone();
   $('pauseScreen').classList.add('hidden');$('ending').classList.add('hidden');
   if(cameraOpen){cameraOpen=false;cameraScreen.classList.remove('is-open');cameraScreen.setAttribute('aria-hidden','true');cameraToggle.setAttribute('aria-expanded','false');}
@@ -1171,8 +1240,9 @@ function togglePause(force){
   if(state.paused===next)return;
   state.paused=next;clearHeldActions();state.dragging=false;state.leftKey=false;state.rightKey=false;
   $('pauseScreen').classList.toggle('hidden',!next);
-  if(!next)$('settings').classList.add('hidden');
+  if(!next){$('settings').classList.add('hidden');toggleAudioSettings(false);}
   state.last=performance.now();
+  AUDIO_SETTINGS.pauseAtmosphere(next||phoneState.status==='talking');
   if(next)pauseGameAudio();else resumeGameAudio();
 }
 $('pauseBtn').addEventListener('click',()=>togglePause());
@@ -1228,6 +1298,9 @@ canvas.addEventListener('pointerleave',()=>{canvas.style.cursor='url("arrow.cur"
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
   if(e.target instanceof HTMLInputElement)return;
+  if(state.paused && !$('audioSettingsPanel').classList.contains('hidden') && e.key==='Escape'){
+    toggleAudioSettings(false);e.preventDefault();return;
+  }
   if(state.paused && !$('settings').classList.contains('hidden') && e.key==='Escape'){
     $('settings').classList.add('hidden');e.preventDefault();return;
   }
@@ -1305,6 +1378,7 @@ function advanceGameStep(dt){
       if(state.power<=0)startPowerFailure();
     }
   }
+  if(state.active)atmosphere.tick(passed,atmosphereContext());
   updateOfficePower();
   updateClock();
 }
@@ -1337,6 +1411,7 @@ function start(night=1,options={}){
   clearVictorySequence();
   clearResignation();
   currentNight=clamp(Number(night)||1,1,7);state.night=currentNight;
+  atmosphere.reset(currentNight);AUDIO_SETTINGS.stopAtmosphere();AUDIO_SETTINGS.pauseAtmosphere(false);toggleAudioSettings(false);
   persistOfficeName();
   $('officeInput').blur();
   state.paused=false;resumeGameAudio();$('pauseScreen').classList.add('hidden');$('pauseBtn').classList.remove('hidden');

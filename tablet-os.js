@@ -260,12 +260,17 @@
   const activeAudio=new Set();
   const audioSound=(name,volume=.65,loop=false)=>{
     if(safeRead('kons-muted')==='1')return;
-    const a=new Audio('assets/sound/'+name+'.mp3');
-    a.preload='auto';a.volume=Math.min(.65,Math.max(0,volume));a.loop=loop;activeAudio.add(a);
-    a.onended=()=>activeAudio.delete(a);a.onerror=()=>activeAudio.delete(a);
+    const source=window.FNAR_SOUND_URL?.(name)||'assets/sound/'+name+'.mp3';
+    const a=new Audio(source);
+    a.preload='auto';a.loop=loop;activeAudio.add(a);
+    const mixer=window.FNAR_AUDIO_SETTINGS;
+    if(mixer)mixer.register(a,'tablet',Math.min(.65,Math.max(0,volume)));
+    else a.volume=Math.min(.65,Math.max(0,volume));
+    a.onended=()=>{activeAudio.delete(a);mixer?.forget(a);};
+    a.onerror=()=>{activeAudio.delete(a);mixer?.forget(a);};
     a.play().catch(()=>activeAudio.delete(a));return a;
   };
-  function stopSound(){for(const a of activeAudio){a.pause();try{a.currentTime=0}catch(_){}}activeAudio.clear();}
+  function stopSound(){for(const a of activeAudio){a.pause();try{a.currentTime=0}catch(_){}window.FNAR_AUDIO_SETTINGS?.forget(a);}activeAudio.clear();}
   let pausedAudio=false;
   function freezeSound(freeze){
     if(freeze===pausedAudio)return;pausedAudio=freeze;
