@@ -146,15 +146,21 @@
   background:linear-gradient(white,#c8d6ef);border:1px solid #5479af;
   cursor:pointer;font-size:inherit;
 }
-.tablet-crash-shortcut{
-  position:absolute;top:6%;left:4%;display:flex;flex-direction:column;align-items:center;
-  gap:.25em;width:min(16%,130px);padding:.4em;
-  color:white;text-shadow:0 2px 3px #000;font-size:clamp(10px,1.1cqw,18px);
-  background:transparent;border:1px solid transparent;cursor:pointer;
+/* Transparent hit target for the EXISTING Net Video icon in desktop.webp.
+   JS computes the rendered, letterboxed background bounds on every resize. */
+.tablet-crash-hotspot{
+  position:absolute;z-index:1;display:block;
+  border:0;border-radius:3px;outline:0;
+  padding:0;margin:0;min-width:0;min-height:0;
+  background:transparent;color:transparent;
+  font-size:0;cursor:pointer;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
 }
-.tablet-crash-shortcut:hover,.tablet-crash-shortcut:focus-visible{background:#5696d466;border-color:#b6d6ff}
-.tablet-crash-shortcut>span{font-size:2.5em;color:#c9ecff}
-.tablet-crash-shortcut strong{font-weight:normal;text-align:center;overflow-wrap:anywhere}
+.tablet-crash-hotspot:hover{background:rgba(100,164,248,.14)}
+.tablet-crash-hotspot:focus-visible{
+  outline:2px solid #dcefff;outline-offset:1px;
+  background:rgba(100,164,248,.18);
+}
 .tablet-crash-launch{
   position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);
   width:min(48%,500px);aspect-ratio:1012/806;max-height:85%;
@@ -197,7 +203,6 @@
 }
 @media(max-width:680px){
   .tablet-crash-error{width:91%}
-  .tablet-crash-shortcut{width:24%}
   .tablet-fault-label{letter-spacing:0}
 }
 
