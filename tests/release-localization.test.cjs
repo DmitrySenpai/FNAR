@@ -78,12 +78,35 @@ test('all three English documents preserve payment amounts, stamps and office na
 test('language menu, selection safety and old save key preserved',()=>{
   const html=read('index.html'),app=read('app.js'),css=read('style.css');
   for(const id of ['languageRu','languageEn','languageJa']) assert.ok(html.includes('id="'+id+'"'));
-  assert.match(html,/data-i18n="chooseLanguage"/);
+  assert.doesNotMatch(html,/id="languageTitle"|data-i18n="chooseLanguage"/);
+  assert.match(html,/<section id="languageScreen"[^>]*aria-label="Выберите язык"/);
+  const languageMarkup=html.split('id="languageScreen"')[1].split('</section>')[0];
+  assert.equal((languageMarkup.match(/<button\b/g)||[]).length,3);
+  assert.match(html,/href="style\.css\?v=052"/);
+  assert.equal((css.match(/#languageScreen \.language-buttons\s*\{/g)||[]).length,1);
+  assert.equal((css.match(/#languageScreen \.language-buttons \.primary\s*\{/g)||[]).length,1);
+  assert.equal((css.match(/#languageScreen \.language-choice\s*\{/g)||[]).length,1);
   assert.match(css,/#languageScreen \.language-buttons\s*\{[^}]*flex-direction:column/s);
+  assert.match(css,/#languageScreen \.language-buttons \.primary\s*\{[^}]*justify-content:center/s);
+  assert.match(css,/#languageScreen \{background:#000!important;\}/);
   assert.match(css,/#officeInput[^}]*user-select:text/s);
   assert.match(css,/#app, #stage, #stage \*/);
   assert.match(app,/writeSave\('kokhinhin_lang',gameLanguage\)/);
   assert.match(app,/const savedLanguage=readSave\('kokhinhin_lang'\)/);
   assert.match(app,/document\.documentElement\.lang=gameLanguage/);
   assert.ok(!app.includes("localStorage.clear()"));
+});
+
+test('language picker dimensions fit common desktop and mobile 16:9 stages',()=>{
+  const clamp=(min,value,max)=>Math.max(min,Math.min(value,max));
+  // Static safeguard for the clamp() formulas in the stylesheet.
+  // Real rendering and cross-browser checks remain separate manual QA.
+  for(const [w,h] of [[1920,1080],[1366,768],[1280,720],[2560,1440],[390,844],[320,568],[844,390],[667,375]]){
+    const stageWidth=Math.min(w,h*16/9),stageHeight=Math.min(h,w*9/16);
+    const buttonWidth=Math.min(360,.8*stageWidth);
+    const buttonHeight=clamp(48,.05*stageWidth,66);
+    const gap=clamp(10,.0145*stageWidth,18);
+    assert.ok(buttonWidth<=stageWidth,'width must fit: '+w+'x'+h);
+    assert.ok(buttonHeight*3+gap*2<=stageHeight,'height must fit: '+w+'x'+h);
+  }
 });
