@@ -834,11 +834,13 @@ const CAM_PICTURE=$('cameraPicture'),CAM_EMPTY=$('feedEmpty');
 const cameraCache=new Map();const cameraUnavailable=new Set();
 const CAMERA_VARIANTS=new Set(["cam01.webp", "cam01_c2.webp", "cam02.webp", "cam02_c4.webp", "cam03.webp", "cam03_c2.webp", "cam03_c2_c3.webp", "cam03_c3.webp", "cam04.webp", "cam04_c1.webp", "cam04_c1_c4.webp", "cam04_c4.webp", "cam05.webp", "cam05_c1.webp", "cam05_c4.webp", "cam05_c4_c1.webp", "cam06.webp", "cam06_c1.webp", "cam06_c1_c4.webp", "cam06_c4.webp", "cam07.webp", "cam07_c1.webp", "cam07_c1_c4.webp", "cam07_c4.webp", "cam08.webp", "cam08_c2.webp", "cam08_c2_c3.webp", "cam08_c3.webp", "cam09.webp", "cam09_c2.webp", "cam09_c2_c3.webp", "cam09_c3.webp"]);
 let cameraOpen=false,currentCamera=1,cameraFlashTimer=0,shownCameraFile='';
+let shownCameraIndex=0,shownCameraIds=[];
 function randomBetween(min,max){return min+Math.random()*(max-min);}
 function resetEnemies(){
   AI.resetNight(aiSession,currentNight,undefined,currentNight===7?customAI:null);
   enemySoundLast.clear();
-  shownCameraFile='';
+  cameraCompositionTransition.cancel();
+  shownCameraFile='';shownCameraIndex=0;shownCameraIds=[];
 }
 function cameraImageURL(file){return window.KONS_EMBEDDED_CAMERAS?.[file] || getCachedAssetURL('assets/cameras/'+file);}
 function cameraFile(){
@@ -858,11 +860,44 @@ function showCameraFlash(){
  const el=$('cameraSwitchFlash');el.classList.remove('burst');void el.offsetWidth;el.classList.add('burst');
  clearTimeout(cameraFlashTimer);cameraFlashTimer=setTimeout(()=>el.classList.remove('burst'),240);
 }
-function updateCameraScene(){
-  if(!state.loaded)return;
-  const file=cameraFile();
-  if(shownCameraFile===file)return;
-  shownCameraFile=file;
+const CAMERA_TRANSITION=window.FNAR_CAMERA_TRANSITION;
+if(!CAMERA_TRANSITION)throw new Error('fnar-camera-transition.js must load before app.js');
+const roosterSignal=$('cameraRoosterSignal');
+function cameraSignalAllowed(target){
+  const tablet=window.FNARTabletDebug, fault=tablet?.status;
+  return Boolean(state.active&&!state.paused&&cameraOpen&&!powerFailure.active&&
+    $('settings').classList.contains('hidden')&&
+    (!fault||(fault.mode==='idle'&&!fault.adVisible))&&
+    (!tablet||tablet.canObserveCamera(currentCamera))&&
+    currentCamera===target.camera&&cameraFile()===target.file);
+}
+function warmCameraFile(file){
+  if(cameraCache.has(file))return Promise.resolve();
+  if(cameraUnavailable.has(file))return Promise.reject(new Error('Missing camera '+file));
+  return new Promise((resolve,reject)=>{
+    const image=new Image();
+    image.onload=()=>{cameraCache.set(file,true);resolve();};
+    image.onerror=()=>{cameraUnavailable.add(file);reject(new Error('Missing camera '+file));};
+    image.src=cameraImageURL(file);
+  });
+}
+const cameraCompositionTransition=CAMERA_TRANSITION.createController({
+  warm:warmCameraFile,allowed:cameraSignalAllowed,
+  onStart(){
+    roosterSignal.classList.remove('is-active');void roosterSignal.offsetWidth;
+    roosterSignal.classList.add('is-active');
+  },
+  onReveal(job){
+    // Keep the old frame until the signal hides the image replacement.
+    displayCameraFile(job.file,AI.visibleIds(aiSession,job.camera));
+  },
+  onFinish(){roosterSignal.classList.remove('is-active');}
+});
+function displayCameraFile(file,visibleIds){
+  if(shownCameraFile===file){
+    shownCameraIndex=currentCamera;shownCameraIds=[...visibleIds];return;
+  }
+  shownCameraFile=file;shownCameraIndex=currentCamera;shownCameraIds=[...visibleIds];
   const setImg=()=>{
     CAM_PICTURE.src=cameraImageURL(file);
     CAM_PICTURE.classList.remove('hidden');CAM_EMPTY.classList.add('hidden');
@@ -874,6 +909,26 @@ function updateCameraScene(){
   pending.onload=()=>{cameraCache.set(file,true);if(shownCameraFile===file)setImg();};
   pending.onerror=()=>{cameraUnavailable.add(file);console.warn('Missing camera asset',file);};
   pending.src=cameraImageURL(file);
+}
+function updateCameraScene({allowRoosterTransition=false}={}){
+  if(!state.loaded)return;
+  const file=cameraFile(),ids=AI.visibleIds(aiSession,currentCamera);
+  const pending=cameraCompositionTransition.status();
+  if(pending){
+    // A pending transition is single-shot, even when AI ticks repeatedly.
+    if(pending.camera===currentCamera&&pending.file===file&&
+      cameraSignalAllowed(pending))return;
+    cameraCompositionTransition.cancel();
+    allowRoosterTransition=false;
+  }
+  if(shownCameraFile===file&&shownCameraIndex===currentCamera)return;
+  if(allowRoosterTransition&&CAMERA_TRANSITION.secondRoosterArrives({
+    previousCamera:shownCameraIndex,currentCamera,
+    previousIds:shownCameraIds,nextIds:ids,
+    previousFile:shownCameraFile,nextFile:file,
+    eligible:cameraSignalAllowed({camera:currentCamera,file})
+  })&&cameraCompositionTransition.start({camera:currentCamera,file}))return;
+  displayCameraFile(file,ids);
 }
 function chooseCamera(id){
  if(id<1||id>CAMS.length)return;
