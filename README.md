@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/branding/fnar-logo.jpg" alt="Five Nights at Rooster's — FNAR" width="780">
+<img src="assets/branding/fnar-logo.webp" alt="Five Nights at Rooster's — FNAR" width="650">
 
 # Five Nights at Rooster's (FNAR)
 
