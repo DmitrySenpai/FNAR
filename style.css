@@ -422,8 +422,9 @@ html, body, #app, #stage, #stage *, button, input {
   justify-content:flex-start;gap:1cqw;width:100%;min-width:0;
   margin:0;padding:0;border:0;background:transparent}
 #customScreen .custom-ai-portrait{display:block;aspect-ratio:1;width:min(16cqw,95%);
-  max-width:100%;object-fit:cover;object-position:50% 33%;
-  border:0;border-radius:0;background:#000;filter:contrast(1.06);user-select:none}
+  max-width:100%;object-fit:cover;object-position:center top;
+  image-rendering:auto;filter:none;
+  border:0;border-radius:0;background:#000;user-select:none}
 #customScreen .custom-ai-label{font:normal clamp(9px,1.95cqw,31px) Consolas,'Courier New',monospace;
   color:#fff;white-space:nowrap;margin:.3cqw 0 0;text-align:center}
 #customScreen .custom-ai-controls{display:grid;grid-template-columns:auto minmax(2.5cqw,1fr) auto;
